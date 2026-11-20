@@ -172,7 +172,7 @@ glance even in a crowd of hundreds.
 | Squad, cannon | in-house wheeled cannon, no crew | static mesh with a recoil kick |
 | Soldier | KayKit Knight | recoloured crimson |
 | Runner | KayKit Rogue | crimson, smaller |
-| Brute / Warlord | KayKit Barbarian, scaled ×2.6 / ×3.4 | open: the warlord still needs its own darker, crowned look |
+| Brute / Warlord | KayKit Barbarian, scaled ×2.6 / ×3.4 | the warlord has its own bake: bareheaded, an in-house gold crown, darker crimson |
 | Bridge, walls, towers | Kenney Castle Kit + in-house deck | |
 | Water, sky | in-house shaders | |
 | Pickups | in-house glass panels (+N, ×N, −N) and stone pedestals carrying the weapon model | |

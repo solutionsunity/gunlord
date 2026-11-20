@@ -19,7 +19,8 @@ const OUT := "res://assets/baked/%s.res"
 const GRIP := Transform3D(Basis(Vector3(0, 0, -1), Vector3(0, 1, 0), Vector3(1, 0, 0)), Vector3(-0.105, -0.01, 0))
 
 ## source: a KayKit character, or "" for a static model made only of `builds`.
-## props: KayKit meshes to keep from bone attachments. builds: in-house props.
+## props: KayKit meshes to keep from bone attachments. builds: in-house props,
+## each a name (held in the right hand) or [name, bone, offset] (sitting on that bone).
 ## team: atlas cells that take the team colour.
 ## clips: role -> [KayKit animation, loops]; a static model holds one pose per role.
 const MANIFEST := [
@@ -61,6 +62,12 @@ const MANIFEST := [
 		id = &"barbarian", source = "Barbarian", atlas = "barbarian",
 		props = ["2H_Axe", "Barbarian_Hat", "Barbarian_Cape"],
 		team = [Vector2i(0, 1), Vector2i(1, 1), Vector2i(2, 1)],
+		clips = {advance = ["Walking_A", true], attack = ["2H_Melee_Attack_Chop", true], death = ["Death_A", false]},
+	},
+	{
+		id = &"warlord", source = "Barbarian", atlas = "barbarian",
+		props = ["2H_Axe", "Barbarian_Cape"], builds = [["crown", "head", Vector3(0, 0.95, 0)]],
+		team = [Vector2i(0, 1), Vector2i(1, 1), Vector2i(2, 1), Vector2i(7, 0)],
 		clips = {advance = ["Walking_A", true], attack = ["2H_Melee_Attack_Chop", true], death = ["Death_A", false]},
 	},
 ]
@@ -197,7 +204,12 @@ func _parts(skel: Skeleton3D, entry: Dictionary) -> Array[Dictionary]:
 						parts.append({skin = null, bone = skel.find_bone(child.bone_name), local = prop.transform,
 								arrays = prop.mesh.surface_get_arrays(0)})
 	for build in entry.get("builds", []):
-		parts.append({skin = null, bone = hand, local = GRIP if hand >= 0 else Transform3D(), arrays = Props.build(build)})
+		if build is Array:
+			parts.append({skin = null, bone = skel.find_bone(build[1]), local = Transform3D(Basis(), build[2]),
+					arrays = Props.build(build[0], entry.atlas)})
+		else:
+			parts.append({skin = null, bone = hand, local = GRIP if hand >= 0 else Transform3D(),
+					arrays = Props.build(build, entry.atlas)})
 	return parts
 
 

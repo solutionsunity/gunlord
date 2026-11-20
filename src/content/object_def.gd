@@ -23,6 +23,7 @@ enum Look { PANEL, PEDESTAL }
 @export var look := Look.PANEL         ## how a pickup stands on the lane: a glass panel or a stone pedestal
 @export var size := 1.0               ## visual scale of an enemy (1 = a soldier)
 @export var color := Color.WHITE
+@export var tint := Color(0, 0, 0, 0)  ## an enemy's own team colour; transparent = the enemy's usual crimson
 
 
 func is_trap() -> bool:

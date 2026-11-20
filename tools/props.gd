@@ -1,5 +1,5 @@
 extends RefCounted
-## In-house weapon models, built from boxes and cylinders. Every face samples
+## In-house props (weapons, the warlord's crown), built from boxes and cylinders. Every face samples
 ## one cell of a KayKit atlas, so the weapons share the characters' palette and
 ## bake through the same pipeline. Forward is +Z, the hand grip is at the origin.
 
@@ -8,10 +8,14 @@ const WOOD := Vector2i(6, 0)
 const STEEL := Vector2i(3, 1)
 const IRON := Vector2i(4, 0)
 const DARK := Vector2i(2, 0)
-const GOLD := Vector2i(6, 1)
+const GEM := Vector2i(0, 2)       ## silver-white in the knight and barbarian atlases; never team-coloured
+## Gold sits in a different cell of each KayKit atlas (sampled: #eac253, #d09745, #ff7c1b).
+const GOLD_BY_ATLAS := {knight = Vector2i(4, 1), barbarian = Vector2i(1, 2), rogue = Vector2i(1, 3)}
 
 
-static func build(name: String) -> Array:
+## `atlas` is the KayKit atlas the prop will be textured from.
+static func build(name: String, atlas: String) -> Array:
+	var GOLD: Vector2i = GOLD_BY_ATLAS[atlas]
 	var m := Builder.new()
 	match name:
 		"musket":
@@ -37,6 +41,14 @@ static func build(name: String) -> Array:
 			for side in [-1.0, 1.0]:
 				m.cylinder(Vector3(side * 0.36, 0.42, 0.15), Vector3(side * 0.5, 0.42, 0.15), 0.42, 14, WOOD)
 				m.cylinder(Vector3(side * 0.34, 0.42, 0.15), Vector3(side * 0.52, 0.42, 0.15), 0.12, 8, STEEL)
+		"crown":
+			# Sits on the head: a gold band with five spikes, each tipped with a gem.
+			m.cylinder(Vector3(0, 0.0, 0), Vector3(0, 0.22, 0), 0.42, 14, GOLD)
+			for k in 5:
+				var a := TAU * k / 5.0
+				var o := Vector3(cos(a), 0.0, sin(a)) * 0.36
+				m.box(o + Vector3(0, 0.34, 0), Vector3(0.13, 0.26, 0.13), GOLD)
+				m.box(o + Vector3(0, 0.52, 0), Vector3(0.11, 0.11, 0.11), GEM)
 		_:
 			push_error("unknown prop %s" % name)
 	return m.arrays()

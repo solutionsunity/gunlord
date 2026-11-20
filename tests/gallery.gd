@@ -3,7 +3,8 @@ extends SceneTree
 ## playing the role given (default: its first clip), to build/gallery.png.
 ##   xvfb-run godot --path . --rendering-driver opengl3 --resolution 1280x720 -s tests/gallery.gd -- shoot 0.3
 
-const MODELS := [&"crossbowman", &"gunner", &"gatlinger", &"cannon", &"knight", &"rogue", &"barbarian"]
+const MODELS := [&"crossbowman", &"gunner", &"gatlinger", &"cannon", &"knight", &"rogue", &"barbarian", &"warlord"]
+const WARLORD_TINT := Color("5c0d18")
 const TEAMS := [Color("2f6fe0"), Color("c8302c")]
 
 var _frames := 0
@@ -22,8 +23,8 @@ func _init() -> void:
 			stage.add_child(crowd)
 			var clip: StringName = role if bake.clips.has(role) else bake.clips.keys()[0]
 			crowd.begin()
-			crowd.add(Vector3((i - 3) * 1.6, 0, row * 2.2), PI * row, Vector3.ONE / bake.height * 1.3,
-					Color(TEAMS[row], 0.0), bake.custom(clip, -at))
+			crowd.add(Vector3((i - 3.5) * 1.5, 0, row * 2.2), PI * row, Vector3.ONE / bake.height * 1.3,
+					Color(WARLORD_TINT if MODELS[i] == &"warlord" and row == 1 else TEAMS[row], 0.0), bake.custom(clip, -at))
 			crowd.end()
 			(crowd.material_override as ShaderMaterial).set_shader_parameter(&"clock", 0.0)
 	var cam := Camera3D.new()

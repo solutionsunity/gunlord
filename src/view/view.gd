@@ -133,7 +133,7 @@ func _draw_lane(lane: Lane, squad: Squad) -> void:
 		var hit := lane.hit_age[i] < FLASH
 		if d.enemy:
 			# Bosses are under fire for seconds at a time: a full flash would wash them white.
-			var color := Color(ENEMY_TEAM, (0.2 if d.persistent else 0.55) if hit else 0.0)
+			var color := Color(_enemy_team(d.tint), (0.2 if d.persistent else 0.55) if hit else 0.0)
 			var role := &"attack" if d.persistent and lane.z[i] >= front - d.radius - 0.05 else &"advance"
 			_character(d.model, Vector3(lane.x[i], 0.0, lane.z[i]), PI, d.size, color, role, -lane.serial[i] * 0.29)
 		else:
@@ -154,6 +154,10 @@ func _draw_lane(lane: Lane, squad: Squad) -> void:
 	_pedestals.end()
 	for i in range(nl, LABELS):
 		_labels[i].visible = false
+
+
+func _enemy_team(tint: Color) -> Color:
+	return tint if tint.a > 0.0 else ENEMY_TEAM
 
 
 ## A glass panel for unit blocks, multipliers and traps; a stone pedestal
@@ -245,7 +249,7 @@ func _drain_events(b: Battle) -> void:
 			&"death":
 				if _corpses.size() == CORPSES:
 					_corpses.pop_front()
-				var team := ENEMY_TEAM if e.enemy else PLAYER_TEAM
+				var team := _enemy_team(e.tint) if e.enemy else PLAYER_TEAM
 				_corpses.append({model = e.model, at = e.at, yaw = PI if e.enemy else 0.0, size = e.size,
 						color = Color(team, 0.0), age = 0.0})
 				if not e.enemy:

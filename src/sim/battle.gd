@@ -20,7 +20,7 @@ var shots := Shots.new()
 var grid := Grid.new()
 ## Presentation events for the view, which drains them each frame. Kinds:
 ##   payout {at, text, color, tone}       tone: gain, loss, max or boost
-##   death  {at, model, size, enemy}   one per fallen soldier on either side
+##   death  {at, model, size, enemy, tint}   one per fallen soldier on either side
 ##   fire   {at, weapon}               one per shot (a spread counts once)
 ##   hit    {at, weapon, splash, target}  one per projectile impact; target is the ObjectDef hit
 ##   end    {won}                         once, when the battle is decided
@@ -141,13 +141,15 @@ func _lose(n: int) -> void:
 	for k in range(total - 1, maxi(total - n, 0) - 1, -1):
 		var p := squad.unit_position(k)
 		var wd := squad.weapons[squad.weapon_at(k)]
-		events.append({kind = &"death", at = Vector3(p.x, 0.0, p.y), model = wd.model, size = wd.size, enemy = false})
+		events.append({kind = &"death", at = Vector3(p.x, 0.0, p.y), model = wd.model, size = wd.size, enemy = false,
+				tint = Color(0, 0, 0, 0)})
 	squad.remove_outer(n)
 
 
 func _enemy_died(i: int) -> void:
 	var d := lane.def[i]
-	events.append({kind = &"death", at = Vector3(lane.x[i], 0.0, lane.z[i]), model = d.model, size = d.size, enemy = true})
+	events.append({kind = &"death", at = Vector3(lane.x[i], 0.0, lane.z[i]), model = d.model, size = d.size, enemy = true,
+			tint = d.tint})
 
 
 func _callout(at: Vector3, text: String, color: Color, tone: StringName) -> void:

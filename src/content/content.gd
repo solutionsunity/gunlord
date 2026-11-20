@@ -43,7 +43,8 @@ static func objects() -> Dictionary:
 		}),
 		_object(&"warlord", {
 			enemy = true, hp = 2000.0, radius = 1.6, walk = 0.2, seek = 2.0, contact_kills = 6.0,
-			persistent = true, final = true, color = Color("3a0d0d"), size = 3.4, model = &"barbarian",
+			persistent = true, final = true, color = Color("3a0d0d"), size = 3.4, model = &"warlord",
+			tint = Color("5c0d18"),
 		}),
 		_object(&"recruits", {
 			hp = 4.0, radius = 0.9, payout = ObjectDef.Payout.ADD_UNITS, amount = 3.0, weapon = &"crossbow",
