@@ -1,6 +1,7 @@
 extends SceneTree
-## Plays Level 01 headless under simple steering policies and prints how each
-## run ends. A balance probe: a good policy should win, a careless one lose.
+## Plays every level headless under simple steering policies and prints how
+## each run ends. A balance probe: on every level the sweeping bot should win
+## and the idle one lose, and the sweeper's margin should shrink level by level.
 ##   godot --headless --path . -s tests/simulate.gd
 
 const DT := 1.0 / 60.0
@@ -8,8 +9,14 @@ const TIME_LIMIT := 240.0
 
 
 func _init() -> void:
+	for index in Levels.count():
+		_play(index)
+	quit()
+
+
+func _play(index: int) -> void:
 	for policy in [&"idle", &"sweep", &"greedy"]:
-		var b := Battle.new(Content.weapons(), Content.objects(), Level01.build())
+		var b := Battle.new(Content.weapons(), Content.objects(), Levels.build(index))
 		var started := Time.get_ticks_usec()
 		var ticks := 0
 		var max_shots := 0
@@ -22,10 +29,9 @@ func _init() -> void:
 			max_shots = maxi(max_shots, b.shots.size())
 			max_objects = maxi(max_objects, b.lane.size())
 		var ms := (Time.get_ticks_usec() - started) / 1000.0 / ticks
-		print("%-7s %-7s t=%5.1fs wave=%2d units=%4d peak=%4d %s | objs<=%d shots<=%d %.3f ms/tick" % [
-			policy, Battle.State.keys()[b.state], b.time, b.wave, b.squad.total(), b.peak_units,
+		print("L%d %-7s %-7s t=%5.1fs wave=%2d units=%4d peak=%4d %s | objs<=%d shots<=%d %.3f ms/tick" % [
+			index + 1, policy, Battle.State.keys()[b.state], b.time, b.wave, b.squad.total(), b.peak_units,
 			_mix(b), max_objects, max_shots, ms])
-	quit()
 
 
 func _steer(policy: StringName, b: Battle) -> void:

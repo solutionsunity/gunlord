@@ -2,7 +2,7 @@ extends SceneTree
 ## Where on the lane does combat happen? Plays Level 01 under the sweeping bot
 ## and reports the distance at which enemies die, and how long each boss lives
 ## once it is in range of the squad.
-##   godot --headless --path . -s tests/engagement.gd
+##   godot --headless --path . -s tests/engagement.gd -- <level number, default 2>
 
 const DT := 1.0 / 60.0
 
@@ -19,7 +19,9 @@ class Probe extends Battle:
 
 
 func _init() -> void:
-	var b := Probe.new(Content.weapons(), Content.objects(), Level01.build())
+	var args := OS.get_cmdline_user_args()
+	var index := int(args[0]) - 1 if not args.is_empty() else 1
+	var b := Probe.new(Content.weapons(), Content.objects(), Levels.build(index))
 	while b.state == Battle.State.RUNNING and b.time < 240.0:
 		b.squad.target_x = sin(b.time * 0.8) * Squad.EDGE
 		_track_bosses(b)

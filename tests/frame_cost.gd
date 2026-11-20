@@ -12,12 +12,17 @@ var _sizes := PackedInt32Array()
 
 func _init() -> void:
 	_main = load("res://main.tscn").instantiate()
+	_main._progress = Progress.new()   # tests start fresh and never save
+	_main._progress.path = ""
 	root.add_child(_main)
 	_main.set_physics_process(false)
 	_main.set_process(false)
 
 
 func _process(delta: float) -> bool:
+	if _main._battle == null:
+		_main.start_level(4)   # the game opens on the menu
+		return false
 	var b: Battle = _main._battle
 	b.squad.target_x = sin(b.time * 0.8) * Squad.EDGE
 	var t0 := Time.get_ticks_usec()

@@ -1,7 +1,9 @@
 class_name Hud
 extends CanvasLayer
-## Timer and wave chips, squad size with its capacity bar, the weapon mix,
-## the nearest boss's health bar, and the end-of-run banner.
+## Pause button, timer and wave chips, squad size with its capacity bar, the
+## weapon mix and the nearest boss's health bar.
+
+signal pause_pressed
 
 const FONT := preload("res://assets/third_party/lilita-one/LilitaOne-Regular.ttf")
 const INK := Color(0.07, 0.09, 0.16)
@@ -15,7 +17,6 @@ var _mix: HBoxContainer
 var _boss: Control
 var _boss_name: Label
 var _boss_bar: ProgressBar
-var _banner: Label
 
 
 func _ready() -> void:
@@ -25,6 +26,19 @@ func _ready() -> void:
 	top.offset_right = -20
 	top.offset_top = 20
 	add_child(top)
+	var pause := Button.new()
+	pause.text = "II"
+	pause.custom_minimum_size = Vector2(64, 56)
+	pause.add_theme_font_override("font", FONT)
+	pause.add_theme_font_size_override("font_size", 30)
+	var box := StyleBoxFlat.new()
+	box.bg_color = Color(INK, 0.6)
+	box.set_corner_radius_all(14)
+	for state in ["normal", "hover", "pressed", "focus"]:
+		pause.add_theme_stylebox_override(state, box)
+	pause.pressed.connect(func() -> void: pause_pressed.emit())
+	top.add_child(pause)
+	top.add_theme_constant_override("separation", 10)
 	_clock = _chip(top, 36)
 	var gap := Control.new()
 	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -56,17 +70,9 @@ func _ready() -> void:
 	_mix.add_theme_constant_override("separation", 10)
 	add_child(_mix)
 
-	_banner = Label.new()
-	_style(_banner, 76, Color.WHITE)
-	_banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_banner.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	_banner.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_banner.grow_vertical = Control.GROW_DIRECTION_BOTH
-	add_child(_banner)
-
 
 func draw(b: Battle) -> void:
-	var left := maxf(Battle.DURATION - b.time, 0.0)
+	var left := maxf(b.level.duration - b.time, 0.0)
 	_clock.text = "%d:%02d" % [int(left) / 60, int(left) % 60]
 	_wave.text = "WAVE %d/%d" % [b.wave, b.waves]
 	var total := b.squad.total()
@@ -76,13 +82,6 @@ func draw(b: Battle) -> void:
 	(_fill.get_theme_stylebox("fill") as StyleBoxFlat).bg_color = Color("f5c542") if total >= b.squad.capacity else Color("4d8df7")
 	_draw_mix(b.squad)
 	_draw_boss(b.lane)
-	match b.state:
-		Battle.State.WON:
-			_banner.text = "VICTORY\npeak %d\ntap to replay" % b.peak_units
-		Battle.State.LOST:
-			_banner.text = "DEFEAT\nwave %d\ntap to retry" % b.wave
-		_:
-			_banner.text = ""
 
 
 func _draw_mix(squad: Squad) -> void:

@@ -68,6 +68,22 @@ func _ready() -> void:
 		_callout_age.append(CALLOUT_LIFE)
 
 
+## Clears everything that belongs to a battle: crowds, corpses, effects, labels.
+func reset() -> void:
+	_corpses.clear()
+	_fx.clear()
+	_trauma = 0.0
+	freeze = 0.0
+	for c in get_children():
+		if c is Crowd:
+			c.begin()
+			c.end()
+	for l in _labels + _callouts:
+		l.visible = false
+	for i in CALLOUTS:
+		_callout_age[i] = CALLOUT_LIFE
+
+
 ## Loads every character kind up front, so none loads mid-battle.
 func prepare(models: Array[StringName]) -> void:
 	for model in models:

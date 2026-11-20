@@ -24,6 +24,7 @@ the game still runs, with placeholder capsules.
 | Bake crowd characters to `assets/baked/` | `godot --headless --path . -s tools/bake_crowd.gd` |
 | Model gallery to `build/gallery.png` | `xvfb-run godot --path . --rendering-driver opengl3 --resolution 1280x720 -s tests/gallery.gd -- shoot 0.3` |
 | Squad close-up at time T to `build/` | `xvfb-run godot --path . --rendering-driver opengl3 --resolution 720x1280 --fixed-fps 60 -s tests/closeup.gd -- T` |
+| Menu, every level's stage and the results screen to `build/` | `xvfb-run godot --path . --rendering-driver opengl3 --resolution 720x1280 --fixed-fps 60 -s tests/screens.gd` |
 | Render frames to `build/` | `xvfb-run godot --path . --rendering-driver opengl3 --resolution 720x1280 --fixed-fps 60 -s tests/screenshot.gd` |
 | Web build | `godot --headless --path . --export-release Web build/web/index.html`, then serve `build/web/` |
 

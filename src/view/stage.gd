@@ -10,8 +10,26 @@ const NEAR_Z := 14.0
 const FAR_Z := -60.0
 const WATER_Y := -1.8
 
+## Time of day per level: sky, sun, ambient light and water colours.
+const THEMES := {
+	dawn = {top = "6f8fd0", horizon = "f3c9a8", sun = "ffd0a0", energy = 0.7, pitch = -24.0, yaw = -60.0,
+			ambient = 0.45, deep = "123a5c", shallow = "4a7fa0"},
+	noon = {top = "4d8fd6", horizon = "bfe0f5", sun = "fff3e0", energy = 0.75, pitch = -52.0, yaw = -35.0,
+			ambient = 0.4, deep = "082a54", shallow = "1a618f"},
+	afternoon = {top = "4a7fc8", horizon = "e6e0c8", sun = "ffe6b8", energy = 0.75, pitch = -38.0, yaw = 25.0,
+			ambient = 0.4, deep = "0a2c50", shallow = "2a6688"},
+	dusk = {top = "34407e", horizon = "f08a5a", sun = "ff9a5c", energy = 0.65, pitch = -18.0, yaw = 40.0,
+			ambient = 0.35, deep = "1a1e44", shallow = "6a4a66"},
+	night = {top = "0a1230", horizon = "2a3a6a", sun = "9fb4ff", energy = 0.45, pitch = -55.0, yaw = 30.0,
+			ambient = 0.3, deep = "040c22", shallow = "142a4a"},
+}
+
 var camera: Camera3D
 var camera_home: Transform3D           ## where the camera rests; shake offsets from here
+var _sun: DirectionalLight3D
+var _sky: ProceduralSkyMaterial
+var _env: Environment
+var _water_mat: ShaderMaterial
 
 
 func _ready() -> void:
@@ -23,6 +41,7 @@ func _ready() -> void:
 	_dividers()
 	_towers()
 	_gatehouse()
+	apply_theme(&"noon")
 
 
 func _camera() -> void:
@@ -34,31 +53,38 @@ func _camera() -> void:
 	camera_home = camera.transform
 
 
-func _light() -> void:
-	var sun := DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-52, -35, 0)
-	sun.light_energy = 0.75
-	sun.light_color = Color("fff3e0")
-	sun.shadow_enabled = true
-	sun.directional_shadow_max_distance = 80.0
-	add_child(sun)
+## Sets the time of day: one of THEMES.
+func apply_theme(theme: StringName) -> void:
+	var t: Dictionary = THEMES[theme]
+	_sky.sky_top_color = Color(t.top)
+	_sky.sky_horizon_color = Color(t.horizon)
+	_sky.ground_horizon_color = Color(t.horizon)
+	_sky.ground_bottom_color = Color(t.deep)
+	_sun.light_color = Color(t.sun)
+	_sun.light_energy = t.energy
+	_sun.rotation_degrees = Vector3(t.pitch, t.yaw, 0)
+	_env.ambient_light_energy = t.ambient
+	_water_mat.set_shader_parameter(&"deep", Color(t.deep))
+	_water_mat.set_shader_parameter(&"shallow", Color(t.shallow))
 
-	var sky_mat := ProceduralSkyMaterial.new()
-	sky_mat.sky_top_color = Color("4d8fd6")
-	sky_mat.sky_horizon_color = Color("bfe0f5")
-	sky_mat.ground_horizon_color = Color("bfe0f5")
-	sky_mat.ground_bottom_color = Color("2a5d8f")
+
+func _light() -> void:
+	_sun = DirectionalLight3D.new()
+	_sun.shadow_enabled = true
+	_sun.directional_shadow_max_distance = 80.0
+	add_child(_sun)
+
+	_sky = ProceduralSkyMaterial.new()
 	var sky := Sky.new()
-	sky.sky_material = sky_mat
-	var env := Environment.new()
-	env.background_mode = Environment.BG_SKY
-	env.sky = sky
-	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	env.ambient_light_energy = 0.4
-	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	env.tonemap_exposure = 0.9
+	sky.sky_material = _sky
+	_env = Environment.new()
+	_env.background_mode = Environment.BG_SKY
+	_env.sky = sky
+	_env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
+	_env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	_env.tonemap_exposure = 0.9
 	var we := WorldEnvironment.new()
-	we.environment = env
+	we.environment = _env
 	add_child(we)
 
 
@@ -79,9 +105,9 @@ func _water() -> void:
 	plane.size = Vector2(160, 200)
 	plane.subdivide_width = 1
 	plane.subdivide_depth = 1
-	var mat := ShaderMaterial.new()
-	mat.shader = preload("res://src/view/water.gdshader")
-	plane.material = mat
+	_water_mat = ShaderMaterial.new()
+	_water_mat.shader = preload("res://src/view/water.gdshader")
+	plane.material = _water_mat
 	var mi := MeshInstance3D.new()
 	mi.mesh = plane
 	mi.position = Vector3(0, WATER_Y, -30)

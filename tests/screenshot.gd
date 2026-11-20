@@ -14,11 +14,16 @@ var _armed := false
 func _init() -> void:
 	DirAccess.make_dir_recursive_absolute("res://build")
 	_main = load("res://main.tscn").instantiate()
+	_main._progress = Progress.new()   # tests start fresh and never save
+	_main._progress.path = ""
 	root.add_child(_main)
 	RenderingServer.render_loop_enabled = false
 
 
 func _process(_delta: float) -> bool:
+	if _main._battle == null:
+		_main.start_level(1)   # the game opens on the menu
+		return false
 	var b: Battle = _main._battle
 	b.squad.target_x = sin(b.time * 0.8) * Squad.EDGE
 	if _armed:

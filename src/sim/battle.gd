@@ -6,13 +6,13 @@ extends RefCounted
 
 enum State { RUNNING, WON, LOST }
 
-const DURATION := 90.0       ## the clock paces the waves; it does not decide the result
 const START_UNITS := 10
 
 var state := State.RUNNING
 var time := 0.0
 var wave := 0
 var waves := 0
+var level: Level
 var peak_units := 0
 var squad: Squad
 var lane := Lane.new()
@@ -32,8 +32,9 @@ var _next := 0
 var _weapon_index := {}
 
 
-func _init(roster: Array[WeaponDef], objects: Dictionary, level: Level) -> void:
+func _init(roster: Array[WeaponDef], objects: Dictionary, p_level: Level) -> void:
 	_objects = objects
+	level = p_level
 	_timeline = level.timeline
 	waves = level.waves
 	for w in roster.size():
@@ -45,7 +46,7 @@ func _init(roster: Array[WeaponDef], objects: Dictionary, level: Level) -> void:
 
 ## The lane's own speed is the main difficulty dial.
 func lane_speed() -> float:
-	return 3.0 + time * 0.02
+	return level.speed + time * level.accel
 
 
 func tick(dt: float) -> void:

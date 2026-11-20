@@ -2,9 +2,15 @@ class_name Level
 extends RefCounted
 ## One level as data: its spawn timeline and the rules that frame it.
 
+var index := 0
+var name := ""
+var theme: StringName                  ## the stage's time of day
 var timeline: Array[Dictionary] = []   ## spawn events sorted by time
 var waves := 0
 var capacity := 0                      ## the squad's maximum size
+var duration := 90.0                   ## the clock; it paces the waves, it does not decide the result
+var speed := 3.0                       ## lane speed at the start, m/s
+var accel := 0.02                      ## lane speed added per second: the main difficulty dial
 
 
 func _init(p_timeline: Array[Dictionary], p_waves: int, p_capacity: int) -> void:

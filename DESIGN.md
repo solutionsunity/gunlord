@@ -117,6 +117,23 @@ Modifiers apply to the whole squad or to one weapon type (`ATK +20%`,
   blocks late and tough.
 - Themed lanes (bridge, towers…) change the setting and the lane layout, not
   the rules.
+- The campaign is five levels, each a spec turned into a timeline by one
+  generator (`src/content/levels.gd`). Each level has its own time of day:
+
+  | # | Level | Time | Character |
+  |---|---|---|---|
+  | 1 | Riverbridge | dawn | 12 waves, no runners or brutes; learn the lanes |
+  | 2 | Old Crossing | noon | the full mix: 20 waves, a brute every 5 |
+  | 3 | Runners' Gauntlet | afternoon | lighter horde, many runners, more traps |
+  | 4 | Brute Bridge | dusk | a brute every 4 waves, cannons early |
+  | 5 | Warlord's Gate | night | everything, faster, a 5,200 hp warlord |
+
+  Calibration (`tests/simulate.gd`): on every level the sweeping bot wins and
+  the careless bots lose. The sweeper keeps 87%, 72%, 55%, 35% and 21% of
+  capacity on levels 1–5.
+- Flow: the level menu, then the battle (with pause), then results with next,
+  replay or retry, and levels. Winning a level unlocks the next. Progress and
+  the best result per level stay on the device (`user://progress.cfg`).
 - Win: kill the final brute. Lose: the unit count reaches 0. The clock sets the
   pace of the waves; it does not decide the result.
 - Pacing rule: challenge grows linearly and rewards grow exponentially. Lane
@@ -263,3 +280,6 @@ Peak scene: 120 squad + ~300 enemies + ~1,500 projectiles.
 | 17 | Crowds cast blob shadows, not real shadows               | Active |
 | 18 | The base weapon is a crossbow (matches the art); id `bow` is renamed `crossbow` | Active |
 | 19 | At capacity, weapon crates swap base units one-for-one   | Active |
+| 20 | Five-level campaign from one generator; a time of day per level | Active |
+| 21 | Progress (unlocks, best result) is the only state kept between runs, on the device | Active |
+| 22 | Sound: weapons and drums synthesized in code; impacts, UI and jingles from Kenney (CC0) | Active |
