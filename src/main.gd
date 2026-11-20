@@ -8,11 +8,13 @@ const KEY_SPEED := 14.0     ## metres per second when steering with keys
 var _battle: Battle
 var _view := View.new()
 var _hud := Hud.new()
+var _sound := Sound.new()
 
 
 func _ready() -> void:
 	add_child(_view)
 	add_child(_hud)
+	add_child(_sound)
 	var models: Array[StringName] = []
 	for w in Content.weapons():
 		models.append(w.model)
@@ -24,6 +26,8 @@ func _ready() -> void:
 
 func _start() -> void:
 	_battle = Battle.new(Content.weapons(), Content.objects(), Level01.build())
+	_sound.play(&"start")
+	_sound.music(true)
 
 
 func _physics_process(delta: float) -> void:
@@ -36,6 +40,8 @@ func _physics_process(delta: float) -> void:
 
 func _process(delta: float) -> void:
 	_view.draw(_battle, delta)
+	_sound.hear(_battle)
+	_battle.events.clear()
 	_hud.draw(_battle)
 
 

@@ -19,11 +19,12 @@ var lane := Lane.new()
 var shots := Shots.new()
 var grid := Grid.new()
 ## Presentation events for the view, which drains them each frame. Kinds:
-##   payout {at, text, color}
+##   payout {at, text, color, tone}       tone: gain, loss, max or boost
 ##   death  {at, model, size, enemy}   one per fallen soldier on either side
 ##   fire   {at, weapon}               one per shot (a spread counts once)
-##   hit    {at, weapon, splash}       one per projectile impact
-var events: Array[Dictionary] = []
+##   hit    {at, weapon, splash, target}  one per projectile impact; target is the ObjectDef hit
+##   end    {won}                         once, when the battle is decided
+var events: Array[Dictionary] = []   ## cleared by whoever runs the battle, after every reader has seen them
 
 var _objects: Dictionary
 var _timeline: Array[Dictionary]
@@ -64,6 +65,8 @@ func tick(dt: float) -> void:
 	peak_units = maxi(peak_units, squad.total())
 	if state == State.RUNNING and squad.total() == 0:
 		state = State.LOST
+	if state != State.RUNNING:
+		events.append({kind = &"end", won = state == State.WON})
 
 
 func _spawn() -> void:
@@ -105,16 +108,18 @@ func _payouts() -> void:
 		match d.payout:
 			ObjectDef.Payout.ADD_UNITS:
 				var added := squad.enlist(_weapon_index[d.weapon], int(n))
-				_callout(at, d.caption_for(n) if added == int(n) else "MAX", d.color)
+				var full := added < int(n)
+				_callout(at, "MAX" if full else d.caption_for(n), d.color, &"max" if full else &"gain")
 			ObjectDef.Payout.MULTIPLY:
 				var grown := squad.multiply(_weapon_index[d.weapon], n)
-				_callout(at, "+%d" % grown if grown > 0 or squad.total() < squad.capacity else "MAX", d.color)
+				var full := grown == 0 and squad.total() >= squad.capacity
+				_callout(at, "MAX" if full else "+%d" % grown, d.color, &"max" if full else &"gain")
 			ObjectDef.Payout.REMOVE_UNITS:
 				_lose(int(n))
-				_callout(at, d.caption_for(n), d.color)
+				_callout(at, d.caption_for(n), d.color, &"loss")
 			ObjectDef.Payout.DAMAGE_BONUS:
 				squad.damage_mult += n
-				_callout(at, d.caption_for(n), d.color)
+				_callout(at, d.caption_for(n), d.color, &"boost")
 		if d.final:
 			state = State.WON
 
@@ -122,9 +127,9 @@ func _payouts() -> void:
 func _shot_events() -> void:
 	for k in range(0, shots.fired.size(), 3):
 		events.append({kind = &"fire", at = Vector3(shots.fired[k], 0.0, shots.fired[k + 1]), weapon = int(shots.fired[k + 2])})
-	for k in range(0, shots.impacts.size(), 4):
+	for k in range(0, shots.impacts.size(), 5):
 		events.append({kind = &"hit", at = Vector3(shots.impacts[k], 0.0, shots.impacts[k + 1]),
-				weapon = int(shots.impacts[k + 2]), splash = shots.impacts[k + 3]})
+				weapon = int(shots.impacts[k + 2]), splash = shots.impacts[k + 3], target = lane.def[int(shots.impacts[k + 4])]})
 	shots.fired.clear()
 	shots.impacts.clear()
 
@@ -144,5 +149,5 @@ func _enemy_died(i: int) -> void:
 	events.append({kind = &"death", at = Vector3(lane.x[i], 0.0, lane.z[i]), model = d.model, size = d.size, enemy = true})
 
 
-func _callout(at: Vector3, text: String, color: Color) -> void:
-	events.append({kind = &"payout", at = at, text = text, color = color})
+func _callout(at: Vector3, text: String, color: Color, tone: StringName) -> void:
+	events.append({kind = &"payout", at = at, text = text, color = color, tone = tone})

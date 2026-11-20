@@ -238,7 +238,6 @@ func _drain_events(b: Battle) -> void:
 					_trauma = 1.0
 					freeze = 0.12
 					_spark(e.at + Vector3(0, 1.0, 0), Color(1.0, 0.75, 0.3), 1.5, 7.0, 0.6)
-	b.events.clear()
 
 
 ## Fallen soldiers play their death once, lie still, then sink into the deck.

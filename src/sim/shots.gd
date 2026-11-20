@@ -15,7 +15,7 @@ var weapon := PackedInt32Array()
 var last_hit := PackedInt32Array()   ## serial of the last object hit, so a piercing shot hits each object once
 var hits_traps := PackedByteArray()  ## only straight shots can claim a trap
 var fired := PackedFloat32Array()    ## this tick's shots: x, z, weapon per shot
-var impacts := PackedFloat32Array()  ## this tick's hits: x, z, weapon, splash per hit
+var impacts := PackedFloat32Array()  ## this tick's hits: x, z, weapon, splash, lane index per hit
 var _rng := RandomNumberGenerator.new()
 
 
@@ -61,7 +61,7 @@ func advance(dt: float, lane: Lane, grid: Grid) -> void:
 			var hit := grid.first_hit(lane, x[i], z[i], last_hit[i], hits_traps[i] == 1)
 			if hit >= 0:
 				lane.damage(hit, damage[i])
-				impacts.append_array([x[i], z[i], float(weapon[i]), splash[i]])
+				impacts.append_array([x[i], z[i], float(weapon[i]), splash[i], float(hit)])
 				if splash[i] > 0.0:
 					lane.splash(lane.x[hit], lane.z[hit], splash[i], damage[i] * 0.5, hit)
 				last_hit[i] = lane.serial[hit]
