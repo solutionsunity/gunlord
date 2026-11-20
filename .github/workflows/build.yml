@@ -1,0 +1,144 @@
+# Builds the game on every push to main and publishes it:
+#   web     -> GitHub Pages (play in any browser, phones included)
+#   android -> signed APK as a workflow artifact; attached to a Release on tags v*
+# The crowd characters are baked here, so generated files never live in git.
+name: build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+env:
+  GODOT_VERSION: 4.7.2
+  GODOT: ./godot/Godot_v4.7.2-stable_linux.x86_64
+  TEMPLATES: ~/.local/share/godot/export_templates/4.7.2.stable
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.name }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Version
+        id: version
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then name="${GITHUB_REF_NAME#v}"; else name="0.1.${GITHUB_RUN_NUMBER}"; fi
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          sed -i "s/^version\/code=.*/version\/code=${GITHUB_RUN_NUMBER}/; s/^version\/name=.*/version\/name=\"$name\"/" export_presets.cfg
+
+      - name: Cache Godot
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            godot
+            templates
+          key: godot-${{ env.GODOT_VERSION }}-web-android
+
+      - name: Download Godot and the templates we use
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          base=https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable
+          mkdir -p godot templates
+          curl -sSfL -o godot.zip "$base/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip -d godot
+          curl -sSfL -o templates.tpz "$base/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          unzip -q -j templates.tpz templates/version.txt templates/web_nothreads_release.zip templates/android_release.apk -d templates
+          rm godot.zip templates.tpz
+
+      - name: Install templates
+        run: |
+          mkdir -p ${{ env.TEMPLATES }}
+          cp templates/* ${{ env.TEMPLATES }}/
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Point Godot at the Android SDK and Java
+        run: |
+          mkdir -p ~/.config/godot
+          cat > ~/.config/godot/editor_settings-4.7.tres <<SETTINGS
+          [gd_resource type="EditorSettings" format=3]
+
+          [resource]
+          export/android/android_sdk_path = "$ANDROID_SDK_ROOT"
+          export/android/java_sdk_path = "$JAVA_HOME"
+          SETTINGS
+
+      - name: Import and bake crowd characters
+        run: |
+          $GODOT --headless --path . --import
+          $GODOT --headless --path . -s tools/bake_crowd.gd
+          test -f assets/baked/crossbowman.res
+
+      - name: Balance probe
+        run: $GODOT --headless --path . -s tests/simulate.gd | grep -E '^(idle|sweep|greedy)'
+
+      - name: Export web
+        run: |
+          mkdir -p build/web
+          $GODOT --headless --path . --export-release Web build/web/index.html
+          test -f build/web/index.pck
+
+      - name: Export Android
+        env:
+          GODOT_ANDROID_KEYSTORE_RELEASE_PATH: ${{ runner.temp }}/release.keystore
+          GODOT_ANDROID_KEYSTORE_RELEASE_USER: gunlord
+          GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > "$GODOT_ANDROID_KEYSTORE_RELEASE_PATH"
+          mkdir -p build/android
+          $GODOT --headless --path . --export-release Android build/android/gunlord.apk
+          test -f build/android/gunlord.apk
+          rm "$GODOT_ANDROID_KEYSTORE_RELEASE_PATH"
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gunlord-android-${{ steps.version.outputs.name }}
+          path: build/android/gunlord.apk
+
+  pages:
+    needs: export
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: export
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: gunlord-android-${{ needs.export.outputs.version }}
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mv gunlord.apk "gunlord-${{ needs.export.outputs.version }}.apk"
+          gh release create "$GITHUB_REF_NAME" "gunlord-${{ needs.export.outputs.version }}.apk" \
+            -R "$GITHUB_REPOSITORY" --title "Gunlord $GITHUB_REF_NAME" \
+            --notes "Android: install the APK (allow installs from unknown sources). Web: https://solutionsunity.github.io/gunlord/"

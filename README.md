@@ -2,6 +2,11 @@
 
 A portrait mobile crowd shooter. Design: [DESIGN.md](DESIGN.md). Research: [RESEARCH.md](RESEARCH.md).
 
+**Play in the browser:** https://solutionsunity.github.io/gunlord/ (phones too).
+**Android:** the signed APK from the latest [release](https://github.com/solutionsunity/gunlord/releases),
+or from the latest [build run](https://github.com/solutionsunity/gunlord/actions/workflows/build.yml).
+Every push to `main` rebuilds and redeploys both; a `v*` tag publishes a release.
+
 Requires Godot 4.7.
 
 First run: bake the crowd characters (generated, not committed). Without them
