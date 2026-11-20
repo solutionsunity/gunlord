@@ -25,7 +25,7 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.name }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Version
         id: version
@@ -36,7 +36,7 @@ jobs:
 
       - name: Cache Godot
         id: cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             godot
@@ -59,7 +59,7 @@ jobs:
           mkdir -p ${{ env.TEMPLATES }}
           cp templates/* ${{ env.TEMPLATES }}/
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: "17"
@@ -102,11 +102,11 @@ jobs:
           test -f build/android/gunlord.apk
           rm "$GODOT_ANDROID_KEYSTORE_RELEASE_PATH"
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: build/web
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: gunlord-android-${{ steps.version.outputs.name }}
           path: build/android/gunlord.apk
@@ -122,7 +122,7 @@ jobs:
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - id: deploy
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
 
   release:
     if: startsWith(github.ref, 'refs/tags/v')
@@ -131,7 +131,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: gunlord-android-${{ needs.export.outputs.version }}
       - name: Publish release
