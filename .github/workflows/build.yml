@@ -82,7 +82,7 @@ jobs:
           test -f assets/baked/crossbowman.res
 
       - name: Balance probe
-        run: $GODOT --headless --path . -s tests/simulate.gd | grep -E '^(idle|sweep|greedy)'
+        run: $GODOT --headless --path . -s tests/simulate.gd | grep -E '^L[0-9]+ '
 
       - name: Export web
         run: |
