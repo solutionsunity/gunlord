@@ -1,0 +1,10 @@
+Gunlord
+Copyright 2026 Solutions Unity
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+It bundles third-party assets under their own licenses, kept beside each pack
+in assets/third_party/ and listed in CREDITS.md:
+  - KayKit Adventurers Character Pack, Kay Lousberg (CC0 1.0)
+  - Castle Kit, Kenney (CC0 1.0)
+  - Lilita One font, Juan Montoreano (SIL Open Font License 1.1)
