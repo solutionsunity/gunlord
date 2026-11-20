@@ -31,6 +31,7 @@ var _frames: Crowd                 ## solid rims of the glass panels
 var _panels: Crowd                 ## translucent panel faces
 var _pedestals: Crowd
 var _projectiles := {}             ## projectile look -> Crowd
+var _streaks: Crowd                ## a glowing trail behind every projectile, so shots read at phone size
 var _font: FontFile
 var _glow: Crowd                   ## every flash, spark and blast: additive billboards
 var _fx: Array[Dictionary] = []    ## {at, color, from, to, life, age}
@@ -51,13 +52,14 @@ func _ready() -> void:
 	_placeholder = _primitive(_capsule(0.3, 1.0), CHARACTERS, false)
 	_font = load(FONT)
 	_glow = _billboards(FX)
+	_streaks = _trails(4000)
 	_frames = _primitive(_box(Vector3(PANEL.x + 0.16, PANEL.y + 0.16, PANEL.z * 0.6)), 200, false)
 	_panels = _glass(_box(PANEL), 200)
 	_pedestals = _kit_crowd("tower-square-base", 64)
 	_projectiles = {
 		bolt = _arrows(4000),
-		tracer = _primitive(_box(Vector3(0.07, 0.07, 0.9)), 4000, true),
-		ball = _primitive(_sphere(0.2), 400, false),
+		tracer = _primitive(_box(Vector3(0.14, 0.14, 1.4)), 4000, true),
+		ball = _primitive(_sphere(0.32), 400, false),
 	}
 	for i in LABELS:
 		_labels.append(_label(40))
@@ -155,10 +157,18 @@ func _pickup(d: ObjectDef, at: Vector3, hit: bool) -> void:
 func _draw_shots(shots: Shots, weapons: Array[WeaponDef]) -> void:
 	for look in _projectiles:
 		_projectiles[look].begin()
+	_streaks.begin()
 	for i in shots.size():
 		var wd := weapons[shots.weapon[i]]
 		var crowd: Crowd = _projectiles.get(wd.projectile, _projectiles.tracer)
-		crowd.add(Vector3(shots.x[i], 0.6, shots.z[i]), atan2(shots.vx[i], shots.vz[i]), Vector3.ONE, wd.color.lightened(0.45))
+		var at := Vector3(shots.x[i], 0.6, shots.z[i])
+		var yaw := atan2(shots.vx[i], shots.vz[i])
+		crowd.add(at, yaw, Vector3.ONE, wd.color.lightened(0.45))
+		# The trail starts at the projectile and stretches back along its path.
+		var back := Vector3(shots.vx[i], 0.0, shots.vz[i]).normalized() * -1.3
+		var wide := 1.0 if wd.projectile == &"ball" else 0.6
+		_streaks.add(at + back, yaw, Vector3(wide, 1.0, 3.0), Color(wd.color.lightened(0.15), 0.95))
+	_streaks.end()
 	for look in _projectiles:
 		_projectiles[look].end()
 
@@ -201,13 +211,13 @@ func _drain_events(b: Battle) -> void:
 			&"fire":
 				var wd: WeaponDef = weapons[e.weapon]
 				var big := wd.splash > 0.0
-				_spark(e.at + Vector3(0, 0.7, -0.35 * wd.size), wd.color.lightened(0.7), 0.6 if big else 0.35, 0.1, 0.07)
+				_spark(e.at + Vector3(0, 0.7, -0.35 * wd.size), wd.color.lightened(0.7), 1.6 if big else 0.8, 0.3, 0.09)
 			&"hit":
 				if e.splash > 0.0:
 					_spark(e.at + Vector3(0, 0.5, 0), Color(1.0, 0.55, 0.15), 0.8, e.splash * 2.2, 0.4)
 					_trauma = minf(_trauma + 0.12, 1.0)
 				else:
-					_spark(e.at + Vector3(0, 0.6, 0), Color(1.0, 0.9, 0.6), 0.2, 0.6, 0.14)
+					_spark(e.at + Vector3(0, 0.6, 0), Color(1.0, 0.9, 0.6), 0.5, 1.3, 0.18)
 			&"payout":
 				_spark(e.at, e.color.lightened(0.4), 0.6, 3.2, 0.45)
 				var label := _callouts[_next_callout]
@@ -349,6 +359,31 @@ func _billboards(capacity: int) -> Crowd:
 	return crowd
 
 
+## Flat streaks lying on the projectile's path: a soft oval, long along +Z.
+## Blended, not additive: additive light on the pale deck washes out to white.
+func _trails(capacity: int) -> Crowd:
+	var gradient := Gradient.new()
+	gradient.colors = PackedColorArray([Color.WHITE, Color(1, 1, 1, 0)])
+	var tex := GradientTexture2D.new()
+	tex.gradient = gradient
+	tex.fill = GradientTexture2D.FILL_RADIAL
+	tex.fill_from = Vector2(0.5, 0.5)
+	tex.fill_to = Vector2(0.5, 0.0)
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.vertex_color_use_as_albedo = true
+	mat.albedo_texture = tex
+	mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	var quad := PlaneMesh.new()
+	quad.size = Vector2.ONE
+	var crowd := Crowd.new(quad, capacity, mat)
+	crowd.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(crowd)
+	return crowd
+
+
 func _glass(mesh: Mesh, capacity: int) -> Crowd:
 	var mat := StandardMaterial3D.new()
 	mat.vertex_color_use_as_albedo = true
@@ -377,7 +412,7 @@ func _arrows(capacity: int) -> Crowd:
 	var scene: Node = load("res://assets/third_party/kaykit-adventurers/props/arrow.gltf").instantiate()
 	var mi: MeshInstance3D = scene.find_children("*", "MeshInstance3D", true, false)[0]
 	var arrays := mi.mesh.surface_get_arrays(0)
-	var turn := Basis(Vector3.RIGHT, PI / 2.0).scaled(Vector3.ONE * 0.8)
+	var turn := Basis(Vector3.RIGHT, PI / 2.0).scaled(Vector3.ONE * 1.8)
 	var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
 	var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
 	for k in verts.size():
