@@ -9,7 +9,9 @@ const float WRAP = 64.0; // CrowdClock.WRAP
 
 uniform sampler2D albedo : source_color, filter_linear_mipmap;
 uniform sampler2D team_mask : filter_nearest;
-uniform highp sampler2D positions : filter_nearest;
+uniform sampler2D positions : filter_nearest;   // 8 bits per axis within the bake's bounds
+uniform vec3 bounds_min;
+uniform vec3 bounds_size;
 uniform sampler2D normals : filter_nearest;
 uniform int width = 1;
 uniform int rows_per_frame = 1;
@@ -32,7 +34,7 @@ void vertex() {
 	int first = int(INSTANCE_CUSTOM.x + 0.5);
 	ivec2 t0 = texel(VERTEX_ID, first + f0);
 	ivec2 t1 = texel(VERTEX_ID, first + f1);
-	VERTEX = mix(texelFetch(positions, t0, 0).xyz, texelFetch(positions, t1, 0).xyz, a);
+	VERTEX = bounds_min + bounds_size * mix(texelFetch(positions, t0, 0).xyz, texelFetch(positions, t1, 0).xyz, a);
 	NORMAL = normalize(mix(texelFetch(normals, t0, 0).xyz, texelFetch(normals, t1, 0).xyz, a) * 2.0 - 1.0);
 	tint = COLOR;
 }

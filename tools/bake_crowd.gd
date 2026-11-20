@@ -132,18 +132,24 @@ func _bake(entry: Dictionary, rig: Node3D) -> CrowdBake:
 
 	var width := mini(count, MAX_WIDTH)
 	var rows := ceili(float(count) / width)
-	var pos_img := Image.create_empty(width, rows * frames.size(), false, Image.FORMAT_RGBAH)
-	var nrm_img := Image.create_empty(width, rows * frames.size(), false, Image.FORMAT_RGBA8)
+	# Positions are stored as 8 bits per axis within the bounds of every pose:
+	# a few millimetres of error at crowd scale, half the size of half floats.
 	var bounds := AABB((frames[0][0] as PackedVector3Array)[0], Vector3.ZERO)
+	for f in frames.size():
+		for p in frames[f][0] as PackedVector3Array:
+			bounds = bounds.expand(p)
+	bounds = bounds.grow(0.001)
+	var pos_img := Image.create_empty(width, rows * frames.size(), false, Image.FORMAT_RGB8)
+	var nrm_img := Image.create_empty(width, rows * frames.size(), false, Image.FORMAT_RGB8)
 	for f in frames.size():
 		var p: PackedVector3Array = frames[f][0]
 		var nn: PackedVector3Array = frames[f][1]
 		for v in count:
 			var at := Vector2i(v % width, f * rows + v / width)
-			pos_img.set_pixelv(at, Color(p[v].x, p[v].y, p[v].z, 1.0))
+			var q := (p[v] - bounds.position) / bounds.size
+			pos_img.set_pixelv(at, Color(q.x, q.y, q.z, 1.0))
 			var n3 := nn[v] * 0.5 + Vector3(0.5, 0.5, 0.5)
 			nrm_img.set_pixelv(at, Color(n3.x, n3.y, n3.z, 1.0))
-			bounds = bounds.expand(p[v])
 
 	var rest := []
 	rest.resize(Mesh.ARRAY_MAX)
@@ -168,6 +174,7 @@ func _bake(entry: Dictionary, rig: Node3D) -> CrowdBake:
 	bake.width = width
 	bake.rows_per_frame = rows
 	bake.clips = clips
+	bake.bounds = bounds
 	bake.height = bounds.end.y
 	return bake
 

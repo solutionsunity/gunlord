@@ -6,8 +6,9 @@ extends Resource
 ## Produced by tools/bake_crowd.gd.
 
 @export var mesh: ArrayMesh
-@export var positions: ImageTexture      ## RGBAH; a frame spans rows_per_frame rows of `width` texels
-@export var normals: ImageTexture        ## RGBA8, normal * 0.5 + 0.5, same layout
+@export var positions: ImageTexture      ## RGB8, position within `bounds`; a frame spans rows_per_frame rows of `width` texels
+@export var bounds := AABB()             ## every position the character takes, over all its clips
+@export var normals: ImageTexture        ## RGB8, normal * 0.5 + 0.5, same layout
 @export var albedo: Texture2D
 @export var team_mask: ImageTexture      ## one texel per atlas cell; 1 = takes the team colour
 @export var width := 0
@@ -32,4 +33,6 @@ func material() -> ShaderMaterial:
 	m.set_shader_parameter(&"normals", normals)
 	m.set_shader_parameter(&"width", width)
 	m.set_shader_parameter(&"rows_per_frame", rows_per_frame)
+	m.set_shader_parameter(&"bounds_min", bounds.position)
+	m.set_shader_parameter(&"bounds_size", bounds.size)
 	return m

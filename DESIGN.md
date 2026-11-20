@@ -192,8 +192,9 @@ the pack's license and source URL. `CREDITS.md` lists them.
   2. For each clip, step through frames at 15 fps. At each frame, skin the mesh
      on the CPU (`bake_mesh_from_current_skeleton_pose`) and transform any
      bone-attached props.
-  3. Write vertex positions and normals into textures, one texture row per
-     frame.
+  3. Write vertex positions (8 bits per axis within the character's bounds,
+     a few millimetres of error at crowd scale) and normals into textures,
+     one texture row per frame.
   4. Output the rest mesh, the textures and a clip table as resources.
 - **The shader** reads the clip and phase for each instance from
   `INSTANCE_CUSTOM`, and the team colour and hit flash from `COLOR`. It blends
@@ -242,7 +243,7 @@ Peak scene: 120 squad + ~300 enemies + ~1,500 projectiles.
 | View buffer writes | 1.3 ms median, 4.3 ms max | met |
 | Under 30 draw calls for crowds and projectiles | 7 characters + 3 projectile kinds + shadows + effects + pickups ≈ 16 | met |
 | Under ~2.5k vertices per baked character | 3.7k–4.6k | **open**: about 1.4M vertices per frame at peak; needs a device test, and mesh simplification (index-only, VAT unchanged) if it is too heavy |
-| Web download | 31 MB data + 39 MB engine | **open**: baked textures are uncompressed half floats |
+| Web download (gzip, as GitHub Pages serves it) | 8.4 MB data + 10.1 MB engine = 18.5 MB | met for now: positions are 8-bit within each character's bounds; the engine is the remaining bulk |
 
 ### Phases
 
