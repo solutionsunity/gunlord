@@ -112,6 +112,8 @@ jobs:
           path: build/android/gunlord.apk
 
   pages:
+    # Pages accepts deployments from main only; a tag points at a commit main already deployed.
+    if: github.ref == 'refs/heads/main'
     needs: export
     runs-on: ubuntu-latest
     permissions:
