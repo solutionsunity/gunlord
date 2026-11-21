@@ -9,6 +9,7 @@ const ENEMY_TEAM := Color("c8302c")
 const FLASH := 0.08
 const CHARACTERS := 1200           ## instance capacity per character kind
 const LABELS := 48
+const BADGES := 16
 const CALLOUTS := 24
 const CALLOUT_LIFE := 0.9
 const BAKED := "res://assets/baked/%s.res"
@@ -39,6 +40,7 @@ var _trauma := 0.0                 ## screen shake, 0..1; decays
 var _shake_time := 0.0
 var freeze := 0.0                  ## seconds of hit-stop requested; the game loop pauses the simulation
 var _labels: Array[Label3D] = []
+var _badges: Array[Sprite3D] = []  ## a pedestal's icon, above its numbers
 var _callouts: Array[Label3D] = []
 var _callout_age := PackedFloat32Array()
 var _next_callout := 0
@@ -63,6 +65,15 @@ func _ready() -> void:
 	}
 	for i in LABELS:
 		_labels.append(_label(40))
+	for i in BADGES:
+		var s := Sprite3D.new()
+		s.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		s.no_depth_test = true
+		s.pixel_size = 0.0055
+		s.render_priority = 1
+		s.visible = false
+		add_child(s)
+		_badges.append(s)
 	for i in CALLOUTS:
 		_callouts.append(_label(56))
 		_callout_age.append(CALLOUT_LIFE)
@@ -80,6 +91,8 @@ func reset() -> void:
 			c.end()
 	for l in _labels + _callouts:
 		l.visible = false
+	for s in _badges:
+		s.visible = false
 	for i in CALLOUTS:
 		_callout_age[i] = CALLOUT_LIFE
 
@@ -127,6 +140,7 @@ func _draw_lane(lane: Lane, squad: Squad) -> void:
 	_panels.begin()
 	_pedestals.begin()
 	var nl := 0
+	var nb := 0
 	var front := Squad.Z - squad.radius()
 	for i in lane.size():
 		var d := lane.def[i]
@@ -149,11 +163,18 @@ func _draw_lane(lane: Lane, squad: Squad) -> void:
 			label.text = hp if d.enemy else "%s\n%s" % [d.caption_for(lane.amount[i]), hp]
 			label.modulate = Color.WHITE if d.enemy else d.color.lightened(0.5)
 			nl += 1
+			if d.icon != &"" and nb < BADGES:
+				_badges[nb].texture = Ui.unit_icon(d.icon)
+				_badges[nb].position = label.position + Vector3(0, 1.6, 0)
+				_badges[nb].visible = true
+				nb += 1
 	_frames.end()
 	_panels.end()
 	_pedestals.end()
 	for i in range(nl, LABELS):
 		_labels[i].visible = false
+	for i in range(nb, BADGES):
+		_badges[i].visible = false
 
 
 func _enemy_team(tint: Color) -> Color:

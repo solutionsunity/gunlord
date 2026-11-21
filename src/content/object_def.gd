@@ -20,6 +20,7 @@ enum Look { PANEL, PEDESTAL }
 @export var final := false            ## killing it wins the level
 @export var caption := ""             ## "{n}" = amount, "{x}" = amount to one decimal, "{p}" = amount as percent
 @export var model: StringName          ## baked character: the enemy itself, or the unit shown on a pedestal
+@export var icon: StringName           ## a pedestal's badge: assets/art/icons/<icon>.png
 @export var look := Look.PANEL         ## how a pickup stands on the lane: a glass panel or a stone pedestal
 @export var size := 1.0               ## visual scale of an enemy (1 = a soldier)
 @export var color := Color.WHITE

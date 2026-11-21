@@ -60,19 +60,19 @@ static func objects() -> Dictionary:
 		}),
 		_object(&"gun_crate", {
 			hp = 25.0, radius = 0.9, payout = ObjectDef.Payout.ADD_UNITS, amount = 4.0, weapon = &"gun",
-			caption = "GUN +{n}", look = ObjectDef.Look.PEDESTAL, model = &"gunner", color = Color("3fd1c9"),
+			caption = "+{n}", icon = &"gun", look = ObjectDef.Look.PEDESTAL, model = &"gunner", color = Color("3fd1c9"),
 		}),
 		_object(&"gatling_crate", {
 			hp = 45.0, radius = 0.9, payout = ObjectDef.Payout.ADD_UNITS, amount = 3.0, weapon = &"gatling",
-			caption = "GATLING +{n}", look = ObjectDef.Look.PEDESTAL, model = &"gatlinger", color = Color("b05cf0"),
+			caption = "+{n}", icon = &"gatling", look = ObjectDef.Look.PEDESTAL, model = &"gatlinger", color = Color("b05cf0"),
 		}),
 		_object(&"cannon_crate", {
 			hp = 70.0, radius = 0.9, payout = ObjectDef.Payout.ADD_UNITS, amount = 1.0, weapon = &"cannon",
-			caption = "CANNON +{n}", look = ObjectDef.Look.PEDESTAL, model = &"cannon", color = Color("f2a516"),
+			caption = "+{n}", icon = &"cannon", look = ObjectDef.Look.PEDESTAL, model = &"cannon", color = Color("f2a516"),
 		}),
 		_object(&"war_drum", {
 			hp = 40.0, radius = 0.9, payout = ObjectDef.Payout.DAMAGE_BONUS, amount = 0.2,
-			caption = "ATK +{p}%", look = ObjectDef.Look.PEDESTAL, color = Color("f0f0f0"),
+			caption = "+{p}%", icon = &"attack", look = ObjectDef.Look.PEDESTAL, color = Color("f0f0f0"),
 		}),
 	]
 	var by_id := {}

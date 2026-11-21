@@ -43,6 +43,7 @@ func _ready() -> void:
 		pool.random_pitch = 1.08
 		pool.random_volume_offset_db = 1.5
 		var player := AudioStreamPlayer.new()
+		player.bus = Settings.SFX_BUS
 		player.stream = pool
 		player.volume_db = spec[1]
 		player.max_polyphony = spec[2]
@@ -51,6 +52,7 @@ func _ready() -> void:
 	_music = AudioStreamPlayer.new()
 	_music.stream = Synth.march()
 	_music.volume_db = -12.0
+	_music.bus = Settings.MUSIC_BUS
 	add_child(_music)
 
 

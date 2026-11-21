@@ -289,6 +289,33 @@ view never infers them from diffs of the simulation state.
 - A short pause (hit-stop) when a boss dies.
 - Payout callouts that pop and fade.
 
+### Interface
+
+- The HUD shows icon buttons for pause and sound, the clock and wave, the
+  squad count with its capacity bar, the boss bar, and one badge per weapon:
+  that unit's portrait and its count.
+- Pedestals show the unit's icon above their payout and hit points.
+- The map, the pause overlay and the settings share a sound toggle and a
+  settings gear. Settings are music on/off, sound on/off, and reset progress
+  (tap twice). They are kept on the device in `user://settings.cfg` and act
+  through two audio buses, Music and SFX.
+- The map scrolls by dragging (finger or mouse) or the mouse wheel. A press
+  that travels more than 14 px is a scroll, never a tap on the node beneath it.
+- Escape, or Android's back button, pauses a battle.
+- Shared style (font, palette, buttons, chips, bars) lives in `src/view/ui.gd`.
+
+### Own art and loading
+
+- `tools/render_art.gd` renders the unit icons, the game icon (a crossbowman
+  on a gold-rimmed badge) and the key art (a battle at dusk under the title)
+  from the game's own scene and models. The outputs are committed, because
+  rendering needs a display, which CI does not have.
+- The key art is the engine's boot splash and the web loading page's
+  background. The web page (`web/shell.html`) is Godot's shell restyled: the
+  art fills a portrait screen, and on wider screens stands whole over a
+  blurred copy, with a gold progress bar. The game icon is the favicon and
+  the Android launcher icon.
+
 ### Budget
 
 Peak scene: 120 squad + ~300 enemies + ~1,500 projectiles.
@@ -345,3 +372,7 @@ Peak scene: 120 squad + ~300 enemies + ~1,500 projectiles.
 | 25 | The map is forged offline and committed; nodes beyond it are generated unverified | Active |
 | 26 | Fixed stage per node; per-attempt variation is only mirroring and formation jitter | Active |
 | 27 | CI replays sampled nodes and fails on margin drift | Active |
+| 28 | A second forge knob, the warlord's hp, tunes stages that one intensity cannot | Active |
+| 29 | Icons over text: unit portraits rendered from our models; UI glyphs from Kenney (CC0) | Active |
+| 30 | Settings (music, sound) and progress are the only state kept on the device | Active; refines 21 |
+| 31 | Own art (icon, key art, loading page) rendered from the game itself and committed | Active |

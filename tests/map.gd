@@ -19,6 +19,8 @@ func _init() -> void:
 	_main = load("res://main.tscn").instantiate()
 	_main._progress = Progress.new()   # tests start fresh and never save
 	_main._progress.path = ""
+	_main._settings = Settings.new()   # and default settings, never saved
+	_main._settings.path = ""
 	_main._progress.unlocked = 9
 	for i in 8:
 		_main._progress.best[i] = 40 + i * 3

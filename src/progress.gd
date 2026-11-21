@@ -22,6 +22,17 @@ static func load_saved() -> Progress:
 func record_victory(index: int, units_left: int) -> void:
 	unlocked = maxi(unlocked, index + 2)
 	best[index] = maxi(best.get(index, 0), units_left)
+	_save()
+
+
+## Back to the start of the map.
+func reset() -> void:
+	unlocked = 1
+	best = {}
+	_save()
+
+
+func _save() -> void:
 	if path.is_empty():
 		return
 	var cfg := ConfigFile.new()

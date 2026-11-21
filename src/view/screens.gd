@@ -1,27 +1,39 @@
 class_name Screens
 extends CanvasLayer
-## The screens around a battle: the map, the pause overlay and the results.
-## They only report choices through signals; the game loop decides.
+## The screens around a battle: the map, the pause overlay, the settings and
+## the results. They only report choices through signals; the game loop decides.
 
 signal level_chosen(index: int)
 signal resume_chosen
 signal menu_chosen
-
-const FONT := preload("res://assets/third_party/lilita-one/LilitaOne-Regular.ttf")
-const INK := Color(0.07, 0.09, 0.16)
-const GOLD := Color("f5c542")
-const BLUE := Color("2f6fe0")
+signal mute_pressed
+signal settings_changed(music: bool, sound: bool)
+signal reset_chosen
 
 const AHEAD := 4             ## locked nodes shown beyond the frontier
 const BEHIND := 40           ## finished nodes shown behind it
 const ROW := 150.0           ## vertical distance between nodes on the map
 const SWAY := 170.0          ## how far the path winds left and right
 const STRIP := 720.0         ## the map is drawn in a strip this wide, centred on any screen
+const DRAG := 14.0           ## pixels a press may travel and still count as a tap
+const WHEEL := 90.0          ## pixels one mouse-wheel notch scrolls
+const BUTTON := 72.0
 
 var _menu: Control
-var _scroll: ScrollContainer
+var _window: Control         ## the map's visible area; the path scrolls inside it
 var _path: VBoxContainer
+var _offset := 0.0           ## how far the path is scrolled, 0 = its top at the window's top
+var _drag_from := 0.0
+var _dragging := false
+var _dragged := false        ## this press became a scroll: the button it started on must not fire
 var _pause: Control
+var _settings: Control
+var _settings_back: Control  ## the overlay the settings return to
+var _music: Button
+var _sound: Button
+var _reset: Button
+var _armed := false          ## reset asks twice
+var _mute_buttons: Array[Button] = []
 var _result: Control
 var _result_title: Label
 var _result_line: Label
@@ -30,67 +42,73 @@ var _result_buttons: HBoxContainer
 
 func _ready() -> void:
 	layer = 10
+	_build_map()
+	_build_pause()
+	_build_settings()
+	_build_result()
+	hide_all()
+
+
+## ---- map --------------------------------------------------------------
+
+func _build_map() -> void:
 	_menu = _overlay(0.35)
-	_scroll = ScrollContainer.new()
-	_scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_scroll.offset_top = 230
-	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	_menu.add_child(_scroll)
+	_window = Control.new()
+	_window.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_window.offset_top = 290
+	_window.clip_contents = true
+	_window.mouse_filter = Control.MOUSE_FILTER_PASS
+	_menu.add_child(_window)
 	_path = VBoxContainer.new()
-	_path.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_path.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
 	_path.add_theme_constant_override("separation", 0)
-	_scroll.add_child(_path)
+	_path.mouse_filter = Control.MOUSE_FILTER_PASS
+	_window.add_child(_path)
 	var head := VBoxContainer.new()
 	head.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
-	head.offset_top = 40
+	head.offset_top = 100   # below the corner buttons, which sit at the top on narrow phones
+	head.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_menu.add_child(head)
-	_label(head, "GUNLORD", 110, GOLD)
-	_label(head, "hold the bridge", 34, Color.WHITE)
-
-	_pause = _overlay(0.55)
-	var p := _column(_pause)
-	_label(p, "PAUSED", 80, Color.WHITE)
-	_space(p, 20)
-	_button(p, "RESUME", BLUE, func() -> void: resume_chosen.emit())
-	_button(p, "LEVELS", Color(INK, 0.9), func() -> void: menu_chosen.emit())
-
-	_result = _overlay(0.55)
-	var r := _column(_result)
-	_result_title = _label(r, "", 96, GOLD)
-	_result_line = _label(r, "", 36, Color.WHITE)
-	_space(r, 24)
-	_result_buttons = HBoxContainer.new()
-	_result_buttons.alignment = BoxContainer.ALIGNMENT_CENTER
-	_result_buttons.add_theme_constant_override("separation", 16)
-	r.add_child(_result_buttons)
-	hide_all()
+	Ui.label(head, "GUNLORD", 110, Ui.GOLD)
+	Ui.label(head, "hold the bridge", 34, Color.WHITE)
+	var corner := HBoxContainer.new()
+	corner.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	corner.offset_top = 20
+	corner.offset_right = -20
+	corner.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	corner.add_theme_constant_override("separation", 10)
+	_menu.add_child(corner)
+	_controls(corner)
 
 
 ## The map: a winding line of nodes climbing from the first at the bottom,
 ## scrolled so the frontier (the first unbeaten node) is in view.
 func show_map(progress: Progress) -> void:
 	hide_all()
+	_menu.visible = true
+	refresh_map(progress)
+
+
+## Rebuilds the map's nodes, wherever it is showing or not (e.g. after a reset).
+func refresh_map(progress: Progress) -> void:
 	for child in _path.get_children():
 		_path.remove_child(child)
 		child.queue_free()
 	var frontier := progress.unlocked - 1
 	var first := maxi(0, frontier - BEHIND)
 	var last := frontier + AHEAD
-	var frontier_row: Control
 	for node in range(last, first - 1, -1):
-		var row := _map_node(node, progress, frontier)
-		if node == frontier:
-			frontier_row = row
-	_menu.visible = true
+		_map_node(node, progress, frontier)
 	await get_tree().process_frame
-	if is_instance_valid(frontier_row):
-		_scroll.scroll_vertical = int(frontier_row.position.y - _scroll.size.y * 0.55)
+	_offset = -((last - frontier) * ROW + ROW * 0.5 - _window.size.y * 0.55)
+	_scroll_by(0.0)
 
 
-func _map_node(node: int, progress: Progress, frontier: int) -> Control:
+func _map_node(node: int, progress: Progress, frontier: int) -> void:
 	var row := Control.new()
 	row.custom_minimum_size = Vector2(STRIP, ROW)
 	row.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	row.mouse_filter = Control.MOUSE_FILTER_PASS
 	_path.add_child(row)
 	var x := sin(node * 0.9) * SWAY
 	var open := node <= frontier
@@ -103,18 +121,21 @@ func _map_node(node: int, progress: Progress, frontier: int) -> Control:
 			var dot := ColorRect.new()
 			dot.color = Color(1, 1, 1, 0.55 if open else 0.2)
 			dot.size = Vector2(12, 12)
-			dot.position = Vector2(360 + lerpf(x, below, k / 4.0) - 6, ROW * 0.5 + ROW * k / 4.0 - 6)
+			dot.position = Vector2(STRIP / 2 + lerpf(x, below, k / 4.0) - 6, ROW * 0.5 + ROW * k / 4.0 - 6)
 			dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			row.add_child(dot)
-	var color := GOLD.darkened(0.2) if boss else BLUE
-	var b := _button(row, str(node + 1), color if open else Color(INK, 0.75), func() -> void: level_chosen.emit(node))
+	var color := Ui.GOLD.darkened(0.2) if boss else Ui.BLUE
+	var b := Ui.button(row, str(node + 1), color if open else Color(Ui.INK, 0.75), func() -> void:
+		if not _dragged:
+			level_chosen.emit(node))
 	b.disabled = not open
+	b.mouse_filter = Control.MOUSE_FILTER_PASS
 	b.custom_minimum_size = Vector2(104, 104)
 	b.size = b.custom_minimum_size
-	b.position = Vector2(360 + x - 52, ROW * 0.5 - 52)
+	b.position = Vector2(STRIP / 2 + x - 52, ROW * 0.5 - 52)
 	if node == frontier:
 		var ring := b.get_theme_stylebox("normal").duplicate() as StyleBoxFlat
-		ring.border_color = GOLD
+		ring.border_color = Ui.GOLD
 		ring.set_border_width_all(7)
 		b.add_theme_stylebox_override("normal", ring)
 	var caption: String = spec.name
@@ -122,12 +143,129 @@ func _map_node(node: int, progress: Progress, frontier: int) -> Control:
 		caption = "BOSS · " + caption
 	if progress.best.has(node):
 		caption += "\nbest %d" % progress.best[node]
-	var label := _label(row, caption, 26, Color.WHITE if open else Color(1, 1, 1, 0.45))
+	var label := Ui.label(row, caption, 26, Color.WHITE if open else Color(1, 1, 1, 0.45))
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT if x < 0 else HORIZONTAL_ALIGNMENT_RIGHT
 	label.size = Vector2(300, 80)
-	label.position = Vector2(360 + x + 66, ROW * 0.5 - 30) if x < 0 else Vector2(360 + x - 366, ROW * 0.5 - 30)
+	label.position = Vector2(STRIP / 2 + x + 66, ROW * 0.5 - 30) if x < 0 else Vector2(STRIP / 2 + x - 366, ROW * 0.5 - 30)
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	return row
+
+
+## Dragging (finger or mouse) and the mouse wheel scroll the map. Read here,
+## before the buttons see the input, so a drag that starts on a node scrolls
+## instead of choosing it. Touch reaches this as emulated mouse input.
+func _input(event: InputEvent) -> void:
+	if not _menu.visible:
+		return
+	if event is InputEventMouseButton:
+		match event.button_index:
+			MOUSE_BUTTON_LEFT:
+				if event.pressed:
+					_dragging = _window.get_global_rect().has_point(event.position)
+					_dragged = false
+					_drag_from = event.position.y
+				else:
+					_dragging = false
+			MOUSE_BUTTON_WHEEL_UP:
+				if event.pressed:
+					_scroll_by(WHEEL)
+			MOUSE_BUTTON_WHEEL_DOWN:
+				if event.pressed:
+					_scroll_by(-WHEEL)
+	elif event is InputEventMouseMotion and _dragging:
+		if not _dragged and absf(event.position.y - _drag_from) > DRAG:
+			_dragged = true
+		if _dragged:
+			_scroll_by(event.relative.y)
+
+
+func _scroll_by(dy: float) -> void:
+	var height := _path.get_combined_minimum_size().y
+	var lowest := minf(0.0, _window.size.y - height)
+	_offset = clampf(_offset + dy, lowest, 0.0)
+	_path.offset_top = _offset
+	_path.offset_bottom = _offset + height
+
+
+## ---- pause and settings ------------------------------------------------
+
+func _build_pause() -> void:
+	_pause = _overlay(0.55)
+	var p := _column(_pause)
+	Ui.label(p, "PAUSED", 80, Color.WHITE)
+	_space(p, 20)
+	Ui.button(p, "RESUME", Ui.BLUE, func() -> void: resume_chosen.emit())
+	Ui.button(p, "LEVELS", Color(Ui.INK, 0.9), func() -> void: menu_chosen.emit())
+	_space(p, 10)
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 16)
+	p.add_child(row)
+	_controls(row)
+
+
+## The sound toggle and the settings gear, as on the map and the pause overlay.
+func _controls(parent: Control) -> void:
+	_mute_buttons.append(Ui.icon_button(parent, "audioOn", BUTTON, Color(Ui.INK, 0.7), func() -> void: mute_pressed.emit()))
+	Ui.icon_button(parent, "gear", BUTTON, Color(Ui.INK, 0.7), func() -> void: _open_settings())
+
+
+func _build_settings() -> void:
+	_settings = _overlay(0.7)
+	var c := _column(_settings)
+	Ui.label(c, "SETTINGS", 72, Color.WHITE)
+	_space(c, 16)
+	_music = Ui.button(c, "", Ui.BLUE, func() -> void: _toggle(true))
+	_sound = Ui.button(c, "", Ui.BLUE, func() -> void: _toggle(false))
+	for b in [_music, _sound]:
+		b.custom_minimum_size = Vector2(420, 88)
+		b.expand_icon = true
+		b.add_theme_constant_override("icon_max_width", 48)
+	_space(c, 16)
+	_reset = Ui.button(c, "", Color("8a2a2a"), func() -> void: _reset_pressed())
+	_reset.custom_minimum_size = Vector2(420, 88)
+	_space(c, 16)
+	Ui.button(c, "BACK", Color(Ui.INK, 0.9), func() -> void: _close_settings())
+
+
+## Shows the current settings: the mute buttons everywhere, the switches here.
+func show_settings(music: bool, sound: bool) -> void:
+	for b in _mute_buttons:
+		b.icon = Ui.icon("audioOff" if not music and not sound else "audioOn")
+	_music.text = "MUSIC  %s" % ("ON" if music else "OFF")
+	_music.icon = Ui.icon("musicOn" if music else "musicOff")
+	_sound.text = "SOUND  %s" % ("ON" if sound else "OFF")
+	_sound.icon = Ui.icon("audioOn" if sound else "audioOff")
+	_music.set_meta(&"on", music)
+	_sound.set_meta(&"on", sound)
+
+
+func _open_settings() -> void:
+	_settings_back = _pause if _pause.visible else _menu
+	_settings_back.visible = false
+	_armed = false
+	_reset.text = "RESET PROGRESS"
+	_settings.visible = true
+
+
+func _close_settings() -> void:
+	_settings.visible = false
+	_settings_back.visible = true
+
+
+func _toggle(music: bool) -> void:
+	var m: bool = _music.get_meta(&"on", true)
+	var s: bool = _sound.get_meta(&"on", true)
+	settings_changed.emit(not m if music else m, s if music else not s)
+
+
+func _reset_pressed() -> void:
+	if not _armed:
+		_armed = true
+		_reset.text = "TAP AGAIN TO RESET"
+		return
+	_armed = false
+	_reset.text = "PROGRESS RESET"
+	reset_chosen.emit()
 
 
 func show_pause() -> void:
@@ -135,31 +273,46 @@ func show_pause() -> void:
 	_pause.visible = true
 
 
+## ---- results -----------------------------------------------------------
+
+func _build_result() -> void:
+	_result = _overlay(0.55)
+	var r := _column(_result)
+	_result_title = Ui.label(r, "", 96, Ui.GOLD)
+	_result_line = Ui.label(r, "", 36, Color.WHITE)
+	_space(r, 24)
+	_result_buttons = HBoxContainer.new()
+	_result_buttons.alignment = BoxContainer.ALIGNMENT_CENTER
+	_result_buttons.add_theme_constant_override("separation", 16)
+	r.add_child(_result_buttons)
+
+
 ## The battle's outcome, with the choices that follow it.
 func show_result(won: bool, line: String, index: int, has_next: bool) -> void:
 	hide_all()
 	_result_title.text = "VICTORY" if won else "DEFEAT"
-	_result_title.add_theme_color_override("font_color", GOLD if won else Color("ff8a7a"))
+	_result_title.add_theme_color_override("font_color", Ui.GOLD if won else Color("ff8a7a"))
 	_result_line.text = line
 	for child in _result_buttons.get_children():
 		child.queue_free()
 	if won and has_next:
-		_button(_result_buttons, "NEXT", BLUE, func() -> void: level_chosen.emit(index + 1))
-	_button(_result_buttons, "REPLAY" if won else "RETRY", BLUE if not won else Color(INK, 0.9),
+		Ui.button(_result_buttons, "NEXT", Ui.BLUE, func() -> void: level_chosen.emit(index + 1))
+	Ui.button(_result_buttons, "REPLAY" if won else "RETRY", Ui.BLUE if not won else Color(Ui.INK, 0.9),
 			func() -> void: level_chosen.emit(index))
-	_button(_result_buttons, "LEVELS", Color(INK, 0.9), func() -> void: menu_chosen.emit())
+	Ui.button(_result_buttons, "LEVELS", Color(Ui.INK, 0.9), func() -> void: menu_chosen.emit())
 	_result.visible = true
 
 
 func hide_all() -> void:
 	_menu.visible = false
 	_pause.visible = false
+	_settings.visible = false
 	_result.visible = false
 
 
 func _overlay(dim: float) -> Control:
 	var bg := ColorRect.new()
-	bg.color = Color(INK, dim)
+	bg.color = Color(Ui.INK, dim)
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
 	return bg
@@ -174,45 +327,7 @@ func _column(parent: Control) -> VBoxContainer:
 	return col
 
 
-func _label(parent: Control, text: String, size: int, color: Color) -> Label:
-	var l := Label.new()
-	l.text = text
-	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	l.add_theme_font_override("font", FONT)
-	l.add_theme_font_size_override("font_size", size)
-	l.add_theme_color_override("font_color", color)
-	l.add_theme_constant_override("outline_size", 14)
-	l.add_theme_color_override("font_outline_color", INK)
-	parent.add_child(l)
-	return l
-
-
 func _space(parent: Control, height: float) -> void:
 	var c := Control.new()
 	c.custom_minimum_size = Vector2(0, height)
 	parent.add_child(c)
-
-
-func _button(parent: Control, text: String, color: Color, pressed: Callable) -> Button:
-	var b := Button.new()
-	b.text = text
-	b.custom_minimum_size = Vector2(220, 88)
-	b.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	b.add_theme_font_override("font", FONT)
-	b.add_theme_font_size_override("font_size", 38)
-	b.add_theme_color_override("font_color", Color.WHITE)
-	b.add_theme_color_override("font_disabled_color", Color(1, 1, 1, 0.45))
-	b.add_theme_constant_override("outline_size", 8)
-	b.add_theme_color_override("font_outline_color", INK)
-	for state in ["normal", "hover", "pressed", "disabled", "focus"]:
-		var box := StyleBoxFlat.new()
-		box.bg_color = color.lightened(0.12) if state == "hover" else (color.darkened(0.15) if state == "pressed" else color)
-		box.set_corner_radius_all(22)
-		box.set_border_width_all(3)
-		box.border_color = Color(1, 1, 1, 0.75) if state != "disabled" else Color(1, 1, 1, 0.2)
-		if state == "focus":
-			box.draw_center = false
-		b.add_theme_stylebox_override(state, box)
-	b.pressed.connect(pressed)
-	parent.add_child(b)
-	return b

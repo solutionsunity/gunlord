@@ -12,6 +12,7 @@ const RESULT_DELAY := 1.6   ## seconds the decided battle plays on before the re
 var _mode := Mode.MENU
 var _battle: Battle
 var _progress := Progress.load_saved()
+var _settings := Settings.load_saved()
 var _view := View.new()
 var _hud := Hud.new()
 var _sound := Sound.new()
@@ -21,6 +22,7 @@ var _attempts := {}         ## node -> attempts this session; each retry varies 
 
 
 func _ready() -> void:
+	_settings.apply()   # before the sound starts: it creates the audio buses
 	add_child(_view)
 	add_child(_hud)
 	add_child(_sound)
@@ -35,6 +37,11 @@ func _ready() -> void:
 	_screens.menu_chosen.connect(_show_menu)
 	_screens.resume_chosen.connect(_resume)
 	_hud.pause_pressed.connect(_pause)
+	_hud.mute_pressed.connect(_toggle_mute)
+	_screens.mute_pressed.connect(_toggle_mute)
+	_screens.settings_changed.connect(_set_audio)
+	_screens.reset_chosen.connect(_reset_progress)
+	_show_settings()
 	_show_menu()
 
 
@@ -62,6 +69,30 @@ func _show_menu() -> void:
 	_hud.visible = false
 	_mode = Mode.MENU
 	_screens.show_map(_progress)
+
+
+## One tap silences everything, or brings it all back.
+func _toggle_mute() -> void:
+	var on := _settings.muted()
+	_set_audio(on, on)
+
+
+func _set_audio(music: bool, sound: bool) -> void:
+	_settings.music = music
+	_settings.sound = sound
+	_settings.save()
+	_sound.play(&"click")
+	_show_settings()
+
+
+func _show_settings() -> void:
+	_hud.set_muted(_settings.muted())
+	_screens.show_settings(_settings.music, _settings.sound)
+
+
+func _reset_progress() -> void:
+	_progress.reset()
+	_screens.refresh_map(_progress)
 
 
 func _pause() -> void:
@@ -115,6 +146,9 @@ func _finish() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if _mode != Mode.BATTLE:
+		return
+	if event.is_action_pressed(&"ui_cancel"):   # Escape, or Android's back
+		_pause()
 		return
 	if event is InputEventMouseMotion and event.button_mask & MOUSE_BUTTON_MASK_LEFT:
 		_battle.squad.steer(event.relative.x * DRAG_GAIN)

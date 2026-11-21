@@ -14,6 +14,8 @@ func _init() -> void:
 	_main = load("res://main.tscn").instantiate()
 	_main._progress = Progress.new()   # tests start fresh and never save
 	_main._progress.path = ""
+	_main._settings = Settings.new()   # and default settings, never saved
+	_main._settings.path = ""
 	root.add_child(_main)
 	_main.set_physics_process(false)
 	_main.set_process(false)

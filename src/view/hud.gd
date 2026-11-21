@@ -1,19 +1,22 @@
 class_name Hud
 extends CanvasLayer
-## Pause button, timer and wave chips, squad size with its capacity bar, the
-## weapon mix and the nearest boss's health bar.
+## Pause and sound buttons, timer and wave chips, squad size with its capacity
+## bar, the weapon mix as unit badges, the nearest boss's health bar, and the
+## stage's title as a battle opens.
 
 signal pause_pressed
+signal mute_pressed
 
-const FONT := preload("res://assets/third_party/lilita-one/LilitaOne-Regular.ttf")
-const INK := Color(0.07, 0.09, 0.16)
 const BOSS_RANGE := -40.0           ## a boss's bar shows once it is this close
+const BUTTON := 64.0
 
+var _mute: Button
 var _clock: Label
 var _wave: Label
 var _units: Label
 var _fill: ProgressBar
 var _mix: HBoxContainer
+var _badges := {}                   ## weapon index -> {chip: Control, count: Label}
 var _boss: Control
 var _boss_name: Label
 var _boss_bar: ProgressBar
@@ -27,20 +30,10 @@ func _ready() -> void:
 	top.offset_left = 20
 	top.offset_right = -20
 	top.offset_top = 20
-	add_child(top)
-	var pause := Button.new()
-	pause.text = "II"
-	pause.custom_minimum_size = Vector2(64, 56)
-	pause.add_theme_font_override("font", FONT)
-	pause.add_theme_font_size_override("font_size", 30)
-	var box := StyleBoxFlat.new()
-	box.bg_color = Color(INK, 0.6)
-	box.set_corner_radius_all(14)
-	for state in ["normal", "hover", "pressed", "focus"]:
-		pause.add_theme_stylebox_override(state, box)
-	pause.pressed.connect(func() -> void: pause_pressed.emit())
-	top.add_child(pause)
 	top.add_theme_constant_override("separation", 10)
+	add_child(top)
+	Ui.icon_button(top, "pause", BUTTON, Color(Ui.INK, 0.6), func() -> void: pause_pressed.emit())
+	_mute = Ui.icon_button(top, "audioOn", BUTTON, Color(Ui.INK, 0.6), func() -> void: mute_pressed.emit())
 	_clock = _chip(top, 36)
 	var gap := Control.new()
 	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -49,22 +42,22 @@ func _ready() -> void:
 
 	var squad := VBoxContainer.new()
 	squad.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
-	squad.offset_top = 86
+	squad.offset_top = 96
 	squad.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	squad.alignment = BoxContainer.ALIGNMENT_CENTER
 	add_child(squad)
-	_units = _text(squad, 64, Color.WHITE)
-	_fill = _bar(squad, Vector2(220, 14), Color("4d8df7"))
+	_units = Ui.label(squad, "", 64, Color.WHITE)
+	_fill = Ui.bar(squad, Vector2(220, 14), Ui.SKY)
 
 	_boss = VBoxContainer.new()
 	_boss.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
-	_boss.offset_top = 200
+	_boss.offset_top = 210
 	_boss.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	add_child(_boss)
-	_boss_name = _text(_boss, 30, Color("ffd0c8"))
-	_boss_bar = _bar(_boss, Vector2(420, 22), Color("d8423a"))
+	_boss_name = Ui.label(_boss, "", 30, Color("ffd0c8"))
+	_boss_bar = Ui.bar(_boss, Vector2(420, 22), Color("d8423a"))
 
-	_title = _text(self, 52, Color.WHITE)
+	_title = Ui.label(self, "", 52, Color.WHITE)
 	_title.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 	_title.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_title.grow_vertical = Control.GROW_DIRECTION_BOTH
@@ -72,11 +65,15 @@ func _ready() -> void:
 
 	_mix = HBoxContainer.new()
 	_mix.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-	_mix.offset_bottom = -36
+	_mix.offset_bottom = -30
 	_mix.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_mix.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	_mix.add_theme_constant_override("separation", 10)
 	add_child(_mix)
+
+
+func set_muted(muted: bool) -> void:
+	_mute.icon = Ui.icon("audioOff" if muted else "audioOn")
 
 
 ## The stage's number and name, shown for a moment as the battle opens.
@@ -95,28 +92,23 @@ func draw(b: Battle) -> void:
 	_units.text = "%d" % total
 	_fill.max_value = b.squad.capacity
 	_fill.value = total
-	(_fill.get_theme_stylebox("fill") as StyleBoxFlat).bg_color = Color("f5c542") if total >= b.squad.capacity else Color("4d8df7")
+	(_fill.get_theme_stylebox("fill") as StyleBoxFlat).bg_color = Ui.GOLD if total >= b.squad.capacity else Ui.SKY
 	_draw_mix(b.squad)
 	_draw_boss(b.lane)
 
 
+## One badge per weapon the squad carries: the unit's portrait and its count.
 func _draw_mix(squad: Squad) -> void:
-	var shown := 0
 	for w in squad.weapons.size():
-		if squad.counts[w] == 0:
-			continue
-		var chip: Label
-		if shown < _mix.get_child_count():
-			chip = _mix.get_child(shown)
-		else:
-			chip = _chip(_mix, 26)
 		var wd := squad.weapons[w]
-		chip.text = "%s %d" % [wd.label, squad.counts[w]]
-		(chip.get_theme_stylebox("normal") as StyleBoxFlat).bg_color = Color(wd.color.darkened(0.35), 0.85)
-		chip.visible = true
-		shown += 1
-	for i in range(shown, _mix.get_child_count()):
-		_mix.get_child(i).visible = false
+		if not _badges.has(w):
+			var row := Ui.icon_chip(_mix, Ui.unit_icon(wd.id), 56.0, 30)
+			var panel := row.get_parent() as PanelContainer
+			(panel.get_theme_stylebox("panel") as StyleBoxFlat).bg_color = Color(wd.color.darkened(0.45), 0.85)
+			_badges[w] = {chip = panel, count = row.get_child(1)}
+		var badge: Dictionary = _badges[w]
+		badge.chip.visible = squad.counts[w] > 0
+		badge.count.text = str(squad.counts[w])
 
 
 ## The nearest boss on the lane, once it comes within range.
@@ -136,49 +128,14 @@ func _draw_boss(lane: Lane) -> void:
 
 func _chip(parent: Control, size: int) -> Label:
 	var l := Label.new()
-	_style(l, size, Color.WHITE)
-	var box := StyleBoxFlat.new()
-	box.bg_color = Color(INK, 0.6)
-	box.set_corner_radius_all(14)
-	box.content_margin_left = 16
-	box.content_margin_right = 16
-	box.content_margin_top = 4
-	box.content_margin_bottom = 4
-	l.add_theme_stylebox_override("normal", box)
+	Ui.style(l, size, Color.WHITE)
+	var s := Ui.box(Color(Ui.INK, 0.6), 14)
+	s.content_margin_left = 16
+	s.content_margin_right = 16
+	s.content_margin_top = 4
+	s.content_margin_bottom = 4
+	l.add_theme_stylebox_override("normal", s)
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	l.custom_minimum_size = Vector2(0, BUTTON)
 	parent.add_child(l)
 	return l
-
-
-func _text(parent: Node, size: int, color: Color) -> Label:
-	var l := Label.new()
-	_style(l, size, color)
-	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	parent.add_child(l)
-	return l
-
-
-func _bar(parent: Control, size: Vector2, color: Color) -> ProgressBar:
-	var bar := ProgressBar.new()
-	bar.custom_minimum_size = size
-	bar.show_percentage = false
-	bar.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	var bg := StyleBoxFlat.new()
-	bg.bg_color = Color(INK, 0.7)
-	bg.set_corner_radius_all(int(size.y / 2))
-	bg.set_border_width_all(2)
-	bg.border_color = Color(1, 1, 1, 0.8)
-	var fill := StyleBoxFlat.new()
-	fill.bg_color = color
-	fill.set_corner_radius_all(int(size.y / 2))
-	bar.add_theme_stylebox_override("background", bg)
-	bar.add_theme_stylebox_override("fill", fill)
-	parent.add_child(bar)
-	return bar
-
-
-func _style(l: Label, size: int, color: Color) -> void:
-	l.add_theme_font_override("font", FONT)
-	l.add_theme_font_size_override("font_size", size)
-	l.add_theme_color_override("font_color", color)
-	l.add_theme_constant_override("outline_size", 10)
-	l.add_theme_color_override("font_outline_color", INK)
