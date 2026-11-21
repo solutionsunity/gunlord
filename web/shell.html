@@ -162,6 +162,20 @@ body {
 			<div id="status-notice"></div>
 		</div>
 
+		<script>
+// Every request for the game's own files carries the build's version, so a
+// new release is never answered from an old cache entry, and a cached page
+// stays consistent with its own files. The build writes the version here
+// (see .github/workflows/build.yml); the server ignores the query.
+const GUNLORD_VERSION = '__GUNLORD_VERSION__';
+const originalFetch = window.fetch.bind(window);
+window.fetch = function (input, init) {
+	if (typeof input === 'string' && /^(\.\/)?index\./.test(input)) {
+		input += (input.includes('?') ? '&' : '?') + 'v=' + encodeURIComponent(GUNLORD_VERSION);
+	}
+	return originalFetch(input, init);
+};
+		</script>
 		<script src="$GODOT_URL"></script>
 		<script>
 const GODOT_CONFIG = $GODOT_CONFIG;

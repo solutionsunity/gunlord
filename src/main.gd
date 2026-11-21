@@ -17,6 +17,7 @@ var _view := View.new()
 var _hud := Hud.new()
 var _sound := Sound.new()
 var _screens := Screens.new()
+var _updates := Updates.new()
 var _since_end := 0.0
 var _attempts := {}         ## node -> attempts this session; each retry varies the stage fairly
 
@@ -27,6 +28,7 @@ func _ready() -> void:
 	add_child(_hud)
 	add_child(_sound)
 	add_child(_screens)
+	add_child(_updates)
 	var models: Array[StringName] = []
 	for w in Content.weapons():
 		models.append(w.model)
@@ -42,6 +44,8 @@ func _ready() -> void:
 	_screens.mute_pressed.connect(_toggle_mute)
 	_screens.setting_changed.connect(_change_setting)
 	_screens.reset_chosen.connect(_reset_progress)
+	_screens.update_chosen.connect(_updates.reload)
+	_updates.available.connect(_screens.show_update)
 	_show_settings()
 	_show_menu()
 
@@ -70,6 +74,7 @@ func _show_menu() -> void:
 	_hud.visible = false
 	_mode = Mode.MENU
 	_screens.show_map(_progress)
+	_updates.check()   # the map is the moment to offer a newer build, never mid-battle
 
 
 ## One tap silences everything, or brings it all back at the levels it had.

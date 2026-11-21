@@ -103,6 +103,13 @@ jobs:
           mkdir -p build/web
           $GODOT --headless --path . --export-release Web build/web/index.html
           test -f build/web/index.pck
+          # The page tags its file requests with the version, and the game
+          # compares its own version with version.json to offer updates.
+          version="${{ steps.version.outputs.name }}"
+          sed -i "s/__GUNLORD_VERSION__/$version/; s|<script src=\"index.js\"></script>|<script src=\"index.js?v=$version\"></script>|" build/web/index.html
+          grep -q "index.js?v=$version" build/web/index.html
+          grep -q "GUNLORD_VERSION = '$version'" build/web/index.html
+          printf '{"version": "%s"}\n' "$version" > build/web/version.json
 
       - name: Export Android
         env:

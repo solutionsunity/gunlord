@@ -9,6 +9,7 @@ signal menu_chosen
 signal mute_pressed
 signal setting_changed(key: StringName, value: Variant)   ## a Settings field and its new value
 signal reset_chosen
+signal update_chosen
 
 const AHEAD := 4             ## locked nodes shown beyond the frontier
 const BEHIND := 40           ## finished nodes shown behind it
@@ -38,6 +39,7 @@ var _master_sliders: Array[HSlider] = []
 var _reset: Button
 var _armed := false          ## reset asks twice
 var _mute_buttons: Array[Button] = []
+var _update: Button         ## on the map, when a newer build is out
 var _result: Control
 var _result_title: Label
 var _result_line: Label
@@ -83,11 +85,25 @@ func _build_map() -> void:
 	corner.add_theme_constant_override("separation", 10)
 	_menu.add_child(corner)
 	_controls(corner)
+	_update = Ui.button(_menu, "", Ui.GOLD.darkened(0.15), func() -> void: update_chosen.emit())
+	_update.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+	_update.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_update.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_update.offset_bottom = -54
+	_update.custom_minimum_size = Vector2(560, 84)
+	_update.add_theme_font_size_override("font_size", 30)
+	_update.visible = false
 	var version := Ui.label(_menu, "v" + Ui.version(), 22, Color(1, 1, 1, 0.6))
 	version.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
 	version.offset_left = 16
 	version.offset_bottom = -10
 	version.grow_vertical = Control.GROW_DIRECTION_BEGIN
+
+
+## A newer build is out: the map offers to load it.
+func show_update(version: String) -> void:
+	_update.text = "NEW VERSION %s · TAP TO UPDATE" % version
+	_update.visible = true
 
 
 ## The map: a winding line of nodes climbing from the first at the bottom,

@@ -329,6 +329,21 @@ view never infers them from diffs of the simulation state.
   blurred copy, with a gold progress bar. The game icon is the favicon and
   the Android launcher icon.
 
+### Versions and updates
+
+- The version is the git tag; a build between tags describes itself from the
+  last one (`0.2.0-3-gab12cd3`). CI writes that one string into the game
+  (shown on the map and in settings), the Android package, the web page and
+  `version.json`.
+- GitHub Pages lets browsers cache every file for ten minutes. The loading
+  page tags its requests for the game's own files with `?v=<version>`, so a
+  new release is never answered from an old cache entry, and a cached page
+  stays consistent with its own files.
+- Each time the map appears (at most every two minutes), the web build
+  fetches `version.json` past every cache. If a different version is
+  published, the map offers "New version … tap to update", which reloads the
+  page. It never interrupts a battle; local and native builds do not check.
+
 ### Budget
 
 Peak scene: 120 squad + ~300 enemies + ~1,500 projectiles.
@@ -392,3 +407,4 @@ Peak scene: 120 squad + ~300 enemies + ~1,500 projectiles.
 | 32 | Music: two CC0 tracks from OpenGameArt, chosen by ear (battle loop, map theme), crossfaded; the synthesized drums are retired | Active |
 | 33 | Volumes (overall, music, effects) as sliders; mute keeps the levels | Active; refines 30 |
 | 34 | Weapon badges in a side column (right or left, a setting), clear of the steering thumb | Active |
+| 35 | Web updates: version-tagged file requests, and a version.json check offering a reload on the map | Active |
