@@ -79,6 +79,11 @@ func _build_map() -> void:
 	corner.add_theme_constant_override("separation", 10)
 	_menu.add_child(corner)
 	_controls(corner)
+	var version := Ui.label(_menu, "v" + Ui.version(), 22, Color(1, 1, 1, 0.6))
+	version.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
+	version.offset_left = 16
+	version.offset_bottom = -10
+	version.grow_vertical = Control.GROW_DIRECTION_BEGIN
 
 
 ## The map: a winding line of nodes climbing from the first at the bottom,
@@ -225,6 +230,8 @@ func _build_settings() -> void:
 	_reset.custom_minimum_size = Vector2(420, 88)
 	_space(c, 16)
 	Ui.button(c, "BACK", Color(Ui.INK, 0.9), func() -> void: _close_settings())
+	_space(c, 12)
+	Ui.label(c, "Gunlord v" + Ui.version(), 24, Color(1, 1, 1, 0.6))
 
 
 ## Shows the current settings: the mute buttons everywhere, the switches here.

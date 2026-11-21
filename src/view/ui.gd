@@ -13,6 +13,12 @@ const KENNEY := "res://assets/third_party/kenney-game-icons/%s.png"
 const UNIT_ICON := "res://assets/art/icons/%s.png"
 
 
+## The game's version: the build writes it into the project from its git
+## tag (see .github/workflows/build.yml); a local run says "dev".
+static func version() -> String:
+	return ProjectSettings.get_setting("application/config/version", "dev")
+
+
 static func icon(name: String) -> Texture2D:
 	return load(KENNEY % name)
 

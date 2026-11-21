@@ -26,13 +26,22 @@ jobs:
       version: ${{ steps.version.outputs.name }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0   # the tags: the version is read from them
 
+      # The version is the git tag; a build between tags describes itself from
+      # the last one, e.g. 0.2.0-3-gab12cd3 (three commits after 0.2.0). It goes
+      # into the game (shown on the map and in settings) and the Android package.
       - name: Version
         id: version
         run: |
-          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then name="${GITHUB_REF_NAME#v}"; else name="0.1.${GITHUB_RUN_NUMBER}"; fi
+          name=$(git describe --tags --always --match 'v*')
+          name="${name#v}"
           echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "Version: $name"
           sed -i "s/^version\/code=.*/version\/code=${GITHUB_RUN_NUMBER}/; s/^version\/name=.*/version\/name=\"$name\"/" export_presets.cfg
+          sed -i "s/^config\/name=\"Gunlord\"$/config\/name=\"Gunlord\"\nconfig\/version=\"$name\"/" project.godot
+          grep -q "config/version=\"$name\"" project.godot
 
       - name: Cache Godot
         id: cache
@@ -138,6 +147,9 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
       - uses: actions/download-artifact@v8
         with:
           name: gunlord-android-${{ needs.export.outputs.version }}
@@ -146,6 +158,14 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           mv gunlord.apk "gunlord-${{ needs.export.outputs.version }}.apk"
+          # Notes: every commit since the previous version tag, by its subject.
+          previous=$(git describe --tags --abbrev=0 --match 'v*' "$GITHUB_REF_NAME^" 2>/dev/null || true)
+          {
+            echo "Play in the browser: https://solutionsunity.github.io/gunlord/"
+            echo "Android: install the APK below (allow installs from unknown sources)."
+            echo
+            echo "## Changes${previous:+ since $previous}"
+            git log --no-merges --pretty='- %s' ${previous:+$previous..}"$GITHUB_REF_NAME"
+          } > notes.md
           gh release create "$GITHUB_REF_NAME" "gunlord-${{ needs.export.outputs.version }}.apk" \
-            -R "$GITHUB_REPOSITORY" --title "Gunlord $GITHUB_REF_NAME" \
-            --notes "Android: install the APK (allow installs from unknown sources). Web: https://solutionsunity.github.io/gunlord/"
+            -R "$GITHUB_REPOSITORY" --title "Gunlord $GITHUB_REF_NAME" --notes-file notes.md
