@@ -47,14 +47,16 @@ static func is_boss(node: int) -> bool:
 	return node % BOSS_EVERY == BOSS_EVERY - 1
 
 
-static func forge(node: int, intensity: float, variant := 0) -> Dictionary:
+## `boss` multiplies the warlord's hp on top of intensity: the second, gentler
+## knob the forge turns when one intensity cannot reach a node's target.
+static func forge(node: int, intensity: float, variant := 0, boss := 1.0) -> Dictionary:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash(node * 7919 + variant * 15485863 + 104729)
 	var character: StringName = CHARACTERS[rng.randi() % CHARACTERS.size()]
 	var w: Array = WEIGHTS[character]
 	var k := intensity
 	var depth := float(node)
-	var boss := is_boss(node)
+	var boss_node := is_boss(node)
 	var waves := clampi(16 + int(depth / 4.0) + rng.randi_range(0, 3), 16, 28)
 	var gap := rng.randf_range(3.8, 4.4)
 	var spec := {
@@ -70,9 +72,9 @@ static func forge(node: int, intensity: float, variant := 0) -> Dictionary:
 		brutes_from = OPENING_WAVES,
 		brute_hp = (300.0 + 12.0 * depth) * w[2] * k,
 		brute_step = (180.0 + 6.0 * depth) * w[2] * k,
-		warlord_hp = (1600.0 + 90.0 * depth) * k * (1.3 if boss else 1.0),
-		boss_scale = 1.0 + minf(depth, 60.0) / 150.0 + (0.15 if boss else 0.0),
-		companions = _companions(character, depth, boss),
+		warlord_hp = (1600.0 + 90.0 * depth) * k * (1.3 if is_boss(node) else 1.0) * boss,
+		boss_scale = 1.0 + minf(depth, 60.0) / 150.0 + (0.15 if boss_node else 0.0),
+		companions = _companions(character, depth, boss_node),
 		capacity = mini(120 + node * 4, 220),
 		speed = rng.randf_range(2.9, 3.3), accel = 0.018 + 0.006 * k,
 		pickup_gap = rng.randf_range(1.5, 1.8),

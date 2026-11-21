@@ -5,7 +5,9 @@ extends SceneTree
 ## below some intensity, lost just above it) cannot be tuned; then the next
 ## variant of the node is tried, up to VARIANTS, keeping the closest.
 ## A stage the sweeping bot cannot win is never kept while a winnable variant
-## exists; if none of VARIANTS wins, up to MORE_VARIANTS are tried.
+## exists; if none of VARIANTS wins, up to MORE_VARIANTS are tried. A stage
+## left too easy (a cliff: no intensity lands between an easy win and a loss)
+## then has its warlord's hp raised until the margin comes down to target.
 ## Appends to what is already forged, or re-forges given nodes in place.
 ##   godot --headless --path . -s tools/forge_map.gd -- <nodes to add, default 20>
 ##   godot --headless --path . -s tools/forge_map.gd -- redo <node number> ...
@@ -17,6 +19,7 @@ const LOW := 0.15
 const HIGH := 3.5
 const VARIANTS := 4
 const MORE_VARIANTS := 10
+const BOSS_MAX := 6.0         ## the most the warlord's hp may be multiplied
 const GOOD_ENOUGH := 0.1      ## stop trying variants once this close
 
 
@@ -42,7 +45,7 @@ func _init() -> void:
 		else:
 			nodes.append(entry)
 		_save(nodes)
-		var spec := Forge.forge(node, entry.intensity, entry.variant)
+		var spec := Forge.forge(node, entry.intensity, entry.variant, entry.boss)
 		print("node %3d v%d %-9s %-20s k=%.3f margin %.2f (target %.2f)  idle %s  %.1fs" % [
 			node + 1, entry.variant, spec.character, spec.name,
 			entry.intensity, entry.margin, entry.target, "lost" if not entry.idle_won else "WON",
@@ -61,9 +64,32 @@ func _forge(node: int) -> Dictionary:
 			best = tuned
 		if best.margin > 0.0 and absf(best.margin - goal) < GOOD_ENOUGH:
 			break
-	var idle: Dictionary = Bots.play(Stages.build_spec(Forge.forge(node, best.intensity, best.variant), node), &"idle")
-	return {node = node, variant = best.variant, intensity = best.intensity,
+	best.boss = 1.0
+	if best.margin - goal > GOOD_ENOUGH:
+		best = _toughen_boss(node, best, goal)
+	var idle: Dictionary = Bots.play(Stages.build_spec(Forge.forge(node, best.intensity, best.variant, best.boss), node), &"idle")
+	return {node = node, variant = best.variant, intensity = best.intensity, boss = best.boss,
 			margin = snappedf(best.margin, 0.001), target = snappedf(goal, 0.001), idle_won = idle.won}
+
+
+## Raises the warlord's hp (bisected on a log scale up to ×BOSS_MAX) to bring a
+## too-easy stage's margin down to the goal, never accepting a loss.
+func _toughen_boss(node: int, tuned: Dictionary, goal: float) -> Dictionary:
+	var best := tuned
+	var lo := 1.0
+	var hi := BOSS_MAX
+	for step in STEPS:
+		var b := snappedf(sqrt(lo * hi), 0.0001)
+		var margin: float = Bots.play(Stages.build_spec(Forge.forge(node, tuned.intensity, tuned.variant, b), node), &"sweep").margin
+		if margin > 0.0 and absf(margin - goal) < absf(best.margin - goal):
+			best = {variant = tuned.variant, intensity = tuned.intensity, boss = b, margin = margin}
+		if margin > 0.0 and absf(margin - goal) < TOLERANCE:
+			break
+		if margin > goal:
+			lo = b
+		else:
+			hi = b
+	return best
 
 
 ## A won stage beats a lost one; between two of a kind, the closer to the goal wins.

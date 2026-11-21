@@ -90,7 +90,7 @@ const AUTHORED := [
 	},
 ]
 
-static var _forged := {}                ## node -> {variant, intensity, margin, target}; loaded once
+static var _forged := {}                ## node -> {variant, intensity, boss, margin, target}; loaded once
 static var _plateau := 1.0
 
 
@@ -100,7 +100,7 @@ static func spec(node: int) -> Dictionary:
 		return AUTHORED[node]
 	_load_forged()
 	var entry: Dictionary = _forged.get(node, {})
-	return Forge.forge(node, entry.get("intensity", _plateau), int(entry.get("variant", 0)))
+	return Forge.forge(node, entry.get("intensity", _plateau), int(entry.get("variant", 0)), entry.get("boss", 1.0))
 
 
 static func is_forged(node: int) -> bool:
