@@ -1,0 +1,237 @@
+{
+	"nodes": [
+		{
+			"idle_won": false,
+			"intensity": 0.9268,
+			"margin": 0.657,
+			"node": 5.0,
+			"target": 0.66,
+			"variant": 0.0
+		},
+		{
+			"idle_won": false,
+			"intensity": 1.0742,
+			"margin": 0.5760000000000001,
+			"node": 6.0,
+			"target": 0.5640000000000001,
+			"variant": 0.0
+		},
+		{
+			"idle_won": false,
+			"intensity": 1.3079,
+			"margin": 0.561,
+			"node": 7,
+			"target": 0.531,
+			"variant": 1
+		},
+		{
+			"idle_won": false,
+			"intensity": 1.2451,
+			"margin": 0.5,
+			"node": 8,
+			"target": 0.5,
+			"variant": 1
+		},
+		{
+			"idle_won": false,
+			"intensity": 1.4432,
+			"margin": 0.404,
+			"node": 9,
+			"target": 0.392,
+			"variant": 0
+		},
+		{
+			"idle_won": false,
+			"intensity": 1.5925,
+			"margin": 0.494,
+			"node": 10,
+			"target": 0.507,
+			"variant": 1
+		},
+		{
+			"idle_won": false,
+			"intensity": 0.9268000000000001,
+			"margin": 0.433,
+			"node": 11,
+			"target": 0.423,
+			"variant": 3
+		},
+		{
+			"idle_won": false,
+			"intensity": 1.0226,
+			"margin": 0.381,
+			"node": 12,
+			"target": 0.401,
+			"variant": 2
+		},
+		{
+			"idle_won": false,
+			"intensity": 1.1853,
+			"margin": 0.424,
+			"node": 13,
+			"target": 0.381,
+			"variant": 0
+		},
+		{
+			"idle_won": false,
+			"intensity": 1.3079,
+			"margin": 0.301,
+			"node": 14,
+			"target": 0.28300000000000003,
+			"variant": 0
+		},
+		{
+			"idle_won": false,
+			"intensity": 1.1853,
+			"margin": 0.406,
+			"node": 15,
+			"target": 0.406,
+			"variant": 0
+		},
+		{
+			"idle_won": false,
+			"intensity": 1.2761,
+			"margin": 0.332,
+			"node": 16,
+			"target": 0.33,
+			"variant": 1
+		},
+		{
+			"idle_won": false,
+			"intensity": 1.1853,
+			"margin": 0.314,
+			"node": 17,
+			"target": 0.316,
+			"variant": 0
+		},
+		{
+			"idle_won": false,
+			"intensity": 1.8233000000000001,
+			"margin": 0.328,
+			"node": 18,
+			"target": 0.302,
+			"variant": 2
+		},
+		{
+			"idle_won": false,
+			"intensity": 0.9043,
+			"margin": 0.24,
+			"node": 19,
+			"target": 0.21,
+			"variant": 0
+		},
+		{
+			"idle_won": false,
+			"intensity": 1.7572,
+			"margin": 0.335,
+			"node": 20,
+			"target": 0.339,
+			"variant": 0
+		},
+		{
+			"idle_won": false,
+			"intensity": 1.8459,
+			"margin": 0.41200000000000003,
+			"node": 21,
+			"target": 0.269,
+			"variant": 1
+		},
+		{
+			"idle_won": false,
+			"intensity": 1.0481,
+			"margin": 0.322,
+			"node": 22,
+			"target": 0.259,
+			"variant": 2
+		},
+		{
+			"idle_won": false,
+			"intensity": 1.3739000000000001,
+			"margin": 0.25,
+			"node": 23,
+			"target": 0.25,
+			"variant": 0
+		},
+		{
+			"idle_won": false,
+			"intensity": 0.8823000000000001,
+			"margin": 0.14400000000000002,
+			"node": 24,
+			"target": 0.162,
+			"variant": 0
+		},
+		{
+			"idle_won": false,
+			"intensity": 1.2451,
+			"margin": 0.268,
+			"node": 25,
+			"target": 0.295,
+			"variant": 2
+		},
+		{
+			"idle_won": false,
+			"intensity": 1.0611000000000002,
+			"margin": 0.373,
+			"node": 26,
+			"target": 0.228,
+			"variant": 2
+		},
+		{
+			"idle_won": false,
+			"intensity": 1.1146,
+			"margin": 0.25,
+			"node": 27,
+			"target": 0.222,
+			"variant": 0
+		},
+		{
+			"idle_won": false,
+			"intensity": 1.3405,
+			"margin": 0.241,
+			"node": 28,
+			"target": 0.216,
+			"variant": 1
+		},
+		{
+			"idle_won": false,
+			"intensity": 0.7996000000000001,
+			"margin": 0.145,
+			"node": 29,
+			"target": 0.131,
+			"variant": 0
+		},
+		{
+			"idle_won": false,
+			"intensity": 0.9268000000000001,
+			"margin": 0.23600000000000002,
+			"node": 30,
+			"target": 0.266,
+			"variant": 1
+		},
+		{
+			"idle_won": false,
+			"intensity": 0.8399000000000001,
+			"margin": 0.377,
+			"node": 31,
+			"target": 0.202,
+			"variant": 3
+		},
+		{
+			"idle_won": false,
+			"intensity": 1.0742,
+			"margin": 0.218,
+			"node": 32,
+			"target": 0.197,
+			"variant": 3
+		},
+		{
+			"idle_won": false,
+			"intensity": 1.3405,
+			"margin": 0.28200000000000003,
+			"node": 33,
+			"target": 0.194,
+			"variant": 0
+		}
+	],
+	"version": 1
+}

@@ -17,6 +17,8 @@ var _mix: HBoxContainer
 var _boss: Control
 var _boss_name: Label
 var _boss_bar: ProgressBar
+var _title: Label
+var _title_age := 9.0
 
 
 func _ready() -> void:
@@ -62,6 +64,12 @@ func _ready() -> void:
 	_boss_name = _text(_boss, 30, Color("ffd0c8"))
 	_boss_bar = _bar(_boss, Vector2(420, 22), Color("d8423a"))
 
+	_title = _text(self, 52, Color.WHITE)
+	_title.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	_title.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_title.grow_vertical = Control.GROW_DIRECTION_BOTH
+	_title.offset_top = -260
+
 	_mix = HBoxContainer.new()
 	_mix.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
 	_mix.offset_bottom = -36
@@ -71,7 +79,15 @@ func _ready() -> void:
 	add_child(_mix)
 
 
+## The stage's number and name, shown for a moment as the battle opens.
+func announce(text: String) -> void:
+	_title.text = text
+	_title_age = 0.0
+
+
 func draw(b: Battle) -> void:
+	_title_age += get_process_delta_time()
+	_title.modulate.a = clampf(2.2 - _title_age, 0.0, 1.0)
 	var left := maxf(b.level.duration - b.time, 0.0)
 	_clock.text = "%d:%02d" % [int(left) / 60, int(left) % 60]
 	_wave.text = "WAVE %d/%d" % [b.wave, b.waves]
@@ -133,7 +149,7 @@ func _chip(parent: Control, size: int) -> Label:
 	return l
 
 
-func _text(parent: Control, size: int, color: Color) -> Label:
+func _text(parent: Node, size: int, color: Color) -> Label:
 	var l := Label.new()
 	_style(l, size, color)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

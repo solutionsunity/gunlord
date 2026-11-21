@@ -1,80 +1,30 @@
 extends SceneTree
-## Plays every level headless under simple steering policies and prints how
-## each run ends. A balance probe: on every level the sweeping bot should win
-## and the idle one lose, and the sweeper's margin should shrink level by level.
-##   godot --headless --path . -s tests/simulate.gd
+## Balance and drift probe.
+## Authored nodes: every bot plays each; the sweeping bot must win and the idle
+## bot must lose. Forged nodes: every SAMPLE-th is replayed by the sweeping bot
+## and must reproduce the margin recorded when it was forged; the simulation is
+## deterministic, so any difference means a change moved the balance and the
+## map must be re-forged on purpose.
+##   godot --headless --path . -s tests/simulate.gd -- [all]   (all: replay every forged node)
+## Lines: "L<n> <bot> WON|LOST ..." and "N<n> sweep margin <now> recorded <then> ok|DRIFT".
 
-const DT := 1.0 / 60.0
-const TIME_LIMIT := 240.0
+const Bots := preload("res://tools/bots.gd")
+const SAMPLE := 10
+const DRIFT := 0.002
 
 
 func _init() -> void:
-	for index in Levels.count():
-		_play(index)
+	for node in Stages.AUTHORED.size():
+		for policy in [&"idle", &"sweep", &"greedy"]:
+			var r: Dictionary = Bots.play(Stages.build(node), policy)
+			print("L%d %-7s %-5s t=%5.1fs wave=%2d units=%4d peak=%4d margin=%.2f" % [
+				node + 1, policy, "WON" if r.won else "LOST", r.time, r.wave, r.survivors, r.peak, r.margin])
+	var every := 1 if OS.get_cmdline_user_args().has("all") else SAMPLE
+	var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(Stages.FORGED))
+	for k in range(0, data.nodes.size(), every):
+		var entry: Dictionary = data.nodes[k]
+		var node := int(entry.node)
+		var r: Dictionary = Bots.play(Stages.build(node), &"sweep")
+		var drift := absf(r.margin - float(entry.margin)) > DRIFT
+		print("N%d sweep margin %.3f recorded %.3f %s" % [node + 1, r.margin, entry.margin, "DRIFT" if drift else "ok"])
 	quit()
-
-
-func _play(index: int) -> void:
-	for policy in [&"idle", &"sweep", &"greedy"]:
-		var b := Battle.new(Content.weapons(), Content.objects(), Levels.build(index))
-		var started := Time.get_ticks_usec()
-		var ticks := 0
-		var max_shots := 0
-		var max_objects := 0
-		while b.state == Battle.State.RUNNING and b.time < TIME_LIMIT:
-			_steer(policy, b)
-			b.tick(DT)
-			b.events.clear()
-			ticks += 1
-			max_shots = maxi(max_shots, b.shots.size())
-			max_objects = maxi(max_objects, b.lane.size())
-		var ms := (Time.get_ticks_usec() - started) / 1000.0 / ticks
-		print("L%d %-7s %-7s t=%5.1fs wave=%2d units=%4d peak=%4d %s | objs<=%d shots<=%d %.3f ms/tick" % [
-			index + 1, policy, Battle.State.keys()[b.state], b.time, b.wave, b.squad.total(), b.peak_units,
-			_mix(b), max_objects, max_shots, ms])
-
-
-func _steer(policy: StringName, b: Battle) -> void:
-	match policy:
-		&"idle":
-			b.squad.target_x = 0.0
-		&"sweep":
-			b.squad.target_x = sin(b.time * 0.8) * Squad.EDGE
-		&"greedy":
-			b.squad.target_x = _greedy_x(b)
-
-
-## Hold the centre while enemies are close; otherwise stand under the best
-## pickup in reach, skipping lanes led by a trap.
-func _greedy_x(b: Battle) -> float:
-	var lane := b.lane
-	for i in lane.size():
-		if lane.def[i].enemy and lane.z[i] > -22.0:
-			return 0.0
-	var best_x := 0.0
-	var best := 0.0
-	for i in lane.size():
-		var d := lane.def[i]
-		if d.enemy or d.is_trap() or lane.z[i] < -45.0:
-			continue
-		if _trap_ahead(lane, i):
-			continue
-		var value := lane.amount[i] / maxf(lane.hp[i], 1.0)
-		if value > best:
-			best = value
-			best_x = lane.x[i]
-	return best_x
-
-
-func _trap_ahead(lane: Lane, i: int) -> bool:
-	for k in lane.size():
-		if lane.def[k].is_trap() and absf(lane.x[k] - lane.x[i]) < 0.5 and lane.z[k] > lane.z[i]:
-			return true
-	return false
-
-
-func _mix(b: Battle) -> String:
-	var parts: PackedStringArray = []
-	for w in b.squad.weapons.size():
-		parts.append("%s:%d" % [b.squad.weapons[w].id, b.squad.counts[w]])
-	return " ".join(parts)

@@ -1,7 +1,7 @@
 class_name Screens
 extends CanvasLayer
-## The screens around a battle: the level menu, the pause overlay and the
-## results. They only report choices through signals; the game loop decides.
+## The screens around a battle: the map, the pause overlay and the results.
+## They only report choices through signals; the game loop decides.
 
 signal level_chosen(index: int)
 signal resume_chosen
@@ -12,8 +12,14 @@ const INK := Color(0.07, 0.09, 0.16)
 const GOLD := Color("f5c542")
 const BLUE := Color("2f6fe0")
 
+const AHEAD := 4             ## locked nodes shown beyond the frontier
+const BEHIND := 40           ## finished nodes shown behind it
+const ROW := 150.0           ## vertical distance between nodes on the map
+const SWAY := 170.0          ## how far the path winds left and right
+
 var _menu: Control
-var _levels: VBoxContainer
+var _scroll: ScrollContainer
+var _path: VBoxContainer
 var _pause: Control
 var _result: Control
 var _result_title: Label
@@ -24,13 +30,21 @@ var _result_buttons: HBoxContainer
 func _ready() -> void:
 	layer = 10
 	_menu = _overlay(0.35)
-	var col := _column(_menu)
-	_label(col, "GUNLORD", 110, GOLD)
-	_label(col, "hold the bridge", 34, Color.WHITE)
-	_space(col, 30)
-	_levels = VBoxContainer.new()
-	_levels.add_theme_constant_override("separation", 14)
-	col.add_child(_levels)
+	_scroll = ScrollContainer.new()
+	_scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_scroll.offset_top = 230
+	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_menu.add_child(_scroll)
+	_path = VBoxContainer.new()
+	_path.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_path.add_theme_constant_override("separation", 0)
+	_scroll.add_child(_path)
+	var head := VBoxContainer.new()
+	head.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
+	head.offset_top = 40
+	_menu.add_child(head)
+	_label(head, "GUNLORD", 110, GOLD)
+	_label(head, "hold the bridge", 34, Color.WHITE)
 
 	_pause = _overlay(0.55)
 	var p := _column(_pause)
@@ -51,22 +65,67 @@ func _ready() -> void:
 	hide_all()
 
 
-func show_menu(progress: Progress, names: Array[String]) -> void:
+## The map: a winding line of nodes climbing from the first at the bottom,
+## scrolled so the frontier (the first unbeaten node) is in view.
+func show_map(progress: Progress) -> void:
 	hide_all()
-	for child in _levels.get_children():
+	for child in _path.get_children():
+		_path.remove_child(child)
 		child.queue_free()
-	for i in names.size():
-		var open := i < progress.unlocked
-		var done := progress.best.has(i)
-		var text := "%d  %s" % [i + 1, names[i]]
-		if done:
-			text += "   best %d" % progress.best[i]
-		elif not open:
-			text += "   locked"
-		var b := _button(_levels, text, BLUE if open else Color(INK, 0.7), func() -> void: level_chosen.emit(i))
-		b.disabled = not open
-		b.custom_minimum_size = Vector2(560, 92)
+	var frontier := progress.unlocked - 1
+	var first := maxi(0, frontier - BEHIND)
+	var last := frontier + AHEAD
+	var frontier_row: Control
+	for node in range(last, first - 1, -1):
+		var row := _map_node(node, progress, frontier)
+		if node == frontier:
+			frontier_row = row
 	_menu.visible = true
+	await get_tree().process_frame
+	if is_instance_valid(frontier_row):
+		_scroll.scroll_vertical = int(frontier_row.position.y - _scroll.size.y * 0.55)
+
+
+func _map_node(node: int, progress: Progress, frontier: int) -> Control:
+	var row := Control.new()
+	row.custom_minimum_size = Vector2(0, ROW)
+	_path.add_child(row)
+	var x := sin(node * 0.9) * SWAY
+	var open := node <= frontier
+	var boss := Forge.is_boss(node)
+	var spec := Stages.spec(node)
+	# The trail down to the previous node.
+	if node > 0:
+		var below := sin((node - 1) * 0.9) * SWAY
+		for k in range(1, 4):
+			var dot := ColorRect.new()
+			dot.color = Color(1, 1, 1, 0.55 if open else 0.2)
+			dot.size = Vector2(12, 12)
+			dot.position = Vector2(360 + lerpf(x, below, k / 4.0) - 6, ROW * 0.5 + ROW * k / 4.0 - 6)
+			dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			row.add_child(dot)
+	var color := GOLD.darkened(0.2) if boss else BLUE
+	var b := _button(row, str(node + 1), color if open else Color(INK, 0.75), func() -> void: level_chosen.emit(node))
+	b.disabled = not open
+	b.custom_minimum_size = Vector2(104, 104)
+	b.size = b.custom_minimum_size
+	b.position = Vector2(360 + x - 52, ROW * 0.5 - 52)
+	if node == frontier:
+		var ring := b.get_theme_stylebox("normal").duplicate() as StyleBoxFlat
+		ring.border_color = GOLD
+		ring.set_border_width_all(7)
+		b.add_theme_stylebox_override("normal", ring)
+	var caption: String = spec.name
+	if boss:
+		caption = "BOSS · " + caption
+	if progress.best.has(node):
+		caption += "\nbest %d" % progress.best[node]
+	var label := _label(row, caption, 26, Color.WHITE if open else Color(1, 1, 1, 0.45))
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT if x < 0 else HORIZONTAL_ALIGNMENT_RIGHT
+	label.size = Vector2(300, 80)
+	label.position = Vector2(360 + x + 66, ROW * 0.5 - 30) if x < 0 else Vector2(360 + x - 366, ROW * 0.5 - 30)
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return row
 
 
 func show_pause() -> void:

@@ -73,7 +73,7 @@ func tick(dt: float) -> void:
 func _spawn() -> void:
 	while _next < _timeline.size() and _timeline[_next].t <= time:
 		var e: Dictionary = _timeline[_next]
-		var d: ObjectDef = _objects[e.id]
+		var d: ObjectDef = e.def if e.has("def") else _objects[e.id]   # a stage may bring its own variant
 		lane.spawn(d, e.x, Lane.SPAWN_Z + e.get("z", 0.0), e.get("hp", d.hp), e.get("amount", d.amount))
 		wave = maxi(wave, e.get("wave", 0))
 		_next += 1

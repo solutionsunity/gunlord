@@ -18,9 +18,11 @@ the game still runs, with placeholder capsules.
 | Task | Command |
 |---|---|
 | Play in the editor | open `project.godot` in Godot 4.7 and press F5 |
-| Balance probe (headless bots) | `godot --headless --path . -s tests/simulate.gd` |
+| Balance and drift probe (authored nodes, sampled forged nodes) | `godot --headless --path . -s tests/simulate.gd` (add `-- all` for every forged node) |
 | Engagement probe (where enemies die, boss time under fire) | `godot --headless --path . -s tests/engagement.gd` |
 | CPU cost per frame (simulation and view) | `godot --headless --path . -s tests/frame_cost.gd` |
+| Forge more map nodes into `assets/map/forged.json` (appends) | `godot --headless --path . -s tools/forge_map.gd -- 20` |
+| Map and a forged boss fight to `build/` | `xvfb-run godot --path . --rendering-driver opengl3 --resolution 720x1280 --fixed-fps 60 -s tests/map.gd -- 10` |
 | Bake crowd characters to `assets/baked/` | `godot --headless --path . -s tools/bake_crowd.gd` |
 | Model gallery to `build/gallery.png` | `xvfb-run godot --path . --rendering-driver opengl3 --resolution 1280x720 -s tests/gallery.gd -- shoot 0.3` |
 | Squad close-up at time T to `build/` | `xvfb-run godot --path . --rendering-driver opengl3 --resolution 720x1280 --fixed-fps 60 -s tests/closeup.gd -- T` |

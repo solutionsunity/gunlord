@@ -81,11 +81,13 @@ jobs:
           $GODOT --headless --path . -s tools/bake_crowd.gd
           test -f assets/baked/crossbowman.res
 
-      - name: Balance probe (fails if the sweeping bot loses a level or the idle bot wins one)
+      - name: Balance and drift probe
+        # Fails if the sweeping bot loses an authored node, the idle bot wins one,
+        # or a sampled forged node no longer plays to its recorded margin.
         run: |
-          out=$($GODOT --headless --path . -s tests/simulate.gd | grep -E '^L[0-9]+ ')
+          out=$($GODOT --headless --path . -s tests/simulate.gd | grep -E '^[LN][0-9]+ ')
           echo "$out"
-          ! echo "$out" | grep -qE '^L[0-9]+ (sweep +LOST|idle +WON)'
+          ! echo "$out" | grep -qE '^L[0-9]+ (sweep +LOST|idle +WON)|DRIFT'
 
       - name: Export web
         run: |

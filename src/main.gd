@@ -1,6 +1,6 @@
 extends Node3D
-## The game loop: owns the flow between the level menu, a battle, the pause
-## overlay and the results, and wires the battle to its view, HUD, sound and
+## The game loop: owns the flow between the map, a battle, the pause overlay
+## and the results, and wires the battle to its view, HUD, sound and
 ## the player's input. Drag (finger or mouse) or the arrow keys steer the squad.
 
 enum Mode { MENU, BATTLE, PAUSED, RESULT }
@@ -17,6 +17,7 @@ var _hud := Hud.new()
 var _sound := Sound.new()
 var _screens := Screens.new()
 var _since_end := 0.0
+var _attempts := {}         ## node -> attempts this session; each retry varies the stage fairly
 
 
 func _ready() -> void:
@@ -39,7 +40,8 @@ func _ready() -> void:
 
 func start_level(index: int) -> void:
 	_sound.play(&"click")
-	var level := Levels.build(index)
+	_attempts[index] = _attempts.get(index, -1) + 1
+	var level := Stages.build(index, _attempts[index])
 	_battle = Battle.new(Content.weapons(), Content.objects(), level)
 	_view.reset()
 	_view.stage.apply_theme(level.theme)
@@ -49,6 +51,7 @@ func start_level(index: int) -> void:
 	_mode = Mode.BATTLE
 	_sound.play(&"start")
 	_sound.music(true)
+	_hud.announce("%d · %s" % [index + 1, level.name])
 
 
 func _show_menu() -> void:
@@ -58,10 +61,7 @@ func _show_menu() -> void:
 	_view.reset()
 	_hud.visible = false
 	_mode = Mode.MENU
-	var names: Array[String] = []
-	for spec in Levels.SPECS:
-		names.append(spec.name)
-	_screens.show_menu(_progress, names)
+	_screens.show_map(_progress)
 
 
 func _pause() -> void:
@@ -107,9 +107,10 @@ func _finish() -> void:
 	var index := _battle.level.index
 	if won:
 		_progress.record_victory(index, _battle.squad.total())
-	var line := "%d of %d standing" % [_battle.squad.total(), _battle.level.capacity] if won \
+	var line := "%d · %s\n" % [index + 1, _battle.level.name]
+	line += "%d of %d standing" % [_battle.squad.total(), _battle.level.capacity] if won \
 			else "fell at wave %d of %d" % [_battle.wave, _battle.waves]
-	_screens.show_result(won, line, index, index + 1 < Levels.count())
+	_screens.show_result(won, line, index, true)
 
 
 func _unhandled_input(event: InputEvent) -> void:

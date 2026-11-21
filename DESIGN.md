@@ -144,6 +144,62 @@ Modifiers apply to the whole squad or to one weapon type (`ATK +20%`,
 - What the store shows is what you play. Marketing material shows only real
   gameplay.
 
+## Endless map
+
+Stages are composed, not authored. A stage is a set of **blocks**, and each
+block has its own tunable numbers:
+
+| Block | Numbers |
+|---|---|
+| Horde | soldiers in the first wave, soldiers added per wave |
+| Runners | first wave they appear, runners added per wave |
+| Brutes | a brute every N waves, hp, hp added per brute |
+| Boss | the warlord's hp and scale, and companions who march with it |
+| Pacing | waves, seconds between waves, lane speed and its rise |
+| Economy | block payout and its growth, block toughness and its growth, pickup gap, multiplier and trap frequency, the crates on offer |
+| Theme | time of day |
+
+**Map.** An endless line of nodes. Nodes 1–5 are the original levels,
+rewritten in blocks. Every later node is forged from its own seed.
+
+**Generate, then verify.** For each node the forge draws a character
+(horde, rush, siege, elite or mixed). It then scales all the threats with one
+intensity knob until the sweeping bot's margin (squad left over capacity) lands
+on that node's target, and it checks that the idle bot loses. The target falls
+from 60% at node 6 towards 15%. Every fifth node is a boss node, harder than
+the curve; the node after it is a breather, easier.
+
+**Protected opening.** Every forged stage opens the same fair way, whatever
+its character: no brute before wave 5, and a gun crate at about ten seconds.
+Without it, a siege stage's early brute meets a squad of crossbows that cannot
+hit it, and no intensity setting rescues the stage.
+
+**Variants.** A stage with a cliff (won easily just below some intensity, lost
+just above it) cannot be tuned to a target. The forge then tries the node's
+next variant (a different draw from the same node), up to four, and keeps the
+closest. The variant is stored with the intensity.
+
+**Forged offline.** One verification runs a whole battle, so verifying
+dozens of candidates on a phone would take minutes. `tools/forge_map.gd` forges
+nodes ahead of time into `assets/map/forged.json`, committed as content: it is
+expensive to regenerate, and it is the level data. Only the variant, intensity
+and measured margin per node are stored; the stage itself is re-derived. Nodes past the forged range
+are generated on the device with the plateau intensity; they are deliberately
+unverified.
+
+**Fixed per node, varied per attempt.** A node is the same stage for everyone
+and on every retry, so a lost stage can be learned. Each attempt varies only
+in ways that keep it fair: the whole stage may be mirrored left-to-right, and
+the horde's formation shifts slightly.
+
+**Drift check.** Forged margins are recorded. CI replays a sample of nodes, and
+a change to the simulation that moves a margin out of tolerance fails the
+build. The map is then re-forged on purpose, never silently.
+
+**Next blocks.** A block only adds variety if it plays differently. Planned:
+enemies that fire back (boss arms, archers), and tougher elite soldiers drawn
+at a larger size.
+
 ## Technology
 
 - **Godot 4**: open source, exports to Android and iOS.
@@ -281,6 +337,11 @@ Peak scene: 120 squad + ~300 enemies + ~1,500 projectiles.
 | 17 | Crowds cast blob shadows, not real shadows               | Active |
 | 18 | The base weapon is a crossbow (matches the art); id `bow` is renamed `crossbow` | Active |
 | 19 | At capacity, weapon crates swap base units one-for-one   | Active |
-| 20 | Five-level campaign from one generator; a time of day per level | Active |
+| 20 | Five-level campaign from one generator; a time of day per level | Refined by 23 |
 | 21 | Progress (unlocks, best result) is the only state kept between runs, on the device | Active |
 | 22 | Sound: weapons and drums synthesized in code; impacts, UI and jingles from Kenney (CC0) | Active |
+| 23 | Endless map of composed stages; the five levels become nodes 1–5 | Active; refines 20 |
+| 24 | Each node forged from a seed and verified by the bots against a margin target | Active |
+| 25 | The map is forged offline and committed; nodes beyond it are generated unverified | Active |
+| 26 | Fixed stage per node; per-attempt variation is only mirroring and formation jitter | Active |
+| 27 | CI replays sampled nodes and fails on margin drift | Active |
