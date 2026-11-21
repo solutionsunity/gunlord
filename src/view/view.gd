@@ -447,12 +447,13 @@ func _kit_crowd(piece: String, capacity: int) -> Crowd:
 	return crowd
 
 
-## KayKit's arrow, turned from lying along +Y to flying along +Z.
+## KayKit's arrow, turned so its steel tip (the model's -Y end; the green
+## fletching is +Y) leads along +Z, the direction a projectile flies.
 func _arrows(capacity: int) -> Crowd:
 	var scene: Node = load("res://assets/third_party/kaykit-adventurers/props/arrow.gltf").instantiate()
 	var mi: MeshInstance3D = scene.find_children("*", "MeshInstance3D", true, false)[0]
 	var arrays := mi.mesh.surface_get_arrays(0)
-	var turn := Basis(Vector3.RIGHT, PI / 2.0).scaled(Vector3.ONE * 1.8)
+	var turn := Basis(Vector3.RIGHT, -PI / 2.0).scaled(Vector3.ONE * 1.8)
 	var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
 	var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
 	for k in verts.size():
