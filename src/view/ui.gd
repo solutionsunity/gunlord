@@ -16,7 +16,8 @@ const UNIT_ICON := "res://assets/art/icons/%s.png"
 ## The game's version: the build writes it into the project from its git
 ## tag (see .github/workflows/build.yml); a local run says "dev".
 static func version() -> String:
-	return ProjectSettings.get_setting("application/config/version", "dev")
+	var v: String = ProjectSettings.get_setting("application/config/version", "")
+	return v if not v.is_empty() else "dev"   # Godot declares the setting, empty, in every project
 
 
 static func icon(name: String) -> Texture2D:
@@ -121,6 +122,47 @@ static func icon_chip(parent: Node, texture: Texture2D, icon_px: float, size: in
 	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(l)
 	return row
+
+
+## A volume slider, 0..1: gold fill on a dark track, a round thumb-sized grabber.
+## `changed` receives the new value as the player drags.
+static func slider(parent: Node, width: float, changed: Callable) -> HSlider:
+	var sl := HSlider.new()
+	sl.min_value = 0.0
+	sl.max_value = 1.0
+	sl.step = 0.05
+	sl.custom_minimum_size = Vector2(width, 48)
+	sl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var track := box(Color(INK, 0.75), 8, 2, Color(1, 1, 1, 0.6))
+	track.content_margin_top = 8
+	track.content_margin_bottom = 8
+	sl.add_theme_stylebox_override("slider", track)
+	sl.add_theme_stylebox_override("grabber_area", box(GOLD, 8))
+	sl.add_theme_stylebox_override("grabber_area_highlight", box(GOLD.lightened(0.2), 8))
+	sl.add_theme_icon_override("grabber", _knob(34, Color.WHITE))
+	sl.add_theme_icon_override("grabber_highlight", _knob(34, GOLD.lightened(0.5)))
+	sl.value_changed.connect(changed)
+	parent.add_child(sl)
+	return sl
+
+
+static var _knobs := {}
+
+
+## A filled circle with a dark rim, drawn once per size and colour.
+static func _knob(px: int, color: Color) -> Texture2D:
+	var key := "%d %s" % [px, color]
+	if _knobs.has(key):
+		return _knobs[key]
+	var img := Image.create_empty(px, px, false, Image.FORMAT_RGBA8)
+	var r := px / 2.0
+	for y in px:
+		for x in px:
+			var d := Vector2(x + 0.5 - r, y + 0.5 - r).length()
+			var a := clampf(r - d, 0.0, 1.0)
+			img.set_pixel(x, y, Color(INK if d > r - 3.0 else color, a))
+	_knobs[key] = ImageTexture.create_from_image(img)
+	return _knobs[key]
 
 
 static func bar(parent: Node, size: Vector2, color: Color) -> ProgressBar:

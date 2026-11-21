@@ -1,34 +1,44 @@
 class_name Settings
 extends RefCounted
-## The player's settings, kept on the device: music and sound effects on or
-## off. They act through two audio buses, so muting is one switch per bus.
+## The player's settings, kept on the device: overall volume and mute, music
+## and effects volumes, and which side of the screen the weapon badges sit on.
+## Volumes act through the audio buses: Master, and Music and SFX under it.
 
 const PATH := "user://settings.cfg"
 const MUSIC_BUS := &"Music"
 const SFX_BUS := &"SFX"
+const SIDES := [&"right", &"left"]
 
 var path := PATH           ## where settings are kept; empty keeps them in memory only (tests)
-var music := true
-var sound := true
+var master := 1.0          ## 0..1
+var muted := false         ## silences everything, keeping the levels for when it is lifted
+var music := 1.0           ## 0..1
+var sound := 1.0           ## 0..1, the effects
+var badges: StringName = &"right"   ## the side of the screen the weapon badges sit on
 
 
 static func load_saved() -> Settings:
 	var s := Settings.new()
 	var cfg := ConfigFile.new()
 	if cfg.load(PATH) == OK:
-		s.music = cfg.get_value("audio", "music", true)
-		s.sound = cfg.get_value("audio", "sound", true)
+		s.master = cfg.get_value("audio", "master", 1.0)
+		s.muted = cfg.get_value("audio", "muted", false)
+		s.music = cfg.get_value("audio", "music_volume", 1.0)
+		s.sound = cfg.get_value("audio", "sound_volume", 1.0)
+		s.badges = StringName(cfg.get_value("hud", "badges", "right"))
 	return s
 
 
-func muted() -> bool:
-	return not music and not sound
+## Silent, whether muted or turned all the way down.
+func silent() -> bool:
+	return muted or master <= 0.0
 
 
-## Applies the settings to the audio buses, creating the buses on first use.
+## Applies the settings to the audio buses, creating Music and SFX on first use.
 func apply() -> void:
-	AudioServer.set_bus_mute(_bus(MUSIC_BUS), not music)
-	AudioServer.set_bus_mute(_bus(SFX_BUS), not sound)
+	_set_bus(0, master, muted)
+	_set_bus(_bus(MUSIC_BUS), music, false)
+	_set_bus(_bus(SFX_BUS), sound, false)
 
 
 func save() -> void:
@@ -36,9 +46,17 @@ func save() -> void:
 	if path.is_empty():
 		return
 	var cfg := ConfigFile.new()
-	cfg.set_value("audio", "music", music)
-	cfg.set_value("audio", "sound", sound)
+	cfg.set_value("audio", "master", master)
+	cfg.set_value("audio", "muted", muted)
+	cfg.set_value("audio", "music_volume", music)
+	cfg.set_value("audio", "sound_volume", sound)
+	cfg.set_value("hud", "badges", String(badges))
 	cfg.save(path)
+
+
+static func _set_bus(i: int, level: float, mute: bool) -> void:
+	AudioServer.set_bus_volume_db(i, linear_to_db(maxf(level, 0.0001)))
+	AudioServer.set_bus_mute(i, mute or level <= 0.0)
 
 
 static func _bus(name: StringName) -> int:

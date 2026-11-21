@@ -7,7 +7,7 @@ signal level_chosen(index: int)
 signal resume_chosen
 signal menu_chosen
 signal mute_pressed
-signal settings_changed(music: bool, sound: bool)
+signal setting_changed(key: StringName, value: Variant)   ## a Settings field and its new value
 signal reset_chosen
 
 const AHEAD := 4             ## locked nodes shown beyond the frontier
@@ -29,8 +29,12 @@ var _dragged := false        ## this press became a scroll: the button it starte
 var _pause: Control
 var _settings: Control
 var _settings_back: Control  ## the overlay the settings return to
-var _music: Button
-var _sound: Button
+var _volume: HSlider
+var _music: HSlider
+var _sound: HSlider
+var _badges: Button
+var _badge_side: StringName = &"right"
+var _master_sliders: Array[HSlider] = []
 var _reset: Button
 var _armed := false          ## reset asks twice
 var _mute_buttons: Array[Button] = []
@@ -208,9 +212,10 @@ func _build_pause() -> void:
 	_controls(row)
 
 
-## The sound toggle and the settings gear, as on the map and the pause overlay.
+## Mute, overall volume and the settings gear, as on the map and the pause overlay.
 func _controls(parent: Control) -> void:
 	_mute_buttons.append(Ui.icon_button(parent, "audioOn", BUTTON, Color(Ui.INK, 0.7), func() -> void: mute_pressed.emit()))
+	_master_sliders.append(Ui.slider(parent, 170.0, func(v: float) -> void: setting_changed.emit(&"master", v)))
 	Ui.icon_button(parent, "gear", BUTTON, Color(Ui.INK, 0.7), func() -> void: _open_settings())
 
 
@@ -219,31 +224,50 @@ func _build_settings() -> void:
 	var c := _column(_settings)
 	Ui.label(c, "SETTINGS", 72, Color.WHITE)
 	_space(c, 16)
-	_music = Ui.button(c, "", Ui.BLUE, func() -> void: _toggle(true))
-	_sound = Ui.button(c, "", Ui.BLUE, func() -> void: _toggle(false))
-	for b in [_music, _sound]:
-		b.custom_minimum_size = Vector2(420, 88)
-		b.expand_icon = true
-		b.add_theme_constant_override("icon_max_width", 48)
+	_volume = _level(c, "audioOn", "VOLUME", &"master")
+	_music = _level(c, "musicOn", "MUSIC", &"music")
+	_sound = _level(c, "target", "EFFECTS", &"sound")
+	_space(c, 12)
+	_badges = Ui.button(c, "", Ui.BLUE, func() -> void:
+		setting_changed.emit(&"badges", &"left" if _badge_side == &"right" else &"right"))
+	_badges.custom_minimum_size = Vector2(460, 88)
 	_space(c, 16)
 	_reset = Ui.button(c, "", Color("8a2a2a"), func() -> void: _reset_pressed())
-	_reset.custom_minimum_size = Vector2(420, 88)
+	_reset.custom_minimum_size = Vector2(460, 88)
 	_space(c, 16)
 	Ui.button(c, "BACK", Color(Ui.INK, 0.9), func() -> void: _close_settings())
 	_space(c, 12)
 	Ui.label(c, "Gunlord v" + Ui.version(), 24, Color(1, 1, 1, 0.6))
 
 
-## Shows the current settings: the mute buttons everywhere, the switches here.
-func show_settings(music: bool, sound: bool) -> void:
+## One volume row: an icon, a name, a slider bound to a Settings field.
+func _level(parent: Control, icon: String, name: String, key: StringName) -> HSlider:
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 14)
+	parent.add_child(row)
+	var pic := TextureRect.new()
+	pic.texture = Ui.icon(icon)
+	pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	pic.custom_minimum_size = Vector2(44, 44)
+	pic.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(pic)
+	var l := Ui.label(row, name, 34, Color.WHITE)
+	l.custom_minimum_size = Vector2(150, 0)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	return Ui.slider(row, 250.0, func(v: float) -> void: setting_changed.emit(key, v))
+
+
+## Shows the current settings everywhere they appear, without re-sending them.
+func show_settings(settings: Settings) -> void:
 	for b in _mute_buttons:
-		b.icon = Ui.icon("audioOff" if not music and not sound else "audioOn")
-	_music.text = "MUSIC  %s" % ("ON" if music else "OFF")
-	_music.icon = Ui.icon("musicOn" if music else "musicOff")
-	_sound.text = "SOUND  %s" % ("ON" if sound else "OFF")
-	_sound.icon = Ui.icon("audioOn" if sound else "audioOff")
-	_music.set_meta(&"on", music)
-	_sound.set_meta(&"on", sound)
+		b.icon = Ui.icon("audioOff" if settings.silent() else "audioOn")
+	for s in _master_sliders + [_volume]:
+		s.set_value_no_signal(settings.master)
+	_music.set_value_no_signal(settings.music)
+	_sound.set_value_no_signal(settings.sound)
+	_badge_side = settings.badges
+	_badges.text = "BADGES ON THE %s" % String(settings.badges).to_upper()
 
 
 func _open_settings() -> void:
@@ -257,12 +281,6 @@ func _open_settings() -> void:
 func _close_settings() -> void:
 	_settings.visible = false
 	_settings_back.visible = true
-
-
-func _toggle(music: bool) -> void:
-	var m: bool = _music.get_meta(&"on", true)
-	var s: bool = _sound.get_meta(&"on", true)
-	settings_changed.emit(not m if music else m, s if music else not s)
 
 
 func _reset_pressed() -> void:

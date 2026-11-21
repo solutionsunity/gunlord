@@ -38,8 +38,9 @@ func _ready() -> void:
 	_screens.resume_chosen.connect(_resume)
 	_hud.pause_pressed.connect(_pause)
 	_hud.mute_pressed.connect(_toggle_mute)
+	_hud.master_changed.connect(func(v: float) -> void: _change_setting(&"master", v))
 	_screens.mute_pressed.connect(_toggle_mute)
-	_screens.settings_changed.connect(_set_audio)
+	_screens.setting_changed.connect(_change_setting)
 	_screens.reset_chosen.connect(_reset_progress)
 	_show_settings()
 	_show_menu()
@@ -71,23 +72,25 @@ func _show_menu() -> void:
 	_screens.show_map(_progress)
 
 
-## One tap silences everything, or brings it all back.
+## One tap silences everything, or brings it all back at the levels it had.
 func _toggle_mute() -> void:
-	var on := _settings.muted()
-	_set_audio(on, on)
-
-
-func _set_audio(music: bool, sound: bool) -> void:
-	_settings.music = music
-	_settings.sound = sound
-	_settings.save()
+	_change_setting(&"muted", not _settings.silent())
+	if not _settings.muted and _settings.master <= 0.0:
+		_change_setting(&"master", 1.0)   # unmuting from "turned all the way down" restores full volume
 	_sound.play(&"click")
+
+
+func _change_setting(key: StringName, value: Variant) -> void:
+	_settings.set(key, value)
+	if key == &"master" and value > 0.0:
+		_settings.muted = false   # raising the volume lifts the mute
+	_settings.save()
 	_show_settings()
 
 
 func _show_settings() -> void:
-	_hud.set_muted(_settings.muted())
-	_screens.show_settings(_settings.music, _settings.sound)
+	_hud.show_settings(_settings)
+	_screens.show_settings(_settings)
 
 
 func _reset_progress() -> void:

@@ -1,21 +1,24 @@
 class_name Hud
 extends CanvasLayer
-## Pause and sound buttons, timer and wave chips, squad size with its capacity
-## bar, the weapon mix as unit badges, the nearest boss's health bar, and the
-## stage's title as a battle opens.
+## Pause, mute and overall volume, timer and wave chips, squad size with its
+## capacity bar, the weapon mix as unit badges in a column at one side (clear
+## of the steering thumb), the nearest boss's health bar, and the stage's
+## title as a battle opens.
 
 signal pause_pressed
 signal mute_pressed
+signal master_changed(value: float)
 
 const BOSS_RANGE := -40.0           ## a boss's bar shows once it is this close
 const BUTTON := 64.0
 
 var _mute: Button
+var _master: HSlider
 var _clock: Label
 var _wave: Label
 var _units: Label
 var _fill: ProgressBar
-var _mix: HBoxContainer
+var _mix: VBoxContainer
 var _badges := {}                   ## weapon index -> {chip: Control, count: Label}
 var _boss: Control
 var _boss_name: Label
@@ -34,6 +37,7 @@ func _ready() -> void:
 	add_child(top)
 	Ui.icon_button(top, "pause", BUTTON, Color(Ui.INK, 0.6), func() -> void: pause_pressed.emit())
 	_mute = Ui.icon_button(top, "audioOn", BUTTON, Color(Ui.INK, 0.6), func() -> void: mute_pressed.emit())
+	_master = Ui.slider(top, 150.0, func(v: float) -> void: master_changed.emit(v))
 	_clock = _chip(top, 36)
 	var gap := Control.new()
 	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -63,17 +67,32 @@ func _ready() -> void:
 	_title.grow_vertical = Control.GROW_DIRECTION_BOTH
 	_title.offset_top = -260
 
-	_mix = HBoxContainer.new()
-	_mix.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-	_mix.offset_bottom = -30
-	_mix.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_mix.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_mix = VBoxContainer.new()
 	_mix.add_theme_constant_override("separation", 10)
 	add_child(_mix)
+	_place_badges(&"right")
 
 
-func set_muted(muted: bool) -> void:
-	_mute.icon = Ui.icon("audioOff" if muted else "audioOn")
+## Reflects the settings: the mute icon, the volume slider, the badges' side.
+func show_settings(settings: Settings) -> void:
+	_mute.icon = Ui.icon("audioOff" if settings.silent() else "audioOn")
+	_master.set_value_no_signal(settings.master)
+	_place_badges(settings.badges)
+
+
+## The badge column hugs one edge, a little above the middle of the screen.
+func _place_badges(side: StringName) -> void:
+	var right := side == &"right"
+	_mix.set_anchors_and_offsets_preset(Control.PRESET_CENTER_RIGHT if right else Control.PRESET_CENTER_LEFT)
+	_mix.grow_horizontal = Control.GROW_DIRECTION_BEGIN if right else Control.GROW_DIRECTION_END
+	_mix.grow_vertical = Control.GROW_DIRECTION_BOTH
+	_mix.offset_right = -14 if right else 0
+	_mix.offset_left = 0 if right else 14
+	_mix.offset_top = -120
+	_mix.offset_bottom = -120
+	_mix.alignment = BoxContainer.ALIGNMENT_CENTER
+	for badge in _mix.get_children():
+		badge.size_flags_horizontal = Control.SIZE_SHRINK_END if right else Control.SIZE_SHRINK_BEGIN
 
 
 ## The stage's number and name, shown for a moment as the battle opens.
@@ -104,6 +123,8 @@ func _draw_mix(squad: Squad) -> void:
 		if not _badges.has(w):
 			var row := Ui.icon_chip(_mix, Ui.unit_icon(wd.id), 56.0, 30)
 			var panel := row.get_parent() as PanelContainer
+			panel.size_flags_horizontal = Control.SIZE_SHRINK_END if _mix.grow_horizontal == Control.GROW_DIRECTION_BEGIN \
+					else Control.SIZE_SHRINK_BEGIN
 			(panel.get_theme_stylebox("panel") as StyleBoxFlat).bg_color = Color(wd.color.darkened(0.45), 0.85)
 			_badges[w] = {chip = panel, count = row.get_child(1)}
 		var badge: Dictionary = _badges[w]

@@ -291,14 +291,18 @@ view never infers them from diffs of the simulation state.
 
 ### Interface
 
-- The HUD shows icon buttons for pause and sound, the clock and wave, the
-  squad count with its capacity bar, the boss bar, and one badge per weapon:
-  that unit's portrait and its count.
+- The HUD shows pause, mute and an overall volume slider, the clock and
+  wave, the squad count with its capacity bar, the boss bar, and one badge
+  per weapon (that unit's portrait and its count). The badges stand in a
+  column at one edge, a little above the middle, clear of the steering
+  thumb; the side (right by default, or left) is a setting.
 - Pedestals show the unit's icon above their payout and hit points.
-- The map, the pause overlay and the settings share a sound toggle and a
-  settings gear. Settings are music on/off, sound on/off, and reset progress
-  (tap twice). They are kept on the device in `user://settings.cfg` and act
-  through two audio buses, Music and SFX.
+- The map and the pause overlay share mute, the overall volume slider and a
+  settings gear. Settings are overall volume, music volume, effects volume,
+  the badges' side, and reset progress (tap twice). Mute keeps the levels for
+  when it is lifted; raising the volume lifts it. Settings are kept on the
+  device in `user://settings.cfg` and act through the audio buses: Master,
+  with Music and SFX under it.
 - The map scrolls by dragging (finger or mouse) or the mouse wheel. A press
   that travels more than 14 px is a scroll, never a tap on the node beneath it.
 - Escape, or Android's back button, pauses a battle.
@@ -386,3 +390,5 @@ Peak scene: 120 squad + ~300 enemies + ~1,500 projectiles.
 | 30 | Settings (music, sound) and progress are the only state kept on the device | Active; refines 21 |
 | 31 | Own art (icon, key art, loading page) rendered from the game itself and committed | Active |
 | 32 | Music: two CC0 tracks from OpenGameArt, chosen by ear (battle loop, map theme), crossfaded; the synthesized drums are retired | Active |
+| 33 | Volumes (overall, music, effects) as sliders; mute keeps the levels | Active; refines 30 |
+| 34 | Weapon badges in a side column (right or left, a setting), clear of the steering thumb | Active |
