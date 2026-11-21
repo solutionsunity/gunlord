@@ -16,6 +16,7 @@ const AHEAD := 4             ## locked nodes shown beyond the frontier
 const BEHIND := 40           ## finished nodes shown behind it
 const ROW := 150.0           ## vertical distance between nodes on the map
 const SWAY := 170.0          ## how far the path winds left and right
+const STRIP := 720.0         ## the map is drawn in a strip this wide, centred on any screen
 
 var _menu: Control
 var _scroll: ScrollContainer
@@ -88,7 +89,8 @@ func show_map(progress: Progress) -> void:
 
 func _map_node(node: int, progress: Progress, frontier: int) -> Control:
 	var row := Control.new()
-	row.custom_minimum_size = Vector2(0, ROW)
+	row.custom_minimum_size = Vector2(STRIP, ROW)
+	row.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_path.add_child(row)
 	var x := sin(node * 0.9) * SWAY
 	var open := node <= frontier

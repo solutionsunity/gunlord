@@ -9,6 +9,8 @@ const DECK_HALF := 6.4                  ## the deck is a little wider than the l
 const NEAR_Z := 14.0
 const FAR_Z := -60.0
 const WATER_Y := -1.8
+const DESIGN_ASPECT := 9.0 / 16.0       ## the portrait frame the game is composed for
+const DESIGN_FOV := 42.0                ## horizontal view in that frame, degrees
 
 ## Time of day per level: sky, sun, ambient light and water colours.
 const THEMES := {
@@ -46,11 +48,27 @@ func _ready() -> void:
 
 func _camera() -> void:
 	camera = Camera3D.new()
-	camera.keep_aspect = Camera3D.KEEP_WIDTH
-	camera.fov = 42.0
 	add_child(camera)
 	camera.look_at_from_position(Vector3(0, 21.0, 11.5), Vector3(0, 0, -15.0))
 	camera_home = camera.transform
+	get_viewport().size_changed.connect(_fit_camera)
+	_fit_camera()
+
+
+## The game is framed for a 9:16 portrait screen with a 42° horizontal view.
+## On anything wider, hold that frame's vertical view instead, so the whole
+## bridge stays in sight and the extra width shows more water and towers;
+## on anything taller, hold the horizontal view and show more lane.
+func _fit_camera() -> void:
+	var size := get_viewport().get_visible_rect().size
+	if size.y <= 0.0:
+		return
+	if size.x / size.y > DESIGN_ASPECT:
+		camera.keep_aspect = Camera3D.KEEP_HEIGHT
+		camera.fov = rad_to_deg(2.0 * atan(tan(deg_to_rad(DESIGN_FOV) / 2.0) / DESIGN_ASPECT))
+	else:
+		camera.keep_aspect = Camera3D.KEEP_WIDTH
+		camera.fov = DESIGN_FOV
 
 
 ## Sets the time of day: one of THEMES.
@@ -102,7 +120,7 @@ func _deck() -> void:
 
 func _water() -> void:
 	var plane := PlaneMesh.new()
-	plane.size = Vector2(160, 200)
+	plane.size = Vector2(600, 600)   # reaches past the horizon even on ultra-wide screens
 	plane.subdivide_width = 1
 	plane.subdivide_depth = 1
 	_water_mat = ShaderMaterial.new()
