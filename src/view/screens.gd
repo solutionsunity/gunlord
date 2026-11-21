@@ -6,7 +6,6 @@ extends CanvasLayer
 signal level_chosen(index: int)
 signal resume_chosen
 signal menu_chosen
-signal mute_pressed
 signal setting_changed(key: StringName, value: Variant)   ## a Settings field and its new value
 signal reset_chosen
 signal update_chosen
@@ -30,15 +29,14 @@ var _dragged := false        ## this press became a scroll: the button it starte
 var _pause: Control
 var _settings: Control
 var _settings_back: Control  ## the overlay the settings return to
-var _volume: HSlider
-var _music: HSlider
-var _sound: HSlider
+var _volume: Slider
+var _music: Slider
+var _sound: Slider
 var _badges: Button
 var _badge_side: StringName = &"right"
-var _master_sliders: Array[HSlider] = []
+var _volume_buttons: Array[VolumeButton] = []
 var _reset: Button
 var _armed := false          ## reset asks twice
-var _mute_buttons: Array[Button] = []
 var _update: Button         ## on the map, when a newer build is out
 var _result: Control
 var _result_title: Label
@@ -179,8 +177,8 @@ func _map_node(node: int, progress: Progress, frontier: int) -> void:
 ## before the buttons see the input, so a drag that starts on a node scrolls
 ## instead of choosing it. Touch reaches this as emulated mouse input.
 func _input(event: InputEvent) -> void:
-	if not _menu.visible:
-		return
+	if not _menu.visible or _volume_buttons.any(func(b: VolumeButton) -> bool: return b.is_open()):
+		return   # a drag on an open volume slider is the slider's, not the map's
 	if event is InputEventMouseButton:
 		match event.button_index:
 			MOUSE_BUTTON_LEFT:
@@ -228,10 +226,12 @@ func _build_pause() -> void:
 	_controls(row)
 
 
-## Mute, overall volume and the settings gear, as on the map and the pause overlay.
+## The volume button and the settings gear, as on the map and the pause overlay.
 func _controls(parent: Control) -> void:
-	_mute_buttons.append(Ui.icon_button(parent, "audioOn", BUTTON, Color(Ui.INK, 0.7), func() -> void: mute_pressed.emit()))
-	_master_sliders.append(Ui.slider(parent, 170.0, func(v: float) -> void: setting_changed.emit(&"master", v)))
+	var volume := VolumeButton.new(BUTTON, Color(Ui.INK, 0.7))
+	volume.changed.connect(func(v: float) -> void: setting_changed.emit(&"master", v))
+	parent.add_child(volume)
+	_volume_buttons.append(volume)
 	Ui.icon_button(parent, "gear", BUTTON, Color(Ui.INK, 0.7), func() -> void: _open_settings())
 
 
@@ -257,7 +257,7 @@ func _build_settings() -> void:
 
 
 ## One volume row: an icon, a name, a slider bound to a Settings field.
-func _level(parent: Control, icon: String, name: String, key: StringName) -> HSlider:
+func _level(parent: Control, icon: String, name: String, key: StringName) -> Slider:
 	var row := HBoxContainer.new()
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
 	row.add_theme_constant_override("separation", 14)
@@ -276,10 +276,9 @@ func _level(parent: Control, icon: String, name: String, key: StringName) -> HSl
 
 ## Shows the current settings everywhere they appear, without re-sending them.
 func show_settings(settings: Settings) -> void:
-	for b in _mute_buttons:
-		b.icon = Ui.icon("audioOff" if settings.silent() else "audioOn")
-	for s in _master_sliders + [_volume]:
-		s.set_value_no_signal(settings.master)
+	for b in _volume_buttons:
+		b.set_level(settings.master)
+	_volume.set_value_no_signal(settings.master)
 	_music.set_value_no_signal(settings.music)
 	_sound.set_value_no_signal(settings.sound)
 	_badge_side = settings.badges

@@ -1,19 +1,17 @@
 class_name Hud
 extends CanvasLayer
-## Pause, mute and overall volume, timer and wave chips, squad size with its
+## Pause, the volume button, timer and wave chips, squad size with its
 ## capacity bar, the weapon mix as unit badges in a column at one side (clear
 ## of the steering thumb), the nearest boss's health bar, and the stage's
 ## title as a battle opens.
 
 signal pause_pressed
-signal mute_pressed
 signal master_changed(value: float)
 
 const BOSS_RANGE := -40.0           ## a boss's bar shows once it is this close
 const BUTTON := 64.0
 
-var _mute: Button
-var _master: HSlider
+var _volume: VolumeButton
 var _clock: Label
 var _wave: Label
 var _units: Label
@@ -36,8 +34,9 @@ func _ready() -> void:
 	top.add_theme_constant_override("separation", 10)
 	add_child(top)
 	Ui.icon_button(top, "pause", BUTTON, Color(Ui.INK, 0.6), func() -> void: pause_pressed.emit())
-	_mute = Ui.icon_button(top, "audioOn", BUTTON, Color(Ui.INK, 0.6), func() -> void: mute_pressed.emit())
-	_master = Ui.slider(top, 150.0, func(v: float) -> void: master_changed.emit(v))
+	_volume = VolumeButton.new(BUTTON, Color(Ui.INK, 0.6))
+	_volume.changed.connect(func(v: float) -> void: master_changed.emit(v))
+	top.add_child(_volume)
 	_clock = _chip(top, 36)
 	var gap := Control.new()
 	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -73,10 +72,9 @@ func _ready() -> void:
 	_place_badges(&"right")
 
 
-## Reflects the settings: the mute icon, the volume slider, the badges' side.
+## Reflects the settings: the volume button, the badges' side.
 func show_settings(settings: Settings) -> void:
-	_mute.icon = Ui.icon("audioOff" if settings.silent() else "audioOn")
-	_master.set_value_no_signal(settings.master)
+	_volume.set_level(settings.master)
 	_place_badges(settings.badges)
 
 

@@ -291,18 +291,20 @@ view never infers them from diffs of the simulation state.
 
 ### Interface
 
-- The HUD shows pause, mute and an overall volume slider, the clock and
+- The HUD shows pause, the volume button, the clock and
   wave, the squad count with its capacity bar, the boss bar, and one badge
   per weapon (that unit's portrait and its count). The badges stand in a
   column at one edge, a little above the middle, clear of the steering
   thumb; the side (right by default, or left) is a setting.
 - Pedestals show the unit's icon above their payout and hit points.
-- The map and the pause overlay share mute, the overall volume slider and a
-  settings gear. Settings are overall volume, music volume, effects volume,
-  the badges' side, and reset progress (tap twice). Mute keeps the levels for
-  when it is lifted; raising the volume lifts it. Settings are kept on the
-  device in `user://settings.cfg` and act through the audio buses: Master,
-  with Music and SFX under it.
+- The volume button is the one sound control outside Settings, in the battle
+  bar, on the map and in the pause overlay: a speaker that, tapped, opens a
+  vertical slider beneath it, whose bottom is silence (the speaker then shows
+  muted). Tapping the speaker again, or anywhere else, closes it; while it is
+  open, a drag is the slider's, never the map's.
+- Settings are overall volume, music volume, effects volume, the badges'
+  side, and reset progress (tap twice); kept on the device in
+  `user://settings.cfg`, acting through the audio buses Master, Music and SFX.
 - The map scrolls by dragging (finger or mouse) or the mouse wheel. A press
   that travels more than 14 px is a scroll, never a tap on the node beneath it.
 - Escape, or Android's back button, pauses a battle.
@@ -408,3 +410,4 @@ Peak scene: 120 squad + ~300 enemies + ~1,500 projectiles.
 | 33 | Volumes (overall, music, effects) as sliders; mute keeps the levels | Active; refines 30 |
 | 34 | Weapon badges in a side column (right or left, a setting), clear of the steering thumb | Active |
 | 35 | Web updates: version-tagged file requests, and a version.json check offering a reload on the map | Active |
+| 36 | One volume button (a speaker opening a vertical slider; its bottom is mute) replaces mute plus inline slider | Active; refines 33 |

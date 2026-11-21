@@ -67,7 +67,7 @@ static func button(parent: Node, text: String, color: Color, pressed: Callable) 
 	b.add_theme_color_override("font_disabled_color", Color(1, 1, 1, 0.45))
 	b.add_theme_constant_override("outline_size", 8)
 	b.add_theme_color_override("font_outline_color", INK)
-	_states(b, color, 22, 3)
+	states(b, color, 22, 3)
 	b.pressed.connect(pressed)
 	parent.add_child(b)
 	return b
@@ -81,13 +81,13 @@ static func icon_button(parent: Node, icon_name: String, px: float, color: Color
 	b.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	b.custom_minimum_size = Vector2(px, px)
 	b.add_theme_constant_override("icon_max_width", int(px * 0.62))
-	_states(b, color, int(px * 0.25), 0)
+	states(b, color, int(px * 0.25), 0)
 	b.pressed.connect(pressed)
 	parent.add_child(b)
 	return b
 
 
-static func _states(b: Button, color: Color, radius: int, border: int) -> void:
+static func states(b: Button, color: Color, radius: int, border: int) -> void:
 	for state in ["normal", "hover", "pressed", "disabled", "focus"]:
 		var c := color.lightened(0.12) if state == "hover" else (color.darkened(0.15) if state == "pressed" else color)
 		var s := box(c, radius, border, Color(1, 1, 1, 0.75) if state != "disabled" else Color(1, 1, 1, 0.2))
@@ -125,17 +125,23 @@ static func icon_chip(parent: Node, texture: Texture2D, icon_px: float, size: in
 
 
 ## A volume slider, 0..1: gold fill on a dark track, a round thumb-sized grabber.
-## `changed` receives the new value as the player drags.
-static func slider(parent: Node, width: float, changed: Callable) -> HSlider:
-	var sl := HSlider.new()
+## `changed` receives the new value as the player drags. Vertical sliders fill
+## from the bottom, so the bottom is silence.
+static func slider(parent: Node, length: float, changed: Callable, vertical := false) -> Slider:
+	var sl: Slider = VSlider.new() if vertical else HSlider.new()
 	sl.min_value = 0.0
 	sl.max_value = 1.0
 	sl.step = 0.05
-	sl.custom_minimum_size = Vector2(width, 48)
-	sl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	sl.custom_minimum_size = Vector2(48, length) if vertical else Vector2(length, 48)
+	if not vertical:
+		sl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	var track := box(Color(INK, 0.75), 8, 2, Color(1, 1, 1, 0.6))
-	track.content_margin_top = 8
-	track.content_margin_bottom = 8
+	if vertical:
+		track.content_margin_left = 8
+		track.content_margin_right = 8
+	else:
+		track.content_margin_top = 8
+		track.content_margin_bottom = 8
 	sl.add_theme_stylebox_override("slider", track)
 	sl.add_theme_stylebox_override("grabber_area", box(GOLD, 8))
 	sl.add_theme_stylebox_override("grabber_area_highlight", box(GOLD.lightened(0.2), 8))
