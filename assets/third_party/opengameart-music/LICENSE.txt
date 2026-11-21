@@ -1,0 +1,15 @@
+Music from OpenGameArt.org, each released by its author under CC0 1.0
+(Creative Commons Zero, public domain dedication):
+http://creativecommons.org/publicdomain/zero/1.0/
+
+determined_pursuit_loop.ogg
+  "Determined Pursuit (epic orchestra loop)" by Emma_MA
+  https://opengameart.org/content/determined-pursuit-epic-orchestra-loop
+  Licence on the source page: CC0. Converted from WAV to Ogg Vorbis.
+
+fantasy_orchestral_theme.ogg
+  "Fantasy Orchestral Theme" by Joth
+  https://opengameart.org/content/fantasy-orchestral-theme
+  Licence on the source page: CC0. Converted from MP3 to Ogg Vorbis.
+
+Licences checked on the source pages on 2026-11-21.

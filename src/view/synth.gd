@@ -1,7 +1,7 @@
 class_name Synth
 extends RefCounted
-## In-house sounds, generated at startup: the weapons' shots and the battle
-## drums. Built from decaying noise and sines, so they ship as code, not files.
+## In-house sounds, generated at startup: the weapons' shots. Built from
+## decaying noise and sines, so they ship as code, not files.
 
 const RATE := 22050
 
@@ -38,45 +38,6 @@ static func cannon() -> AudioStreamWAV:
 		var boom := sin(TAU * (75.0 - 30.0 * t) * t) * exp(-t * 4.5)
 		var rumble := lower.step(low.step(n)) * 12.0 * exp(-t * 3.0)
 		return (boom * 0.7 + rumble * 0.5) * 0.7)
-
-
-## The battle march: war drums at 96 BPM, four bars, looping. Kick on 1 and 3,
-## snare on 2 and 4, a snare roll closing the fourth bar. Each drum is rendered
-## once and mixed in at its beats.
-static func march() -> AudioStreamWAV:
-	var beat := 60.0 / 96.0
-	var bars := 4
-	var low := _Lowpass.new(0.2)
-	var kick := _samples(0.5, func(t: float, _n: float) -> float:
-		return sin(TAU * (60.0 - 25.0 * t) * t) * exp(-t * 9.0) * 0.9)
-	var snare := _samples(0.35, func(t: float, n: float) -> float:
-		return (low.step(n) * 1.6 + sin(TAU * 190.0 * t) * 0.4) * exp(-t * 16.0) * 0.7)
-	var ghost := _samples(0.15, func(t: float, n: float) -> float:
-		return low.step(n) * 1.6 * exp(-t * 30.0) * 0.3)
-	var length := bars * 4 * beat
-	var mix := PackedFloat32Array()
-	mix.resize(int(length * RATE))
-	for bar in bars:
-		for b in 4:
-			var at := (bar * 4 + b) * beat
-			_mix_in(mix, kick if b % 2 == 0 else snare, at)
-			if b == 1 or b == 3:
-				_mix_in(mix, ghost, at + beat * 0.75)
-		if bar == bars - 1:
-			for k in 6:
-				_mix_in(mix, ghost, (bar * 4 + 3) * beat + k * beat / 6.0)
-	for i in mix.size():
-		mix[i] *= 0.6
-	var stream := _encode(mix)
-	stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
-	stream.loop_end = mix.size()
-	return stream
-
-
-static func _mix_in(mix: PackedFloat32Array, sound: PackedFloat32Array, at: float) -> void:
-	var start := int(at * RATE)
-	for i in mini(sound.size(), mix.size() - start):
-		mix[start + i] += sound[i]
 
 
 ## Samples `voice(t, noise)` for `seconds` into a 16-bit mono stream, with a

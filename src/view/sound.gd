@@ -11,7 +11,17 @@ const BOSS_SIZE := 2.0
 var _kit := {}
 var _players := {}
 var _last := {}
-var _music: AudioStreamPlayer
+const MUSIC := "res://assets/third_party/opengameart-music/%s.ogg"
+const FADE := 1.2                 ## seconds a track takes to fade in or out
+
+## track -> [file, volume dB]
+const TRACKS := {
+	battle = ["determined_pursuit_loop", -10.0],
+	map = ["fantasy_orchestral_theme", -9.0],
+}
+
+var _tracks := {}                 ## track -> AudioStreamPlayer
+var _track: StringName            ## the track playing, or empty
 
 
 func _ready() -> void:
@@ -49,11 +59,14 @@ func _ready() -> void:
 		player.max_polyphony = spec[2]
 		add_child(player)
 		_players[key] = player
-	_music = AudioStreamPlayer.new()
-	_music.stream = Synth.march()
-	_music.volume_db = -12.0
-	_music.bus = Settings.MUSIC_BUS
-	add_child(_music)
+	for track in TRACKS:
+		var stream: AudioStreamOggVorbis = load(MUSIC % TRACKS[track][0])
+		stream.loop = true
+		var player := AudioStreamPlayer.new()
+		player.stream = stream
+		player.bus = Settings.MUSIC_BUS
+		add_child(player)
+		_tracks[track] = player
 
 
 func play(key: StringName) -> void:
@@ -64,11 +77,22 @@ func play(key: StringName) -> void:
 	_players[key].play()
 
 
-func music(on: bool) -> void:
-	if on and not _music.playing:
-		_music.play()
-	elif not on:
-		_music.stop()
+## Crossfades to `track` (battle or map); an empty track fades to silence.
+func music(track: StringName) -> void:
+	if track == _track:
+		return
+	if _track != &"":
+		var old: AudioStreamPlayer = _tracks[_track]
+		var out := create_tween()
+		out.tween_property(old, "volume_db", -60.0, FADE)
+		out.tween_callback(old.stop)
+	_track = track
+	if track == &"":
+		return
+	var player: AudioStreamPlayer = _tracks[track]
+	player.volume_db = -60.0
+	player.play()
+	create_tween().tween_property(player, "volume_db", TRACKS[track][1], FADE)
 
 
 func hear(b: Battle) -> void:
@@ -95,7 +119,7 @@ func hear(b: Battle) -> void:
 				elif e.size >= BOSS_SIZE:
 					play(&"boss_down")
 			&"end":
-				music(false)
+				music(&"")
 				play(&"victory" if e.won else &"defeat")
 
 

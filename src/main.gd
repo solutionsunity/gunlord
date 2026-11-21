@@ -57,13 +57,13 @@ func start_level(index: int) -> void:
 	_since_end = 0.0
 	_mode = Mode.BATTLE
 	_sound.play(&"start")
-	_sound.music(true)
+	_sound.music(&"battle")
 	_hud.announce("%d · %s" % [index + 1, level.name])
 
 
 func _show_menu() -> void:
 	_sound.play(&"click")
-	_sound.music(false)
+	_sound.music(&"map")
 	_battle = null
 	_view.reset()
 	_hud.visible = false

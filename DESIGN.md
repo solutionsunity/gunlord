@@ -302,6 +302,9 @@ view never infers them from diffs of the simulation state.
 - The map scrolls by dragging (finger or mouse) or the mouse wheel. A press
   that travels more than 14 px is a scroll, never a tap on the node beneath it.
 - Escape, or Android's back button, pauses a battle.
+- Music: "Determined Pursuit" (Emma_MA) loops through a battle; "Fantasy
+  Orchestral Theme" (Joth) plays on the map. Tracks crossfade over 1.2 s, and
+  the battle track fades out as the battle is decided, under its jingle.
 - Shared style (font, palette, buttons, chips, bars) lives in `src/view/ui.gd`.
 
 ### Own art and loading
@@ -366,7 +369,7 @@ Peak scene: 120 squad + ~300 enemies + ~1,500 projectiles.
 | 19 | At capacity, weapon crates swap base units one-for-one   | Active |
 | 20 | Five-level campaign from one generator; a time of day per level | Refined by 23 |
 | 21 | Progress (unlocks, best result) is the only state kept between runs, on the device | Active |
-| 22 | Sound: weapons and drums synthesized in code; impacts, UI and jingles from Kenney (CC0) | Active |
+| 22 | Sound: weapons and drums synthesized in code; impacts, UI and jingles from Kenney (CC0) | Refined by 32 |
 | 23 | Endless map of composed stages; the five levels become nodes 1–5 | Active; refines 20 |
 | 24 | Each node forged from a seed and verified by the bots against a margin target | Active |
 | 25 | The map is forged offline and committed; nodes beyond it are generated unverified | Active |
@@ -376,3 +379,4 @@ Peak scene: 120 squad + ~300 enemies + ~1,500 projectiles.
 | 29 | Icons over text: unit portraits rendered from our models; UI glyphs from Kenney (CC0) | Active |
 | 30 | Settings (music, sound) and progress are the only state kept on the device | Active; refines 21 |
 | 31 | Own art (icon, key art, loading page) rendered from the game itself and committed | Active |
+| 32 | Music: two CC0 tracks from OpenGameArt, chosen by ear (battle loop, map theme), crossfaded; the synthesized drums are retired | Active |
