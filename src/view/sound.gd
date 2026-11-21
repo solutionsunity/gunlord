@@ -65,6 +65,11 @@ func _ready() -> void:
 		var player := AudioStreamPlayer.new()
 		player.stream = stream
 		player.bus = Settings.MUSIC_BUS
+		# Streamed, decoded a little at a time. On the web Godot defaults to
+		# "sample" playback, which hands the browser the whole track decoded at
+		# once: tens of megabytes for minutes of music, which phones can fail to
+		# play. Short effects stay samples, for low latency.
+		player.playback_type = AudioServer.PLAYBACK_TYPE_STREAM
 		add_child(player)
 		_tracks[track] = player
 

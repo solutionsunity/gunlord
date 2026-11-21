@@ -305,6 +305,12 @@ view never infers them from diffs of the simulation state.
 - Music: "Determined Pursuit" (Emma_MA) loops through a battle; "Fantasy
   Orchestral Theme" (Joth) plays on the map. Tracks crossfade over 1.2 s, and
   the battle track fades out as the battle is decided, under its jingle.
+- On the web, effects play as samples (handed to the browser: low latency),
+  but music streams through Godot's mixer, decoded a little at a time.
+  Sample playback decodes a whole track at once (about 105 MB for both
+  tracks), which phones can fail to play. Streaming needs the game to keep
+  the mixer fed, so the web audio buffer is 120 ms; only music pays that
+  latency.
 - Shared style (font, palette, buttons, chips, bars) lives in `src/view/ui.gd`.
 
 ### Own art and loading
