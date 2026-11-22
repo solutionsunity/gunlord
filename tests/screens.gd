@@ -1,7 +1,7 @@
 extends SceneTree
 ## Renders the map, a battle on each authored node's stage, and the results
 ## screen, to build/menu.png, build/level_<n>.png and build/result.png.
-##   xvfb-run godot --path . --rendering-driver opengl3 --resolution 720x1280 --fixed-fps 60 -s tests/screens.gd
+##   xvfb-run godot --path . --audio-driver Dummy --rendering-driver opengl3 --resolution 720x1280 --fixed-fps 60 -s tests/screens.gd
 
 var _main: Node
 var _step := 0

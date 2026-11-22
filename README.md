@@ -22,15 +22,15 @@ the game still runs, with placeholder capsules.
 | Engagement probe (where enemies die, boss time under fire) | `godot --headless --path . -s tests/engagement.gd` |
 | CPU cost per frame (simulation and view) | `godot --headless --path . -s tests/frame_cost.gd` |
 | Forge more map nodes into `assets/map/forged.json` (appends) | `godot --headless --path . -s tools/forge_map.gd -- 20` |
-| Map and a forged boss fight to `build/` | `xvfb-run godot --path . --rendering-driver opengl3 --resolution 720x1280 --fixed-fps 60 -s tests/map.gd -- 10` |
-| Render the game icon, unit icons and key art to `assets/art/` (committed) | `xvfb-run godot --path . --rendering-driver opengl3 --resolution 1080x1920 -s tools/render_art.gd` |
+| Map and a forged boss fight to `build/` | `xvfb-run godot --path . --audio-driver Dummy --rendering-driver opengl3 --resolution 720x1280 --fixed-fps 60 -s tests/map.gd -- 10` |
+| Render the game icon, unit icons and key art to `assets/art/` (committed) | `xvfb-run godot --path . --audio-driver Dummy --rendering-driver opengl3 --resolution 1080x1920 -s tools/render_art.gd` |
 | Map input: drag scrolls, tap opens, wheel scrolls | `godot --headless --path . -s tests/map_input.gd` |
 | Volume button: opens, mutes at the bottom, closes, never scrolls the map | `godot --headless --path . -s tests/volume_input.gd` |
 | Bake crowd characters to `assets/baked/` | `godot --headless --path . -s tools/bake_crowd.gd` |
-| Model gallery to `build/gallery.png` | `xvfb-run godot --path . --rendering-driver opengl3 --resolution 1280x720 -s tests/gallery.gd -- shoot 0.3` |
-| Squad close-up at time T to `build/` | `xvfb-run godot --path . --rendering-driver opengl3 --resolution 720x1280 --fixed-fps 60 -s tests/closeup.gd -- T` |
-| Menu, every level's stage and the results screen to `build/` | `xvfb-run godot --path . --rendering-driver opengl3 --resolution 720x1280 --fixed-fps 60 -s tests/screens.gd` |
-| Render frames to `build/` | `xvfb-run godot --path . --rendering-driver opengl3 --resolution 720x1280 --fixed-fps 60 -s tests/screenshot.gd` |
+| Model gallery to `build/gallery.png` | `xvfb-run godot --path . --audio-driver Dummy --rendering-driver opengl3 --resolution 1280x720 -s tests/gallery.gd -- shoot 0.3` |
+| Squad close-up at time T to `build/` | `xvfb-run godot --path . --audio-driver Dummy --rendering-driver opengl3 --resolution 720x1280 --fixed-fps 60 -s tests/closeup.gd -- T` |
+| Menu, every level's stage and the results screen to `build/` | `xvfb-run godot --path . --audio-driver Dummy --rendering-driver opengl3 --resolution 720x1280 --fixed-fps 60 -s tests/screens.gd` |
+| Render frames to `build/` | `xvfb-run godot --path . --audio-driver Dummy --rendering-driver opengl3 --resolution 720x1280 --fixed-fps 60 -s tests/screenshot.gd` |
 | Web build | `godot --headless --path . --export-release Web build/web/index.html`, then serve `build/web/` |
 
 Controls: drag with a finger or the mouse, or use the arrow keys.

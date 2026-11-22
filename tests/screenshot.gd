@@ -2,7 +2,7 @@ extends SceneTree
 ## Runs the real game scene under a sweeping bot and saves frames to build/.
 ## The simulation runs at full speed; the renderer is switched on only for the
 ## frames being captured, so this is quick even on a software GPU.
-##   xvfb-run godot --path . --rendering-driver opengl3 --resolution 720x1280 --fixed-fps 60 -s tests/screenshot.gd -- [node, default 2]
+##   xvfb-run godot --path . --audio-driver Dummy --rendering-driver opengl3 --resolution 720x1280 --fixed-fps 60 -s tests/screenshot.gd -- [node, default 2]
 
 const SHOTS := [6.0, 20.0, 38.0, 55.0, 72.0, 91.0]
 

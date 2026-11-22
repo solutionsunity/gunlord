@@ -1,7 +1,7 @@
 extends SceneTree
 ## Renders every baked model side by side, front and back, in both team colours,
 ## playing the role given (default: its first clip), to build/gallery.png.
-##   xvfb-run godot --path . --rendering-driver opengl3 --resolution 1280x720 -s tests/gallery.gd -- shoot 0.3
+##   xvfb-run godot --path . --audio-driver Dummy --rendering-driver opengl3 --resolution 1280x720 -s tests/gallery.gd -- shoot 0.3
 
 const MODELS := [&"crossbowman", &"gunner", &"gatlinger", &"cannon", &"knight", &"rogue", &"barbarian", &"warlord"]
 const WARLORD_TINT := Color("5c0d18")

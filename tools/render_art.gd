@@ -7,7 +7,7 @@ extends SceneTree
 ##   icon.png                the game icon: a crossbowman on a gold-rimmed badge (512²)
 ##   splash.png              key art: a battle at dusk under the title (1080×1920)
 ## Needs a GPU context, so it runs under a display (xvfb on a server):
-##   xvfb-run godot --path . --rendering-driver opengl3 --resolution 1080x1920 -s tools/render_art.gd
+##   xvfb-run godot --path . --audio-driver Dummy --rendering-driver opengl3 --resolution 1080x1920 -s tools/render_art.gd
 ## The outputs are committed: rendering needs a display, which CI does not have.
 
 const Bots := preload("res://tools/bots.gd")

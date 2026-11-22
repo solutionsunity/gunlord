@@ -1,7 +1,7 @@
 extends SceneTree
 ## Plays the real scene under the sweeping bot until time T, then saves a
 ## close-up of the squad to build/closeup_<T>.png. Renders only that frame.
-##   xvfb-run godot --path . --rendering-driver opengl3 --resolution 720x1280 --fixed-fps 60 -s tests/closeup.gd -- 60
+##   xvfb-run godot --path . --audio-driver Dummy --rendering-driver opengl3 --resolution 720x1280 --fixed-fps 60 -s tests/closeup.gd -- 60
 
 var _main: Node
 var _at := 13.0

@@ -1,7 +1,7 @@
 extends SceneTree
 ## Renders the map with progress part-way along it (build/map.png), then a
 ## forged boss node fast-forwarded to its warlord fight (build/boss.png).
-##   xvfb-run godot --path . --rendering-driver opengl3 --resolution 720x1280 --fixed-fps 60 -s tests/map.gd -- [boss node, default 10]
+##   xvfb-run godot --path . --audio-driver Dummy --rendering-driver opengl3 --resolution 720x1280 --fixed-fps 60 -s tests/map.gd -- [boss node, default 10]
 
 const Bots := preload("res://tools/bots.gd")
 
