@@ -4,7 +4,8 @@
 			"boss": 1.0,
 			"idle_won": false,
 			"intensity": 1.4432,
-			"margin": 0.686,
+			"lucky": 0.679,
+			"margin": 0.671,
 			"node": 5,
 			"target": 0.66,
 			"variant": 2
@@ -12,25 +13,28 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 1.2451,
-			"margin": 0.59,
+			"intensity": 1.3079,
+			"lucky": 0.5630000000000001,
+			"margin": 0.5630000000000001,
 			"node": 6,
 			"target": 0.5640000000000001,
 			"variant": 0
 		},
 		{
-			"boss": 1.1829,
+			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.7802,
-			"margin": 0.534,
+			"intensity": 0.6487,
+			"lucky": 0.655,
+			"margin": 0.581,
 			"node": 7,
 			"target": 0.531,
-			"variant": 3
+			"variant": 0
 		},
 		{
 			"boss": 1.0,
 			"idle_won": false,
 			"intensity": 1.4432,
+			"lucky": 0.467,
 			"margin": 0.47400000000000003,
 			"node": 8,
 			"target": 0.5,
@@ -39,8 +43,9 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.8399000000000001,
-			"margin": 0.365,
+			"intensity": 0.8823000000000001,
+			"lucky": 0.397,
+			"margin": 0.385,
 			"node": 9,
 			"target": 0.392,
 			"variant": 0
@@ -48,25 +53,28 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 1.0226,
+			"intensity": 1.5925,
+			"lucky": 0.519,
 			"margin": 0.525,
 			"node": 10,
 			"target": 0.507,
-			"variant": 2
-		},
-		{
-			"boss": 1.0,
-			"idle_won": false,
-			"intensity": 1.4432,
-			"margin": 0.439,
-			"node": 11,
-			"target": 0.423,
 			"variant": 1
 		},
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 1.1853,
+			"intensity": 1.3571,
+			"lucky": 0.0,
+			"margin": 0.47600000000000003,
+			"node": 11,
+			"target": 0.423,
+			"variant": 0
+		},
+		{
+			"boss": 1.0,
+			"idle_won": false,
+			"intensity": 1.3739000000000001,
+			"lucky": 0.399,
 			"margin": 0.387,
 			"node": 12,
 			"target": 0.401,
@@ -75,8 +83,9 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 1.1565,
-			"margin": 0.372,
+			"intensity": 1.3079,
+			"lucky": 0.436,
+			"margin": 0.43,
 			"node": 13,
 			"target": 0.381,
 			"variant": 1
@@ -84,8 +93,9 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 1.1284,
-			"margin": 0.278,
+			"intensity": 1.3079,
+			"lucky": 0.29,
+			"margin": 0.28400000000000003,
 			"node": 14,
 			"target": 0.28300000000000003,
 			"variant": 0
@@ -93,17 +103,19 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 1.1853,
-			"margin": 0.4,
+			"intensity": 1.2761,
+			"lucky": 0.506,
+			"margin": 0.494,
 			"node": 15,
 			"target": 0.406,
-			"variant": 2
+			"variant": 1
 		},
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 1.2761,
-			"margin": 0.315,
+			"intensity": 1.939,
+			"lucky": 0.337,
+			"margin": 0.337,
 			"node": 16,
 			"target": 0.33,
 			"variant": 1
@@ -111,8 +123,9 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 1.3079,
-			"margin": 0.28700000000000003,
+			"intensity": 1.4792,
+			"lucky": 0.314,
+			"margin": 0.314,
 			"node": 17,
 			"target": 0.316,
 			"variant": 0
@@ -120,17 +133,19 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 1.3739000000000001,
-			"margin": 0.328,
+			"intensity": 1.3571,
+			"lucky": 0.41100000000000003,
+			"margin": 0.401,
 			"node": 18,
 			"target": 0.302,
-			"variant": 2
+			"variant": 0
 		},
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 1.4432,
-			"margin": 0.23,
+			"intensity": 2.0368,
+			"lucky": 0.194,
+			"margin": 0.184,
 			"node": 19,
 			"target": 0.21,
 			"variant": 1
@@ -138,8 +153,9 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 1.516,
-			"margin": 0.34,
+			"intensity": 2.0368,
+			"lucky": 0.33,
+			"margin": 0.325,
 			"node": 20,
 			"target": 0.339,
 			"variant": 0
@@ -147,8 +163,9 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 1.5348000000000002,
-			"margin": 0.152,
+			"intensity": 1.8010000000000002,
+			"lucky": 0.47100000000000003,
+			"margin": 0.23,
 			"node": 21,
 			"target": 0.269,
 			"variant": 0
@@ -156,8 +173,9 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.9735,
-			"margin": 0.231,
+			"intensity": 1.516,
+			"lucky": 0.0,
+			"margin": 0.25,
 			"node": 22,
 			"target": 0.259,
 			"variant": 1
@@ -165,8 +183,9 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 1.2605,
-			"margin": 0.34900000000000003,
+			"intensity": 1.8919000000000001,
+			"lucky": 0.274,
+			"margin": 0.25,
 			"node": 23,
 			"target": 0.25,
 			"variant": 0
@@ -174,8 +193,9 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 1.516,
-			"margin": 0.171,
+			"intensity": 2.1396,
+			"lucky": 0.157,
+			"margin": 0.139,
 			"node": 24,
 			"target": 0.162,
 			"variant": 2
@@ -183,8 +203,9 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 1.939,
-			"margin": 0.264,
+			"intensity": 2.8746,
+			"lucky": 0.305,
+			"margin": 0.28600000000000003,
 			"node": 25,
 			"target": 0.295,
 			"variant": 2
@@ -192,17 +213,19 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 1.4432,
-			"margin": 0.218,
+			"intensity": 1.7145000000000001,
+			"lucky": 0.305,
+			"margin": 0.28200000000000003,
 			"node": 26,
 			"target": 0.228,
-			"variant": 2
+			"variant": 0
 		},
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.8715,
-			"margin": 0.25,
+			"intensity": 1.4081000000000001,
+			"lucky": 0.218,
+			"margin": 0.2,
 			"node": 27,
 			"target": 0.222,
 			"variant": 3
@@ -210,17 +233,19 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 1.0742,
+			"intensity": 1.2761,
+			"lucky": 0.3,
 			"margin": 0.191,
 			"node": 28,
 			"target": 0.216,
-			"variant": 3
+			"variant": 2
 		},
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.9268000000000001,
-			"margin": 0.14100000000000001,
+			"intensity": 1.4792,
+			"lucky": 0.155,
+			"margin": 0.145,
 			"node": 29,
 			"target": 0.131,
 			"variant": 0
@@ -228,8 +253,9 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.9735,
-			"margin": 0.264,
+			"intensity": 1.8459,
+			"lucky": 0.314,
+			"margin": 0.245,
 			"node": 30,
 			"target": 0.266,
 			"variant": 0
@@ -237,26 +263,29 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 1.3909,
-			"margin": 0.123,
+			"intensity": 2.4197,
+			"lucky": 0.0,
+			"margin": 0.255,
 			"node": 31,
 			"target": 0.202,
 			"variant": 0
 		},
 		{
-			"boss": 1.1185,
+			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 1.0101,
-			"margin": 0.209,
+			"intensity": 1.5538,
+			"lucky": 0.182,
+			"margin": 0.17300000000000001,
 			"node": 32,
 			"target": 0.197,
-			"variant": 3
+			"variant": 0
 		},
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.9268000000000001,
-			"margin": 0.214,
+			"intensity": 1.3571,
+			"lucky": 0.177,
+			"margin": 0.195,
 			"node": 33,
 			"target": 0.194,
 			"variant": 1
@@ -264,8 +293,9 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.7336,
-			"margin": 0.11800000000000001,
+			"intensity": 1.2,
+			"lucky": 0.127,
+			"margin": 0.114,
 			"node": 34,
 			"target": 0.11,
 			"variant": 0
@@ -273,8 +303,9 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.9268000000000001,
-			"margin": 0.223,
+			"intensity": 1.8459,
+			"lucky": 0.255,
+			"margin": 0.255,
 			"node": 35,
 			"target": 0.247,
 			"variant": 1
@@ -282,8 +313,9 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.5951000000000001,
-			"margin": 0.164,
+			"intensity": 1.3241,
+			"lucky": 0.223,
+			"margin": 0.223,
 			"node": 36,
 			"target": 0.184,
 			"variant": 1
@@ -291,26 +323,29 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 1.1853,
-			"margin": 0.164,
+			"intensity": 1.8919000000000001,
+			"lucky": 0.214,
+			"margin": 0.182,
 			"node": 37,
 			"target": 0.181,
-			"variant": 0
+			"variant": 1
 		},
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.8399000000000001,
-			"margin": 0.136,
+			"intensity": 1.6122,
+			"lucky": 0.132,
+			"margin": 0.095,
 			"node": 38,
 			"target": 0.179,
-			"variant": 2
+			"variant": 3
 		},
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.5878,
-			"margin": 0.159,
+			"intensity": 1.0742,
+			"lucky": 0.15,
+			"margin": 0.127,
 			"node": 39,
 			"target": 0.096,
 			"variant": 1
@@ -318,35 +353,39 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.8399000000000001,
-			"margin": 0.245,
+			"intensity": 1.3241,
+			"lucky": 0.423,
+			"margin": 0.25,
 			"node": 40,
 			"target": 0.234,
-			"variant": 3
-		},
-		{
-			"boss": 1.0,
-			"idle_won": false,
-			"intensity": 0.6251,
-			"margin": 0.123,
-			"node": 41,
-			"target": 0.17200000000000001,
-			"variant": 2
-		},
-		{
-			"boss": 1.0876000000000001,
-			"idle_won": false,
-			"intensity": 1.0611000000000002,
-			"margin": 0.145,
-			"node": 42,
-			"target": 0.171,
 			"variant": 1
 		},
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.7898000000000001,
-			"margin": 0.232,
+			"intensity": 0.9977,
+			"lucky": 0.155,
+			"margin": 0.145,
+			"node": 41,
+			"target": 0.17200000000000001,
+			"variant": 3
+		},
+		{
+			"boss": 1.0,
+			"idle_won": false,
+			"intensity": 2.3901000000000003,
+			"lucky": 0.20500000000000002,
+			"margin": 0.195,
+			"node": 42,
+			"target": 0.171,
+			"variant": 1
+		},
+		{
+			"boss": 1.1502000000000001,
+			"idle_won": false,
+			"intensity": 1.5538,
+			"lucky": 0.08600000000000001,
+			"margin": 0.15,
 			"node": 43,
 			"target": 0.169,
 			"variant": 3
@@ -354,35 +393,39 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.6567000000000001,
-			"margin": 0.114,
+			"intensity": 1.8010000000000002,
+			"lucky": 0.145,
+			"margin": 0.077,
 			"node": 44,
 			"target": 0.08700000000000001,
-			"variant": 0
+			"variant": 1
 		},
 		{
-			"boss": 1.0,
+			"boss": 1.1502000000000001,
 			"idle_won": false,
-			"intensity": 0.9977,
-			"margin": 0.255,
+			"intensity": 3.1719,
+			"lucky": 0.318,
+			"margin": 0.232,
 			"node": 45,
 			"target": 0.226,
-			"variant": 0
+			"variant": 2
 		},
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.8823000000000001,
-			"margin": 0.182,
+			"intensity": 2.9102,
+			"lucky": 0.23600000000000002,
+			"margin": 0.23600000000000002,
 			"node": 46,
 			"target": 0.165,
 			"variant": 3
 		},
 		{
-			"boss": 1.0,
+			"boss": 1.2865,
 			"idle_won": false,
-			"intensity": 0.5665,
-			"margin": 0.127,
+			"intensity": 1.1146,
+			"lucky": 0.441,
+			"margin": 0.17300000000000001,
 			"node": 47,
 			"target": 0.164,
 			"variant": 2
@@ -390,8 +433,9 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.9977,
-			"margin": 0.155,
+			"intensity": 2.2753,
+			"lucky": 0.395,
+			"margin": 0.095,
 			"node": 48,
 			"target": 0.163,
 			"variant": 0
@@ -399,17 +443,19 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.4375,
-			"margin": 0.164,
+			"intensity": 1.9873,
+			"lucky": 0.145,
+			"margin": 0.11800000000000001,
 			"node": 49,
 			"target": 0.082,
-			"variant": 1
+			"variant": 0
 		},
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.9735,
-			"margin": 0.227,
+			"intensity": 2.7365,
+			"lucky": 0.223,
+			"margin": 0.23600000000000002,
 			"node": 50,
 			"target": 0.221,
 			"variant": 0
@@ -417,35 +463,39 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.7246,
-			"margin": 0.136,
+			"intensity": 1.6935,
+			"lucky": 0.268,
+			"margin": 0.223,
 			"node": 51,
 			"target": 0.16,
-			"variant": 0
-		},
-		{
-			"boss": 1.0576,
-			"idle_won": false,
-			"intensity": 0.7996000000000001,
-			"margin": 0.177,
-			"node": 52,
-			"target": 0.159,
 			"variant": 1
-		},
-		{
-			"boss": 1.7506000000000002,
-			"idle_won": false,
-			"intensity": 0.40140000000000003,
-			"margin": 0.159,
-			"node": 53,
-			"target": 0.158,
-			"variant": 3
 		},
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.7612,
-			"margin": 0.073,
+			"intensity": 2.2475,
+			"lucky": 0.155,
+			"margin": 0.123,
+			"node": 52,
+			"target": 0.159,
+			"variant": 0
+		},
+		{
+			"boss": 1.3231000000000002,
+			"idle_won": false,
+			"intensity": 0.6648000000000001,
+			"lucky": 0.132,
+			"margin": 0.182,
+			"node": 53,
+			"target": 0.158,
+			"variant": 0
+		},
+		{
+			"boss": 1.0,
+			"idle_won": false,
+			"intensity": 2.0119000000000002,
+			"lucky": 0.159,
+			"margin": 0.17300000000000001,
 			"node": 54,
 			"target": 0.08,
 			"variant": 0
@@ -453,8 +503,9 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.6487,
-			"margin": 0.232,
+			"intensity": 2.1396,
+			"lucky": 0.28200000000000003,
+			"margin": 0.264,
 			"node": 55,
 			"target": 0.217,
 			"variant": 0
@@ -462,35 +513,39 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.8195,
-			"margin": 0.159,
+			"intensity": 2.4497,
+			"lucky": 0.395,
+			"margin": 0.195,
 			"node": 56,
-			"target": 0.156,
-			"variant": 0
-		},
-		{
-			"boss": 1.1502000000000001,
-			"idle_won": false,
-			"intensity": 0.7246,
-			"margin": 0.145,
-			"node": 57,
 			"target": 0.156,
 			"variant": 3
 		},
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.7070000000000001,
-			"margin": 0.186,
-			"node": 58,
-			"target": 0.155,
+			"intensity": 1.2919,
+			"lucky": 0.455,
+			"margin": 0.218,
+			"node": 57,
+			"target": 0.156,
 			"variant": 1
 		},
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.3139,
-			"margin": 0.095,
+			"intensity": 1.6728,
+			"lucky": 0.0,
+			"margin": 0.127,
+			"node": 58,
+			"target": 0.155,
+			"variant": 0
+		},
+		{
+			"boss": 1.0,
+			"idle_won": false,
+			"intensity": 0.6251,
+			"lucky": 0.264,
+			"margin": 0.114,
 			"node": 59,
 			"target": 0.08,
 			"variant": 1
@@ -498,8 +553,9 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.5665,
-			"margin": 0.3,
+			"intensity": 1.2761,
+			"lucky": 0.545,
+			"margin": 0.195,
 			"node": 60,
 			"target": 0.215,
 			"variant": 0
@@ -507,17 +563,19 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.8195,
-			"margin": 0.15,
+			"intensity": 1.939,
+			"lucky": 0.241,
+			"margin": 0.209,
 			"node": 61,
 			"target": 0.154,
-			"variant": 0
+			"variant": 2
 		},
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.6898000000000001,
-			"margin": 0.155,
+			"intensity": 1.5925,
+			"lucky": 0.177,
+			"margin": 0.164,
 			"node": 62,
 			"target": 0.154,
 			"variant": 2
@@ -525,8 +583,9 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.8399000000000001,
-			"margin": 0.159,
+			"intensity": 1.939,
+			"lucky": 0.227,
+			"margin": 0.132,
 			"node": 63,
 			"target": 0.154,
 			"variant": 0
@@ -534,8 +593,9 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.5134000000000001,
-			"margin": 0.091,
+			"intensity": 1.6322,
+			"lucky": 0.177,
+			"margin": 0.08600000000000001,
 			"node": 64,
 			"target": 0.08,
 			"variant": 0
@@ -543,8 +603,9 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.5951000000000001,
-			"margin": 0.23600000000000002,
+			"intensity": 1.4081000000000001,
+			"lucky": 0.227,
+			"margin": 0.245,
 			"node": 65,
 			"target": 0.213,
 			"variant": 0
@@ -552,26 +613,29 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.5951000000000001,
-			"margin": 0.132,
+			"intensity": 2.48,
+			"lucky": 0.291,
+			"margin": 0.155,
 			"node": 66,
 			"target": 0.153,
-			"variant": 0
+			"variant": 1
 		},
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.6567000000000001,
-			"margin": 0.14100000000000001,
+			"intensity": 1.0226,
+			"lucky": 0.4,
+			"margin": 0.164,
 			"node": 67,
 			"target": 0.153,
-			"variant": 0
+			"variant": 2
 		},
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.6813,
-			"margin": 0.186,
+			"intensity": 1.7145000000000001,
+			"lucky": 0.177,
+			"margin": 0.168,
 			"node": 68,
 			"target": 0.152,
 			"variant": 0
@@ -579,8 +643,9 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.5134000000000001,
-			"margin": 0.077,
+			"intensity": 1.4081000000000001,
+			"lucky": 0.20500000000000002,
+			"margin": 0.177,
 			"node": 69,
 			"target": 0.08,
 			"variant": 0
@@ -588,17 +653,19 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.6898000000000001,
-			"margin": 0.223,
+			"intensity": 1.5925,
+			"lucky": 0.191,
+			"margin": 0.127,
 			"node": 70,
 			"target": 0.212,
-			"variant": 2
+			"variant": 1
 		},
 		{
-			"boss": 1.1829,
+			"boss": 1.2336,
 			"idle_won": false,
-			"intensity": 0.5527000000000001,
-			"margin": 0.177,
+			"intensity": 1.7572,
+			"lucky": 0.0,
+			"margin": 0.145,
 			"node": 71,
 			"target": 0.152,
 			"variant": 2
@@ -606,8 +673,9 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.5198,
-			"margin": 0.136,
+			"intensity": 1.8688,
+			"lucky": 0.159,
+			"margin": 0.132,
 			"node": 72,
 			"target": 0.152,
 			"variant": 1
@@ -615,17 +683,19 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.8296,
-			"margin": 0.25,
+			"intensity": 1.4432,
+			"lucky": 0.08600000000000001,
+			"margin": 0.11800000000000001,
 			"node": 73,
 			"target": 0.152,
-			"variant": 0
+			"variant": 3
 		},
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.5665,
-			"margin": 0.095,
+			"intensity": 1.516,
+			"lucky": 0.468,
+			"margin": 0.105,
 			"node": 74,
 			"target": 0.08,
 			"variant": 0
@@ -633,26 +703,29 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.6898000000000001,
-			"margin": 0.2,
+			"intensity": 2.2475,
+			"lucky": 0.273,
+			"margin": 0.223,
 			"node": 75,
 			"target": 0.211,
-			"variant": 0
+			"variant": 3
 		},
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.6251,
-			"margin": 0.123,
+			"intensity": 1.4792,
+			"lucky": 0.227,
+			"margin": 0.214,
 			"node": 76,
 			"target": 0.151,
-			"variant": 0
+			"variant": 2
 		},
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.7336,
-			"margin": 0.195,
+			"intensity": 2.1396,
+			"lucky": 0.155,
+			"margin": 0.155,
 			"node": 77,
 			"target": 0.151,
 			"variant": 0
@@ -660,17 +733,19 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.7070000000000001,
-			"margin": 0.15,
+			"intensity": 1.8010000000000002,
+			"lucky": 0.255,
+			"margin": 0.168,
 			"node": 78,
 			"target": 0.151,
-			"variant": 0
+			"variant": 2
 		},
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.5327000000000001,
-			"margin": 0.091,
+			"intensity": 1.9153,
+			"lucky": 0.045,
+			"margin": 0.05,
 			"node": 79,
 			"target": 0.08,
 			"variant": 0
@@ -678,8 +753,9 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.22510000000000002,
-			"margin": 0.168,
+			"intensity": 0.4429,
+			"lucky": 0.209,
+			"margin": 0.209,
 			"node": 80,
 			"target": 0.211,
 			"variant": 1
@@ -687,8 +763,9 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.3593,
-			"margin": 0.209,
+			"intensity": 1.0742,
+			"lucky": 0.25,
+			"margin": 0.195,
 			"node": 81,
 			"target": 0.151,
 			"variant": 1
@@ -696,17 +773,19 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.46530000000000005,
-			"margin": 0.168,
+			"intensity": 0.6567000000000001,
+			"lucky": 0.177,
+			"margin": 0.159,
 			"node": 82,
 			"target": 0.151,
-			"variant": 2
+			"variant": 0
 		},
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.6567000000000001,
-			"margin": 0.164,
+			"intensity": 1.6728,
+			"lucky": 0.336,
+			"margin": 0.232,
 			"node": 83,
 			"target": 0.151,
 			"variant": 1
@@ -714,8 +793,9 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.3728,
-			"margin": 0.059000000000000004,
+			"intensity": 1.0611000000000002,
+			"lucky": 0.159,
+			"margin": 0.14100000000000001,
 			"node": 84,
 			"target": 0.08,
 			"variant": 0
@@ -723,8 +803,9 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.5262,
-			"margin": 0.218,
+			"intensity": 1.516,
+			"lucky": 0.23600000000000002,
+			"margin": 0.20500000000000002,
 			"node": 85,
 			"target": 0.211,
 			"variant": 1
@@ -732,8 +813,9 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.4375,
-			"margin": 0.105,
+			"intensity": 1.4611,
+			"lucky": 0.209,
+			"margin": 0.209,
 			"node": 86,
 			"target": 0.151,
 			"variant": 0
@@ -741,8 +823,9 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.6567000000000001,
-			"margin": 0.159,
+			"intensity": 1.4255,
+			"lucky": 0.40900000000000003,
+			"margin": 0.186,
 			"node": 87,
 			"target": 0.15,
 			"variant": 0
@@ -750,8 +833,9 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.5665,
-			"margin": 0.168,
+			"intensity": 1.7572,
+			"lucky": 0.20500000000000002,
+			"margin": 0.177,
 			"node": 88,
 			"target": 0.15,
 			"variant": 0
@@ -759,8 +843,9 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.3463,
-			"margin": 0.105,
+			"intensity": 1.0742,
+			"lucky": 0.1,
+			"margin": 0.08600000000000001,
 			"node": 89,
 			"target": 0.08,
 			"variant": 0
@@ -768,8 +853,9 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.5806,
-			"margin": 0.232,
+			"intensity": 2.2475,
+			"lucky": 0.241,
+			"margin": 0.245,
 			"node": 90,
 			"target": 0.21,
 			"variant": 0
@@ -777,26 +863,29 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.42160000000000003,
-			"margin": 0.177,
+			"intensity": 0.5527000000000001,
+			"lucky": 0.436,
+			"margin": 0.11800000000000001,
 			"node": 91,
-			"target": 0.15,
-			"variant": 1
-		},
-		{
-			"boss": 1.0,
-			"idle_won": false,
-			"intensity": 0.5735,
-			"margin": 0.155,
-			"node": 92,
 			"target": 0.15,
 			"variant": 0
 		},
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.6025,
-			"margin": 0.159,
+			"intensity": 1.4432,
+			"lucky": 0.3,
+			"margin": 0.114,
+			"node": 92,
+			"target": 0.15,
+			"variant": 2
+		},
+		{
+			"boss": 1.0,
+			"idle_won": false,
+			"intensity": 2.2475,
+			"lucky": 0.17300000000000001,
+			"margin": 0.177,
 			"node": 93,
 			"target": 0.15,
 			"variant": 0
@@ -804,8 +893,9 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.3549,
-			"margin": 0.077,
+			"intensity": 1.0353,
+			"lucky": 0.11800000000000001,
+			"margin": 0.082,
 			"node": 94,
 			"target": 0.08,
 			"variant": 0
@@ -813,8 +903,9 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.4888,
-			"margin": 0.186,
+			"intensity": 1.516,
+			"lucky": 0.20500000000000002,
+			"margin": 0.20500000000000002,
 			"node": 95,
 			"target": 0.21,
 			"variant": 0
@@ -822,26 +913,29 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.47690000000000005,
+			"intensity": 1.2919,
+			"lucky": 0.159,
 			"margin": 0.136,
 			"node": 96,
 			"target": 0.15,
 			"variant": 0
 		},
 		{
-			"boss": 1.2865,
+			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.3593,
-			"margin": 0.15,
+			"intensity": 0.4484,
+			"lucky": 0.209,
+			"margin": 0.195,
 			"node": 97,
 			"target": 0.15,
-			"variant": 3
+			"variant": 2
 		},
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.5134000000000001,
-			"margin": 0.232,
+			"intensity": 1.2919,
+			"lucky": 0.2,
+			"margin": 0.15,
 			"node": 98,
 			"target": 0.15,
 			"variant": 2
@@ -849,8 +943,9 @@
 		{
 			"boss": 1.0,
 			"idle_won": false,
-			"intensity": 0.3025,
-			"margin": 0.155,
+			"intensity": 0.9383,
+			"lucky": 0.095,
+			"margin": 0.041,
 			"node": 99,
 			"target": 0.08,
 			"variant": 0
