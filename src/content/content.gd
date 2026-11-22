@@ -30,7 +30,7 @@ static func arms() -> Array[WeaponDef]:
 		}),
 		_weapon(&"rocket", "Rocket", {
 			damage = 12.0, aim = WeaponDef.Aim.AUTO, splash = 1.6, homing = true,
-			reach = 45.0, projectile_speed = 20.0, color = Color("ff4a4a"), projectile = &"ball",
+			reach = 45.0, projectile_speed = 20.0, color = Color("ff4a4a"), projectile = &"rocket",
 		}),
 	]
 	return list

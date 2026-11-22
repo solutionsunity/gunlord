@@ -84,6 +84,7 @@ func _change_setting(key: StringName, value: Variant) -> void:
 
 
 func _show_settings() -> void:
+	_view.stage.apply_graphics(_settings.graphics == &"full")
 	_hud.show_settings(_settings)
 	_screens.show_settings(_settings)
 

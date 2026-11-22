@@ -3,7 +3,7 @@ extends Node3D
 ## Draws a Battle. Reads simulation state, never writes it. Each kind of thing
 ## on screen is one Crowd: a single batched draw call.
 
-const UNIT_HEIGHT := 0.95          ## metres; a baked character is scaled to this, times its size
+const UNIT_HEIGHT := 1.1           ## metres; a baked character is scaled to this, times its size
 const PLAYER_TEAM := Color("2f6fe0")
 const ENEMY_TEAM := Color("c8302c")
 const FLASH := 0.08
@@ -35,8 +35,9 @@ var _panels: Crowd                 ## translucent panel faces
 var _pedestals: Crowd
 var _projectiles := {}             ## projectile look -> Crowd
 var _streaks: Crowd                ## a glowing trail behind every projectile, so shots read at phone size
-var _blades: Crowd                 ## the relics: orbiting blades, hovering drones, the shield's arc
+var _blades: Crowd                 ## the relics: orbiting swords, hovering drones, the shield's honeycomb
 var _drones: Crowd
+var _rotors: Crowd
 var _shield: Crowd
 var _font: FontFile
 var _glow: Crowd                   ## every flash, spark and blast: additive billboards
@@ -63,11 +64,15 @@ func _ready() -> void:
 	_frames = _primitive(_box(Vector3(PANEL.x + 0.16, PANEL.y + 0.16, PANEL.z * 0.6)), 200, false)
 	_panels = _glass(_box(PANEL), 200)
 	_pedestals = _kit_crowd("tower-square-base", 64)
-	_blades = _primitive(_box(Vector3(0.22, 0.06, 1.3)), 8, false)
-	_drones = _primitive(_sphere(0.36), 8, false)
-	_shield = _glass(_box(Vector3(0.95, 1.1, 0.1)), SHIELD_PANES)
+	_blades = _swords(8)
+	_drones = _primitive(_sphere(0.34), 8, false)
+	(_drones.material_override as StandardMaterial3D).metallic = 0.7
+	(_drones.material_override as StandardMaterial3D).roughness = 0.3
+	_rotors = _primitive(_box(Vector3(1.0, 0.03, 0.1)), 16, false)
+	_shield = _glass(_reshaped(_hexagon(0.42), Transform3D(Basis(Vector3.RIGHT, PI / 2.0), Vector3.ZERO)), SHIELD_PANES * 2)
 	_projectiles = {
 		bolt = _arrows(4000),
+		rocket = _primitive(_reshaped(_capsule(0.13, 0.75), Transform3D(Basis(Vector3.RIGHT, PI / 2.0), Vector3.ZERO)), 200, false),
 		tracer = _primitive(_box(Vector3(0.14, 0.14, 1.4)), 4000, true),
 		ball = _primitive(_sphere(0.32), 400, false),
 	}
@@ -218,6 +223,9 @@ func _draw_shots(shots: Shots, weapons: Array[WeaponDef]) -> void:
 		crowd.add(at, yaw, Vector3.ONE, wd.color.lightened(0.45))
 		# The trail starts at the projectile and stretches back along its path.
 		var back := Vector3(shots.vx[i], 0.0, shots.vz[i]).normalized() * -1.3
+		if wd.homing:   # a rocket leaves a long pale smoke trail
+			_streaks.add(at + back * 2.2, yaw, Vector3(0.9, 1.0, 5.5), Color(0.85, 0.85, 0.88, 0.7))
+			continue
 		var wide := 1.0 if wd.projectile == &"ball" else 0.6
 		_streaks.add(at + back, yaw, Vector3(wide, 1.0, 3.0), Color(wd.color.lightened(0.15), 0.95))
 	_streaks.end()
@@ -248,7 +256,6 @@ func _character_kind(model: StringName) -> Dictionary:
 		return {}
 	var bake: CrowdBake = load(BAKED % model)
 	var crowd := Crowd.new(bake.mesh, CHARACTERS, bake.material())
-	crowd.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(crowd)
 	crowd.begin()
 	(crowd.material_override as ShaderMaterial).set_shader_parameter(&"clock", _clock)
@@ -310,32 +317,37 @@ func _draw_corpses(delta: float) -> void:
 	_corpses = keep
 
 
-## Blades spinning flat around the squad, drones bobbing beside it, and the
-## shield's glass arc ahead of it, fading as it is spent.
+## Swords sweeping edge-first around the squad, drones bobbing beside it on
+## spinning rotors, and the shield's honeycomb ahead of it, fading as it is spent.
 func _draw_relics(arms: Arms, squad: Squad) -> void:
 	_blades.begin()
 	for p in arms.blades(squad):
-		var at := Vector3(p.x, 0.55, p.y)
-		_blades.add(at, arms.spin * 3.0, Vector3.ONE, Color("e6ebf5"))
-		_blades.add(at, arms.spin * 3.0 + PI / 2.0, Vector3.ONE, Color("e6ebf5"))
-		_shadows.add(Vector3(p.x, 0.03, p.y), 0.0, Vector3.ONE * 0.8, Color(0, 0, 0, 0.3))
+		var out := p - Vector2(squad.x, Squad.Z)
+		var tangent := atan2(-out.y, out.x)        # the way the circle runs here, as a yaw
+		_blades.add(Vector3(p.x, 0.7, p.y), tangent, Vector3.ONE, Color.WHITE)
+		_shadows.add(Vector3(p.x, 0.03, p.y), 0.0, Vector3(0.5, 1.0, 1.2), Color(0, 0, 0, 0.3))
 	_blades.end()
 	_drones.begin()
+	_rotors.begin()
 	var k := 0
 	for p in arms.drones(squad):
-		var at := Vector3(p.x, 1.7 + sin(_clock * 3.0 + k) * 0.15, p.y)
+		var at := Vector3(p.x, 1.8 + sin(_clock * 3.0 + k) * 0.15, p.y)
 		_drones.add(at, 0.0, Vector3.ONE, Color("f5c542"))
-		_shadows.add(Vector3(p.x, 0.03, p.y), 0.0, Vector3.ONE * 0.7, Color(0, 0, 0, 0.3))
+		for side: float in [-0.42, 0.42]:
+			_rotors.add(at + Vector3(side, 0.34, 0), _clock * 40.0 * signf(side), Vector3(0.8, 1.0, 1.6), Color(0.12, 0.13, 0.16))
+		_shadows.add(Vector3(p.x, 0.03, p.y), 0.0, Vector3.ONE * 0.9, Color(0, 0, 0, 0.3))
 		k += 1
+	_rotors.end()
 	_drones.end()
 	_shield.begin()
 	if arms.level(&"shield") > 0:
 		var charge := arms.shield / maxf(arms.shield_max(squad), 1.0)
 		var r := squad.radius() + 0.7
-		for i in SHIELD_PANES:
-			var a := -PI / 2.0 + SHIELD_SPAN * (float(i) / (SHIELD_PANES - 1) - 0.5)
-			var at := Vector3(squad.x + cos(a) * r, 0.6, Squad.Z + sin(a) * r)
-			_shield.add(at, -a - PI / 2.0, Vector3.ONE, Color(0.45, 0.7, 1.0, 0.12 + 0.5 * charge))
+		for row in 2:   # two courses of hexagons, the upper set half a cell over
+			for i in SHIELD_PANES - row:
+				var a := -PI / 2.0 + SHIELD_SPAN * ((i + row * 0.5) / (SHIELD_PANES - 1) - 0.5)
+				var at := Vector3(squad.x + cos(a) * r, 0.45 + row * 0.72, Squad.Z + sin(a) * r)
+				_shield.add(at, PI / 2.0 - a, Vector3.ONE, Color(0.45, 0.75, 1.0, 0.15 + 0.5 * charge))
 	_shield.end()
 
 
@@ -392,7 +404,7 @@ func _draw_callouts(delta: float) -> void:
 			label.modulate.a = 1.0 - t * t
 
 
-func _primitive(mesh: PrimitiveMesh, capacity: int, unshaded: bool) -> Crowd:
+func _primitive(mesh: Mesh, capacity: int, unshaded: bool) -> Crowd:
 	var mat := StandardMaterial3D.new()
 	mat.vertex_color_use_as_albedo = true
 	if unshaded:
@@ -506,24 +518,54 @@ func _kit_crowd(piece: String, capacity: int) -> Crowd:
 func _arrows(capacity: int) -> Crowd:
 	var scene: Node = load("res://assets/third_party/kaykit-adventurers/props/arrow.gltf").instantiate()
 	var mi: MeshInstance3D = scene.find_children("*", "MeshInstance3D", true, false)[0]
-	var arrays := mi.mesh.surface_get_arrays(0)
-	var turn := Basis(Vector3.RIGHT, -PI / 2.0).scaled(Vector3.ONE * 1.8)
-	var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
-	var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
-	for k in verts.size():
-		verts[k] = turn * verts[k]
-		normals[k] = (turn * normals[k]).normalized()
-	arrays[Mesh.ARRAY_VERTEX] = verts
-	arrays[Mesh.ARRAY_NORMAL] = normals
-	arrays[Mesh.ARRAY_TANGENT] = null
-	var mesh := ArrayMesh.new()
-	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
-	mesh.surface_set_material(0, mi.mesh.surface_get_material(0))
+	var mesh := _reshaped(mi.mesh, Transform3D(Basis(Vector3.RIGHT, -PI / 2.0).scaled(Vector3.ONE * 1.8), Vector3.ZERO))
 	scene.free()
 	var crowd := Crowd.new(mesh, capacity, null)
 	crowd.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(crowd)
 	return crowd
+
+
+## The knight's sword, laid flat and centred, its point leading along +Z:
+## a relic blade that sweeps edge-first around the squad.
+func _swords(capacity: int) -> Crowd:
+	var knight: Node = load("res://assets/third_party/kaykit-adventurers/characters/Knight.glb").instantiate()
+	var sword: MeshInstance3D = knight.find_child("1H_Sword")
+	var lay := Basis(Vector3.FORWARD, 0.35) * Basis(Vector3.RIGHT, PI / 2.0)   # flat, rolled a little to catch the light
+	var mesh := _reshaped(sword.mesh, Transform3D(lay.scaled(Vector3.ONE * 1.1), lay * Vector3(0, -0.52, 0) * 1.1))
+	knight.free()
+	var crowd := Crowd.new(mesh, capacity, null)
+	add_child(crowd)
+	return crowd
+
+
+## A copy of a mesh with every vertex moved by `xform` once, up front: crowds
+## only turn their instances about Y, so any other pose is built in here.
+static func _reshaped(source: Mesh, xform: Transform3D) -> ArrayMesh:
+	var mesh := ArrayMesh.new()
+	for s in source.get_surface_count():
+		var arrays := source.surface_get_arrays(s)
+		var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+		var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+		for k in verts.size():
+			verts[k] = xform * verts[k]
+			normals[k] = (xform.basis * normals[k]).normalized()
+		arrays[Mesh.ARRAY_VERTEX] = verts
+		arrays[Mesh.ARRAY_NORMAL] = normals
+		arrays[Mesh.ARRAY_TANGENT] = null
+		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+		mesh.surface_set_material(s, source.surface_get_material(s))
+	return mesh
+
+
+func _hexagon(r: float) -> CylinderMesh:
+	var m := CylinderMesh.new()
+	m.top_radius = r
+	m.bottom_radius = r
+	m.height = 0.06
+	m.radial_segments = 6
+	m.rings = 1
+	return m
 
 
 func _box(size: Vector3) -> BoxMesh:

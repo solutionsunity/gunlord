@@ -324,8 +324,22 @@ view never infers them from diffs of the simulation state.
 - Stone bridge over animated water, with castle walls and towers along the
   edges. The lane dividers are low stone walls, drawn where the stage's plan
   puts them, or none.
-- One sun, with real shadows only on static set pieces. Crowds get one
-  blob-shadow quad per unit, drawn as another MultiMesh.
+- One sun, casting real shadows from set pieces and crowds alike, with a
+  soft blob under every unit for contact. The sun stands no higher than 40°
+  at any time of day, so shadows always fall across the deck.
+- Depth cues: the camera sits low and close behind the squad (13.5 m up,
+  10 m back, looking 14 m ahead), so units read as figures, not dots. Haze
+  fades the far end of the bridge into the horizon's colour. Glow catches
+  only what burns brighter than daylight: shots, sparks, blasts.
+- Characters: rim light, a little sheen, darker toward the feet, a dark
+  silhouette edge (a cheap outline), and each figure a shade lighter or
+  darker than its neighbours. Team colour dyes the cloth but keeps its folds.
+- The deck is darker, warmer sandstone with worn slab edges.
+- Relics and rockets are models: the knight's sword sweeping edge-first, gold
+  drones on spinning rotors, a two-course honeycomb of glass, rockets trailing
+  smoke.
+- Graphics setting: full, or light (no shadows, glow or haze) for weaker
+  devices. Phone cost is unmeasured; light is the fallback.
 
 ### Feedback
 
@@ -437,7 +451,7 @@ Peak scene: 120 squad + ~300 enemies + ~1,500 projectiles.
 | 14 | Crowd animation via an in-house VAT baker inside Godot    | Active |
 | 15 | Base art: KayKit (CC0) characters and Kenney (CC0) set pieces; signature weapons are ours | Active |
 | 16 | The simulation emits presentation events; the view only reads them | Active |
-| 17 | Crowds cast blob shadows, not real shadows               | Active |
+| 17 | Crowds cast blob shadows, not real shadows               | Superseded by 42 |
 | 18 | The base weapon is a crossbow (matches the art); id `bow` is renamed `crossbow` | Active |
 | 19 | At capacity, weapon crates swap base units one-for-one   | Active |
 | 20 | Five-level campaign from one generator; a time of day per level | Refined by 23 |
@@ -462,3 +476,4 @@ Peak scene: 120 squad + ~300 enemies + ~1,500 projectiles.
 | 39 | Surges: rare timed weapons in planned slots, drawn per attempt; stages verified without them, `lucky` recorded | Active |
 | 40 | Relics (blades, drones, shield) earned on boss nodes on a fixed schedule; the loadout is derived from the node, verified with, never stored | Active |
 | 41 | Relics scale with the squad's size; the forge passes over any variant the idle bot wins | Active; refines 24, 40 |
+| 42 | Graphics pass: low close camera, real crowd shadows, haze, glow, shaded and outlined characters, modelled relics; a light setting | Active; supersedes 17 |

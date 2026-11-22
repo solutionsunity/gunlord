@@ -3,8 +3,8 @@
 shader_type spatial;
 render_mode specular_disabled;
 
-uniform vec3 stone : source_color = vec3(0.8, 0.66, 0.52);
-uniform vec3 grout : source_color = vec3(0.5, 0.37, 0.3);
+uniform vec3 stone : source_color = vec3(0.66, 0.54, 0.43);
+uniform vec3 grout : source_color = vec3(0.3, 0.22, 0.18);
 uniform vec2 slab = vec2(1.6, 1.1);
 
 varying vec3 world;
@@ -26,7 +26,8 @@ void fragment() {
 	vec2 f = fract(cell);
 	float edge = min(min(f.x, 1.0 - f.x) * slab.x, min(f.y, 1.0 - f.y) * slab.y);
 	float line = smoothstep(0.02, 0.06, edge);
-	vec3 tint = stone * (0.88 + 0.16 * hash(id));
+	float bevel = smoothstep(0.04, 0.22, edge);   // slab edges worn round: darker as they fall to the grout
+	vec3 tint = stone * (0.8 + 0.3 * hash(id)) * mix(0.78, 1.0, bevel);
 	ALBEDO = mix(grout, tint, line);
 	ROUGHNESS = 0.9;
 }

@@ -16,13 +16,13 @@ const DESIGN_FOV := 42.0                ## horizontal view in that frame, degree
 const THEMES := {
 	dawn = {top = "6f8fd0", horizon = "f3c9a8", sun = "ffd0a0", energy = 0.7, pitch = -24.0, yaw = -60.0,
 			ambient = 0.45, deep = "123a5c", shallow = "4a7fa0"},
-	noon = {top = "4d8fd6", horizon = "bfe0f5", sun = "fff3e0", energy = 0.75, pitch = -52.0, yaw = -35.0,
+	noon = {top = "4d8fd6", horizon = "bfe0f5", sun = "fff3e0", energy = 0.75, pitch = -40.0, yaw = -55.0,
 			ambient = 0.4, deep = "082a54", shallow = "1a618f"},
 	afternoon = {top = "4a7fc8", horizon = "e6e0c8", sun = "ffe6b8", energy = 0.75, pitch = -38.0, yaw = 25.0,
 			ambient = 0.4, deep = "0a2c50", shallow = "2a6688"},
 	dusk = {top = "34407e", horizon = "f08a5a", sun = "ff9a5c", energy = 0.65, pitch = -18.0, yaw = 40.0,
 			ambient = 0.35, deep = "1a1e44", shallow = "6a4a66"},
-	night = {top = "0a1230", horizon = "2a3a6a", sun = "9fb4ff", energy = 0.45, pitch = -55.0, yaw = 30.0,
+	night = {top = "0a1230", horizon = "2a3a6a", sun = "9fb4ff", energy = 0.45, pitch = -40.0, yaw = 35.0,
 			ambient = 0.3, deep = "040c22", shallow = "142a4a"},
 }
 
@@ -51,7 +51,7 @@ func _ready() -> void:
 func _camera() -> void:
 	camera = Camera3D.new()
 	add_child(camera)
-	camera.look_at_from_position(Vector3(0, 21.0, 11.5), Vector3(0, 0, -15.0))
+	camera.look_at_from_position(Vector3(0, 13.5, 10.0), Vector3(0, 0, -14.0))
 	camera_home = camera.transform
 	get_viewport().size_changed.connect(_fit_camera)
 	_fit_camera()
@@ -73,6 +73,14 @@ func _fit_camera() -> void:
 		camera.fov = DESIGN_FOV
 
 
+## Full graphics cast real shadows, glow and haze; light ones skip all three,
+## the shadow pass above all, for weaker devices.
+func apply_graphics(full: bool) -> void:
+	_sun.shadow_enabled = full
+	_env.glow_enabled = full
+	_env.fog_enabled = full
+
+
 ## Sets the time of day: one of THEMES.
 func apply_theme(theme: StringName) -> void:
 	var t: Dictionary = THEMES[theme]
@@ -80,10 +88,11 @@ func apply_theme(theme: StringName) -> void:
 	_sky.sky_horizon_color = Color(t.horizon)
 	_sky.ground_horizon_color = Color(t.horizon)
 	_sky.ground_bottom_color = Color(t.deep)
+	_env.fog_light_color = Color(t.horizon)
 	_sun.light_color = Color(t.sun)
-	_sun.light_energy = t.energy
+	_sun.light_energy = t.energy * 1.25
 	_sun.rotation_degrees = Vector3(t.pitch, t.yaw, 0)
-	_env.ambient_light_energy = t.ambient
+	_env.ambient_light_energy = t.ambient * 0.6
 	_water_mat.set_shader_parameter(&"deep", Color(t.deep))
 	_water_mat.set_shader_parameter(&"shallow", Color(t.shallow))
 
@@ -103,6 +112,19 @@ func _light() -> void:
 	_env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
 	_env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	_env.tonemap_exposure = 0.9
+	# Haze toward the horizon: the far end of the bridge fades into the sky's
+	# own colour, so distance reads as depth.
+	_env.fog_enabled = true
+	_env.fog_mode = Environment.FOG_MODE_DEPTH
+	_env.fog_depth_begin = 28.0
+	_env.fog_depth_end = 120.0
+	_env.fog_depth_curve = 1.6
+	_env.fog_density = 0.55
+	_env.fog_sky_affect = 0.0
+	_env.glow_enabled = true
+	_env.glow_intensity = 0.5
+	_env.glow_bloom = 0.0
+	_env.glow_hdr_threshold = 1.6   # only what burns brighter than daylight: shots, sparks, blasts
 	var we := WorldEnvironment.new()
 	we.environment = _env
 	add_child(we)
