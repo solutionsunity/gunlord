@@ -1,6 +1,7 @@
 class_name Hud
 extends CanvasLayer
-## Pause, the volume button, timer and wave chips, squad size with its
+## Pause, the volume button, timer and wave chips, the relics the squad
+## brings (each glyph with its level), squad size with its
 ## capacity bar, the weapon mix as unit badges in a column at one side (clear
 ## of the steering thumb), the nearest boss's health bar, the running surge
 ## with its countdown (and a frost over the screen while the lane is frozen),
@@ -22,6 +23,7 @@ var _badges := {}                   ## weapon index -> {chip: Control, count: La
 var _boss: Control
 var _boss_name: Label
 var _boss_bar: ProgressBar
+var _relics: VBoxContainer
 var _surge: Control
 var _surge_icon: TextureRect
 var _surge_bar: ProgressBar
@@ -55,6 +57,13 @@ func _ready() -> void:
 	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(gap)
 	_wave = _chip(top, 36)
+
+	_relics = VBoxContainer.new()   # down the left edge, under the pause button
+	_relics.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+	_relics.offset_left = 20
+	_relics.offset_top = 100
+	_relics.add_theme_constant_override("separation", 8)
+	add_child(_relics)
 
 	var squad := VBoxContainer.new()
 	squad.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
@@ -118,6 +127,16 @@ func _place_badges(side: StringName) -> void:
 	_mix.alignment = BoxContainer.ALIGNMENT_CENTER
 	for badge in _mix.get_children():
 		badge.size_flags_horizontal = Control.SIZE_SHRINK_END if right else Control.SIZE_SHRINK_BEGIN
+
+
+## The relics this battle brings: a glyph and a level for each.
+func show_relics(loadout: Dictionary) -> void:
+	for child in _relics.get_children():
+		child.queue_free()
+	for id in Relics.LABELS:
+		if loadout.has(id):
+			var row := Ui.icon_chip(_relics, Ui.unit_icon(id), 40.0, 24)
+			(row.get_child(1) as Label).text = Relics.NUMERALS[loadout[id]]
 
 
 ## The stage's number and name, shown for a moment as the battle opens.

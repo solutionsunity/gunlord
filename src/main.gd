@@ -63,6 +63,7 @@ func start_level(index: int) -> void:
 	_sound.play(&"start")
 	_sound.music(&"battle")
 	_hud.announce("%d · %s" % [index + 1, level.name])
+	_hud.show_relics(level.loadout)
 
 
 func _show_menu() -> void:
@@ -138,6 +139,9 @@ func _finish() -> void:
 	var line := "%d · %s\n" % [index + 1, _battle.level.name]
 	line += "%d of %d standing" % [_battle.squad.total(), _battle.level.capacity] if won \
 			else "fell at wave %d of %d" % [_battle.wave, _battle.waves]
+	var relic := Relics.earned(index)
+	if won and not relic.is_empty():
+		line += "\nRELIC: %s %s" % [Relics.LABELS[relic[0]], Relics.NUMERALS[relic[1]]]
 	_screens.show_result(won, line, index, true)
 
 

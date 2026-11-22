@@ -43,7 +43,7 @@ func _init(roster: Array[WeaponDef], objects: Dictionary, p_level: Level) -> voi
 		_weapon_index[roster[w].id] = w
 	arsenal = roster.duplicate()
 	arsenal.append_array(Content.arms())
-	arms = Arms.new(arsenal)
+	arms = Arms.new(arsenal, level.loadout)
 	squad = Squad.new(roster, level.capacity)
 	for s in level.start:
 		squad.add(_weapon_index[s[0]], s[1])
@@ -104,9 +104,9 @@ func _contacts(dt: float) -> void:
 			continue
 		if d.persistent:
 			lane.z[i] = minf(lane.z[i], front)
-			_lose(squad.wound(d.contact_kills * dt))
+			_struck(squad.wound(d.contact_kills * dt))
 		else:
-			_lose(int(d.contact_kills))
+			_struck(int(d.contact_kills))
 			lane.alive[i] = 0
 			_enemy_died(i)
 
@@ -152,6 +152,11 @@ func _shot_events() -> void:
 	shots.fired.clear()
 	shots.impacts.clear()
 	shots.zaps.clear()
+
+
+## The front line takes n blows: the shield saves what it can, the rest fall.
+func _struck(n: int) -> void:
+	_lose(n - arms.absorb(n))
 
 
 ## Removes n units from the rim of the squad, announcing each one's death.

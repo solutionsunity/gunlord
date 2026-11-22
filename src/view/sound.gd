@@ -31,6 +31,7 @@ func _ready() -> void:
 		fire_gatling = [[Synth.gatling()], -16.0, 4, 0.05],
 		fire_cannon = [[Synth.cannon()], -6.0, 3, 0.2],
 		fire_rocket = [[Synth.rocket()], -14.0, 3, 0.12],
+		fire_drone = [[Synth.gatling()], -22.0, 2, 0.1],
 		zap = [[Synth.zap()], -14.0, 3, 0.06],
 		surge = [[Synth.surge()], -4.0, 1, 0.3],
 		hit_flesh = [_kenney("impact-sounds", "impactPunch_medium_%03d", 5), -16.0, 4, 0.05],

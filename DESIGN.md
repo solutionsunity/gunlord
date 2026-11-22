@@ -199,6 +199,16 @@ mix. These draws depend on the node alone, so every attempt plays the
 verified stage. The five authored nodes use all three plans: lanes, split,
 open, open, lanes.
 
+**Relics** are gear the squad keeps from stage to stage (`Relics`):
+orbiting blades that cut the enemies they touch, drones that fire beside
+the squad, and a shield arc that takes the front line's blows and
+recharges. Beating a boss node (every fifth) earns the next step of a fixed
+schedule: a new relic, or a level on one held, up to level III each, all
+three maxed by node 46. A node can only be reached by beating every boss
+before it, so the loadout at a node is a fact of the map: everyone arrives
+with the same, the forge verifies each stage with exactly it, a replay of an
+earlier node plays with that node's loadout, and nothing is stored.
+
 **Protected opening.** Every forged stage opens fairly, whatever its
 character: no brute before wave 5, and a weapon crate (gun, gatling or
 cannon, the stage's draw) at about ten seconds.
@@ -446,3 +456,4 @@ Peak scene: 120 squad + ~300 enemies + ~1,500 projectiles.
 | 37 | The plan is a block: each stage draws its layout (lanes, split, open), wave formations, pickup pattern and opening squad; walls are stage data | Active; refines 23 |
 | 38 | Reach sets each weapon's role: gatling 18 m, crossbow 26, cannon 34, gun 40 | Active |
 | 39 | Surges: rare timed weapons in planned slots, drawn per attempt; stages verified without them, `lucky` recorded | Active |
+| 40 | Relics (blades, drones, shield) earned on boss nodes on a fixed schedule; the loadout is derived from the node, verified with, never stored | Active |

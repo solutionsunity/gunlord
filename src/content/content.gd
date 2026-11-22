@@ -24,6 +24,10 @@ const SURGES := {
 ## Weapons no unit carries: fired by surges and relics. Their shots index past the roster.
 static func arms() -> Array[WeaponDef]:
 	var list: Array[WeaponDef] = [
+		_weapon(&"drone", "Drone", {
+			damage = 3.0, fire_rate = 4.0, aim = WeaponDef.Aim.AUTO,
+			reach = 30.0, projectile_speed = 40.0, color = Color("f5c542"), projectile = &"tracer",
+		}),
 		_weapon(&"rocket", "Rocket", {
 			damage = 12.0, aim = WeaponDef.Aim.AUTO, splash = 1.6, homing = true,
 			reach = 45.0, projectile_speed = 20.0, color = Color("ff4a4a"), projectile = &"ball",

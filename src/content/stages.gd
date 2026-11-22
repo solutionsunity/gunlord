@@ -169,6 +169,7 @@ static func build_spec(s: Dictionary, node: int, attempt := 0, luck := &"") -> L
 	level.accel = s.accel
 	level.walls = PackedFloat32Array(plan.walls.map(func(w: float) -> float: return w * mirror))
 	level.start = s.start
+	level.loadout = Relics.at(node)
 	return level
 
 

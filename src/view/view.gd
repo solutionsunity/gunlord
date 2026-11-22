@@ -23,6 +23,8 @@ const SPIN := TAU / 4.0            ## rad/s; a whole number of turns per clock w
 const FONT := "res://assets/third_party/lilita-one/LilitaOne-Regular.ttf"
 const FX := 1200                   ## live flashes, sparks and blasts
 const BOSS_SIZE := 2.0             ## enemies this big shake the screen when they fall
+const SHIELD_PANES := 9            ## glass panes in the shield's arc
+const SHIELD_SPAN := 1.9           ## radians the arc covers, centred ahead of the squad
 
 var stage := Stage.new()
 var _characters := {}              ## model -> {crowd: Crowd, bake: CrowdBake, scale: float}
@@ -33,6 +35,9 @@ var _panels: Crowd                 ## translucent panel faces
 var _pedestals: Crowd
 var _projectiles := {}             ## projectile look -> Crowd
 var _streaks: Crowd                ## a glowing trail behind every projectile, so shots read at phone size
+var _blades: Crowd                 ## the relics: orbiting blades, hovering drones, the shield's arc
+var _drones: Crowd
+var _shield: Crowd
 var _font: FontFile
 var _glow: Crowd                   ## every flash, spark and blast: additive billboards
 var _fx: Array[Dictionary] = []    ## {at, color, from, to, life, age}
@@ -58,6 +63,9 @@ func _ready() -> void:
 	_frames = _primitive(_box(Vector3(PANEL.x + 0.16, PANEL.y + 0.16, PANEL.z * 0.6)), 200, false)
 	_panels = _glass(_box(PANEL), 200)
 	_pedestals = _kit_crowd("tower-square-base", 64)
+	_blades = _primitive(_box(Vector3(0.22, 0.06, 1.3)), 8, false)
+	_drones = _primitive(_sphere(0.36), 8, false)
+	_shield = _glass(_box(Vector3(0.95, 1.1, 0.1)), SHIELD_PANES)
 	_projectiles = {
 		bolt = _arrows(4000),
 		tracer = _primitive(_box(Vector3(0.14, 0.14, 1.4)), 4000, true),
@@ -114,6 +122,7 @@ func draw(b: Battle, delta: float) -> void:
 	_draw_units(b.squad)
 	_draw_lane(b.lane, b.squad)
 	_draw_shots(b.shots, b.arsenal)
+	_draw_relics(b.arms, b.squad)
 	_drain_events(b)
 	if b.arms.surge == &"flame":
 		_flames(b.squad)
@@ -299,6 +308,35 @@ func _draw_corpses(delta: float) -> void:
 		var at: Vector3 = c.at - Vector3(0, sink * 0.6 * c.size, 0)
 		_character(c.model, at, c.yaw, c.size, c.color, &"death", -c.age, 0.45 * (1.0 - sink))
 	_corpses = keep
+
+
+## Blades spinning flat around the squad, drones bobbing beside it, and the
+## shield's glass arc ahead of it, fading as it is spent.
+func _draw_relics(arms: Arms, squad: Squad) -> void:
+	_blades.begin()
+	for p in arms.blades(squad):
+		var at := Vector3(p.x, 0.55, p.y)
+		_blades.add(at, arms.spin * 3.0, Vector3.ONE, Color("e6ebf5"))
+		_blades.add(at, arms.spin * 3.0 + PI / 2.0, Vector3.ONE, Color("e6ebf5"))
+		_shadows.add(Vector3(p.x, 0.03, p.y), 0.0, Vector3.ONE * 0.8, Color(0, 0, 0, 0.3))
+	_blades.end()
+	_drones.begin()
+	var k := 0
+	for p in arms.drones(squad):
+		var at := Vector3(p.x, 1.7 + sin(_clock * 3.0 + k) * 0.15, p.y)
+		_drones.add(at, 0.0, Vector3.ONE, Color("f5c542"))
+		_shadows.add(Vector3(p.x, 0.03, p.y), 0.0, Vector3.ONE * 0.7, Color(0, 0, 0, 0.3))
+		k += 1
+	_drones.end()
+	_shield.begin()
+	if arms.shield_max() > 0.0:
+		var charge := arms.shield / arms.shield_max()
+		var r := squad.radius() + 0.7
+		for i in SHIELD_PANES:
+			var a := -PI / 2.0 + SHIELD_SPAN * (float(i) / (SHIELD_PANES - 1) - 0.5)
+			var at := Vector3(squad.x + cos(a) * r, 0.6, Squad.Z + sin(a) * r)
+			_shield.add(at, -a - PI / 2.0, Vector3.ONE, Color(0.45, 0.7, 1.0, 0.12 + 0.5 * charge))
+	_shield.end()
 
 
 ## The flame surge: tongues of fire licking out over the ground ahead of the squad.
