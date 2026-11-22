@@ -2,6 +2,8 @@ class_name Screens
 extends CanvasLayer
 ## The screens around a battle: the map, the pause overlay, the settings and
 ## the results. They only report choices through signals; the game loop decides.
+## Each screen opens with a button in focus, so the keyboard works throughout:
+## arrows move, Enter or Space presses, Escape steps back.
 
 signal level_chosen(index: int)
 signal resume_chosen
@@ -38,6 +40,8 @@ var _volume_buttons: Array[VolumeButton] = []
 var _reset: Button
 var _armed := false          ## reset asks twice
 var _update: Button         ## on the map, when a newer build is out
+var _frontier: Button        ## the map's first unbeaten node
+var _resume: Button
 var _result: Control
 var _result_title: Label
 var _result_line: Label
@@ -125,6 +129,8 @@ func refresh_map(progress: Progress) -> void:
 	await get_tree().process_frame
 	_offset = -((last - frontier) * ROW + ROW * 0.5 - _window.size.y * 0.55)
 	_scroll_by(0.0)
+	if _menu.visible:
+		_frontier.grab_focus(true)
 
 
 func _map_node(node: int, progress: Progress, frontier: int) -> void:
@@ -152,11 +158,15 @@ func _map_node(node: int, progress: Progress, frontier: int) -> void:
 		if not _dragged:
 			level_chosen.emit(node))
 	b.disabled = not open
+	if not open:
+		b.focus_mode = Control.FOCUS_NONE
+	b.focus_entered.connect(_scroll_into_view.bind(row))
 	b.mouse_filter = Control.MOUSE_FILTER_PASS
 	b.custom_minimum_size = Vector2(104, 104)
 	b.size = b.custom_minimum_size
 	b.position = Vector2(STRIP / 2 + x - 52, ROW * 0.5 - 52)
 	if node == frontier:
+		_frontier = b
 		var ring := b.get_theme_stylebox("normal").duplicate() as StyleBoxFlat
 		ring.border_color = Ui.GOLD
 		ring.set_border_width_all(7)
@@ -179,7 +189,9 @@ func _map_node(node: int, progress: Progress, frontier: int) -> void:
 func _input(event: InputEvent) -> void:
 	if not _menu.visible or _volume_buttons.any(func(b: VolumeButton) -> bool: return b.is_open()):
 		return   # a drag on an open volume slider is the slider's, not the map's
-	if event is InputEventMouseButton:
+	if event is InputEventKey:
+		_dragged = false   # a key press is never the tail of a drag
+	elif event is InputEventMouseButton:
 		match event.button_index:
 			MOUSE_BUTTON_LEFT:
 				if event.pressed:
@@ -201,6 +213,31 @@ func _input(event: InputEvent) -> void:
 			_scroll_by(event.relative.y)
 
 
+## Escape steps back: from settings to where they opened, from pause into the
+## battle, from the results to the map.
+func _unhandled_input(event: InputEvent) -> void:
+	if not event.is_action_pressed(&"ui_cancel"):
+		return
+	if _settings.visible:
+		_close_settings()
+	elif _pause.visible:
+		resume_chosen.emit()
+	elif _result.visible:
+		menu_chosen.emit()
+	else:
+		return
+	get_viewport().set_input_as_handled()
+
+
+## Keyboard focus moved to a node: scroll just enough to keep its row in view.
+func _scroll_into_view(row: Control) -> void:
+	var top := row.get_index() * ROW + _offset   # rows are ROW tall: no wait for layout
+	if top < 0.0:
+		_scroll_by(-top)
+	elif top + ROW > _window.size.y:
+		_scroll_by(_window.size.y - top - ROW)
+
+
 func _scroll_by(dy: float) -> void:
 	var height := _path.get_combined_minimum_size().y
 	var lowest := minf(0.0, _window.size.y - height)
@@ -216,7 +253,7 @@ func _build_pause() -> void:
 	var p := _column(_pause)
 	Ui.label(p, "PAUSED", 80, Color.WHITE)
 	_space(p, 20)
-	Ui.button(p, "RESUME", Ui.BLUE, func() -> void: resume_chosen.emit())
+	_resume = Ui.button(p, "RESUME", Ui.BLUE, func() -> void: resume_chosen.emit())
 	Ui.button(p, "LEVELS", Color(Ui.INK, 0.9), func() -> void: menu_chosen.emit())
 	_space(p, 10)
 	var row := HBoxContainer.new()
@@ -291,11 +328,13 @@ func _open_settings() -> void:
 	_armed = false
 	_reset.text = "RESET PROGRESS"
 	_settings.visible = true
+	_volume.grab_focus(true)
 
 
 func _close_settings() -> void:
 	_settings.visible = false
 	_settings_back.visible = true
+	(_resume if _settings_back == _pause else _frontier).grab_focus(true)
 
 
 func _reset_pressed() -> void:
@@ -311,6 +350,7 @@ func _reset_pressed() -> void:
 func show_pause() -> void:
 	hide_all()
 	_pause.visible = true
+	_resume.grab_focus(true)
 
 
 ## ---- results -----------------------------------------------------------
@@ -334,6 +374,7 @@ func show_result(won: bool, line: String, index: int, has_next: bool) -> void:
 	_result_title.add_theme_color_override("font_color", Ui.GOLD if won else Color("ff8a7a"))
 	_result_line.text = line
 	for child in _result_buttons.get_children():
+		_result_buttons.remove_child(child)
 		child.queue_free()
 	if won and has_next:
 		Ui.button(_result_buttons, "NEXT", Ui.BLUE, func() -> void: level_chosen.emit(index + 1))
@@ -341,9 +382,11 @@ func show_result(won: bool, line: String, index: int, has_next: bool) -> void:
 			func() -> void: level_chosen.emit(index))
 	Ui.button(_result_buttons, "LEVELS", Color(Ui.INK, 0.9), func() -> void: menu_chosen.emit())
 	_result.visible = true
+	_result_buttons.get_child(0).grab_focus(true)
 
 
 func hide_all() -> void:
+	get_viewport().gui_release_focus()   # nothing hidden keeps the keyboard
 	_menu.visible = false
 	_pause.visible = false
 	_settings.visible = false

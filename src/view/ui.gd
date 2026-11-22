@@ -93,8 +93,11 @@ static func states(b: Button, color: Color, radius: int, border: int) -> void:
 		var s := box(c, radius, border, Color(1, 1, 1, 0.75) if state != "disabled" else Color(1, 1, 1, 0.2))
 		s.content_margin_left = 10
 		s.content_margin_right = 10
-		if state == "focus":
+		if state == "focus":   # keyboard only: pointer presses leave no ring
 			s.draw_center = false
+			s.set_border_width_all(5)
+			s.border_color = GOLD
+			s.set_expand_margin_all(4)
 		b.add_theme_stylebox_override(state, s)
 
 

@@ -3,7 +3,8 @@ extends Button
 ## The one sound control outside Settings: a speaker that, when tapped, opens
 ## a vertical volume slider beneath it, topped by a mute button. The bottom of
 ## the slider is silence. Tapped while silent, the mute button gives back the
-## last level heard. Tapping the speaker again, or anywhere else, closes it.
+## last level heard. Tapping the speaker again, or anywhere else, or Escape,
+## closes it. From the keyboard, the slider takes focus as it opens.
 
 signal changed(value: float)
 
@@ -57,6 +58,12 @@ func _init(px: float, color: Color) -> void:
 	_slider.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 
 
+func _unhandled_input(event: InputEvent) -> void:
+	if _panel.visible and event.is_action_pressed(&"ui_cancel"):
+		_open(false)
+		get_viewport().set_input_as_handled()
+
+
 func is_open() -> bool:
 	return _panel.visible
 
@@ -88,6 +95,9 @@ func _show_level(v: float) -> void:
 
 
 func _open(open: bool) -> void:
+	var focused := get_viewport().gui_get_focus_owner()
+	if not open and focused and _panel.is_ancestor_of(focused):
+		grab_focus()   # the keyboard returns to the speaker
 	_panel.visible = open
 	_catcher.visible = open
 	if open:
@@ -96,3 +106,5 @@ func _open(open: bool) -> void:
 		_catcher.size = get_viewport_rect().size
 		_panel.reset_size()
 		_panel.global_position = Vector2(r.get_center().x - _panel.size.x / 2.0, r.end.y + 10)
+		if has_focus(true):   # opened from the keyboard: up and down set the level
+			_slider.grab_focus()

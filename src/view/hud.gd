@@ -33,8 +33,11 @@ func _ready() -> void:
 	top.offset_top = 20
 	top.add_theme_constant_override("separation", 10)
 	add_child(top)
-	Ui.icon_button(top, "pause", BUTTON, Color(Ui.INK, 0.6), func() -> void: pause_pressed.emit())
+	# Not focusable: in battle the keys steer, and Escape pauses.
+	Ui.icon_button(top, "pause", BUTTON, Color(Ui.INK, 0.6), func() -> void: pause_pressed.emit()) \
+			.focus_mode = Control.FOCUS_NONE
 	_volume = VolumeButton.new(BUTTON, Color(Ui.INK, 0.6))
+	_volume.focus_mode = Control.FOCUS_NONE
 	_volume.changed.connect(func(v: float) -> void: master_changed.emit(v))
 	top.add_child(_volume)
 	_clock = _chip(top, 36)
