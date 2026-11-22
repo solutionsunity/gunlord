@@ -33,7 +33,7 @@ func _process(_delta: float) -> bool:
 		8:
 			_check("a tap at the slider's bottom silences everything", _main._settings.master <= 0.05,
 					"master %.2f" % _main._settings.master)
-			_check("the speaker shows muted", button.icon == Ui.icon("audioOff"), "")
+			_check("the speaker shows muted", button.icon == Ui.unit_icon(&"mute"), "")
 			_check("the master bus is muted", AudioServer.is_bus_mute(0), "")
 			_tap(Vector2(360, 900))
 		10:

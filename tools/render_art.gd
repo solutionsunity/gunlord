@@ -3,6 +3,7 @@ extends SceneTree
 ##   icons/<weapon id>.png   a portrait of the unit carrying each weapon (256², transparent)
 ##   icons/attack.png        KayKit's sword, for the attack bonus (256², transparent)
 ##   icons/<surge or relic>.png  a bold outlined glyph for each surge and relic (256², transparent)
+##   icons/mute.png          a speaker struck through by a red circle: sound off
 ##   icon.png                the game icon: a crossbowman on a gold-rimmed badge (512²)
 ##   splash.png              key art: a battle at dusk under the title (1080×1920)
 ## Needs a GPU context, so it runs under a display (xvfb on a server):
@@ -226,6 +227,14 @@ var GLYPHS := {
 		[&"fill", _circle(Vector2(128, 140), 58), Color("f5c542")],
 		[&"fill", _circle(Vector2(128, 140), 22), Color("2f6fe0")],
 	],
+	mute = func() -> Array:
+		var ring := Array(_circle(Vector2(128, 128), 104))
+		ring.append(ring[0])
+		return [
+			[&"fill", [Vector2(52, 100), Vector2(92, 100), Vector2(150, 54), Vector2(150, 202), Vector2(92, 156), Vector2(52, 156)], Color.WHITE],
+			[&"line", ring, Color("e8333a"), 20.0],
+			[&"line", [Vector2(54, 202), Vector2(202, 54)], Color("e8333a"), 20.0],
+		],
 	shield = func() -> Array: return [
 		[&"fill", [Vector2(128, 18), Vector2(222, 50), Vector2(214, 140), Vector2(128, 238), Vector2(42, 140), Vector2(34, 50)], Color("f5c542")],
 		[&"fill", [Vector2(128, 44), Vector2(196, 68), Vector2(190, 134), Vector2(128, 206), Vector2(66, 134), Vector2(60, 68)], Color("2f6fe0")],

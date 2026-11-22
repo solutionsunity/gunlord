@@ -52,7 +52,7 @@ func _init(px: float, color: Color) -> void:
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 14)
 	_panel.add_child(column)
-	_mute = Ui.icon_button(column, "audioOff", MUTE, Ui.INK.lightened(0.2), _toggle_mute)
+	_mute = Ui.icon_button(column, "audioOn", MUTE, Ui.INK.lightened(0.2), _toggle_mute)
 	_mute.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_slider = Ui.slider(column, LENGTH, _choose, true)
 	_slider.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
@@ -86,12 +86,15 @@ func _toggle_mute() -> void:
 	_open(false)
 
 
-## The speaker shows the state; the mute button shows what it will do.
+## The speaker shows the state; the mute button shows what it will do. Silence
+## is always the struck-through speaker, so it reads at a glance.
 func _show_level(v: float) -> void:
 	if v > 0.0:
 		_before = v
-	icon = Ui.icon("audioOff" if v <= 0.0 else "audioOn")
-	_mute.icon = Ui.icon("audioOn" if v <= 0.0 else "audioOff")
+	var muted := Ui.unit_icon(&"mute")
+	var sounding := Ui.icon("audioOn")
+	icon = muted if v <= 0.0 else sounding
+	_mute.icon = sounding if v <= 0.0 else muted
 
 
 func _open(open: bool) -> void:

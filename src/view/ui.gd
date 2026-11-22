@@ -25,7 +25,7 @@ static func icon(name: String) -> Texture2D:
 
 
 ## One of our own icons (tools/render_art.gd): a weapon's unit portrait, the
-## attack-bonus sword ("attack"), or a surge's or relic's glyph.
+## attack-bonus sword ("attack"), a surge's or relic's glyph, or "mute".
 static func unit_icon(id: StringName) -> Texture2D:
 	return load(UNIT_ICON % id)
 
