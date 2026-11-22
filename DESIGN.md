@@ -141,7 +141,7 @@ Modifiers apply to the whole squad or to one weapon type (`ATK +20%`,
 - Pacing rule: challenge grows linearly and rewards grow exponentially. Lane
   speed is the main difficulty setting. Current values: brute hp 300 + 250 per
   tier, a bounty of +30 units per brute kill, warlord hp 2000.
-- Combat happens on screen. Weapon reach (22–30 m) is shorter than the visible
+- Combat happens on screen. Weapon reach (18–40 m, each weapon its own: gatling close, crossbow middle, cannon far, gun farthest) is shorter than the visible
   lane (50 m), so enemies are fought mid-screen, not at the horizon.
 - What the store shows is what you play. Marketing material shows only real
   gameplay.

@@ -2,24 +2,27 @@ class_name Content
 extends RefCounted
 ## The roster. Weapons are listed centre-first: the formation places earlier
 ## weapons in the middle of the squad, so contact losses take later ones first.
+## Reach sets each weapon's role: the gatling shreds what is close (18 m), the
+## crossbow covers the middle (26 m), the cannon lobs far (34 m), and the gun
+## picks off what is still distant (40 m).
 
 
 static func weapons() -> Array[WeaponDef]:
 	var list: Array[WeaponDef] = [
 		_weapon(&"cannon", "Cannon", {
 			damage = 10.0, fire_rate = 0.5, aim = WeaponDef.Aim.AUTO, splash = 2.2,
-			reach = 26.0, projectile_speed = 24.0, color = Color("f2a516"), size = 1.5, model = &"cannon", projectile = &"ball",
+			reach = 34.0, projectile_speed = 24.0, color = Color("f2a516"), size = 1.5, model = &"cannon", projectile = &"ball",
 		}),
 		_weapon(&"gatling", "Gatling", {
 			damage = 1.0, fire_rate = 9.0, aim = WeaponDef.Aim.AUTO, jitter = 4.0,
-			reach = 22.0, projectile_speed = 45.0, color = Color("b05cf0"), size = 1.15, model = &"gatlinger", projectile = &"tracer",
+			reach = 18.0, projectile_speed = 45.0, color = Color("b05cf0"), size = 1.15, model = &"gatlinger", projectile = &"tracer",
 		}),
 		_weapon(&"gun", "Gun", {
 			damage = 2.0, fire_rate = 2.5, pierce = 1,
-			reach = 30.0, projectile_speed = 50.0, color = Color("3fd1c9"), model = &"gunner", projectile = &"tracer",
+			reach = 40.0, projectile_speed = 50.0, color = Color("3fd1c9"), model = &"gunner", projectile = &"tracer",
 		}),
 		_weapon(&"crossbow", "Crossbow", {
-			damage = 1.0, fire_rate = 1.5, reach = 28.0, projectile_speed = 32.0, color = Color("4d8df7"),
+			damage = 1.0, fire_rate = 1.5, reach = 26.0, projectile_speed = 32.0, color = Color("4d8df7"),
 			model = &"crossbowman", projectile = &"bolt",
 		}),
 	]
