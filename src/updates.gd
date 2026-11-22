@@ -8,6 +8,7 @@ extends Node
 signal available(version: String)
 
 const EVERY := 120.0          ## seconds between checks at most
+const CACHE_PREFIX := "Gunlord-sw-cache-"   ## the service worker's caches: the project name, then Godot's suffix
 
 var _request := HTTPRequest.new()
 var _last := -EVERY
@@ -32,9 +33,14 @@ func check() -> void:
 		_busy = true
 
 
-## Loads the page again, which brings the new build.
+## Brings the new build: drops the service worker and the build it keeps for
+## offline play (an installed game would start from them again), then loads
+## the page afresh. The next start installs the worker anew, for the new build.
 func reload() -> void:
-	JavaScriptBridge.eval("location.reload()")
+	JavaScriptBridge.eval("""Promise.all([
+		'serviceWorker' in navigator ? navigator.serviceWorker.getRegistration().then((r) => r && r.unregister()) : null,
+		'caches' in self ? caches.keys().then((keys) => Promise.all(keys.filter((k) => k.startsWith('%s')).map((k) => caches.delete(k)))) : null,
+	]).finally(() => location.reload())""" % CACHE_PREFIX)
 
 
 func _on_completed(result: int, code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:

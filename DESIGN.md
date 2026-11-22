@@ -403,8 +403,17 @@ view never infers them from diffs of the simulation state.
   stays consistent with its own files.
 - Each time the map appears (at most every two minutes), the web build
   fetches `version.json` past every cache. If a different version is
-  published, the map offers "New version … tap to update", which reloads the
-  page. It never interrupts a battle; local and native builds do not check.
+  published, the map offers "New version … tap to update". It never
+  interrupts a battle; local and native builds do not check.
+- The web build is an installable app (Godot's progressive web app export):
+  a manifest (standalone, portrait, the game icon) and a service worker that
+  keeps the build for offline play, one cache per build. The worker serves
+  its cache first, so the version check is what notices a new build; the
+  update tap drops the worker and its cache and loads the page afresh. CI
+  teaches Godot's worker to see past the `?v=` tags and to fill its cache
+  past the browser's, so a build's cache holds only that build's files.
+  Offline starts from the installed app (`index.html`); the bare site address
+  needs the network.
 
 ### Budget
 
@@ -477,3 +486,4 @@ Peak scene: 120 squad + ~300 enemies + ~1,500 projectiles.
 | 40 | Relics (blades, drones, shield) earned on boss nodes on a fixed schedule; the loadout is derived from the node, verified with, never stored | Active |
 | 41 | Relics scale with the squad's size; the forge passes over any variant the idle bot wins | Active; refines 24, 40 |
 | 42 | Graphics pass: low close camera, real crowd shadows, haze, glow, shaded and outlined characters, modelled relics; a light setting | Active; supersedes 17 |
+| 43 | Installable web app: Godot's PWA export, its worker taught the version tags; the update tap clears the offline build | Active; refines 35 |

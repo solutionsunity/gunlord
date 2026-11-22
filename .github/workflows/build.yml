@@ -110,6 +110,15 @@ jobs:
           grep -q "index.js?v=$version" build/web/index.html
           grep -q "GUNLORD_VERSION = '$version'" build/web/index.html
           printf '{"version": "%s"}\n' "$version" > build/web/version.json
+          # Godot's service worker (the installable app's offline copy) keys
+          # files by bare name; the page asks for them versioned. It is taught
+          # to see past the version, and to fill its cache past the browser's,
+          # so a build's cache only ever holds that build's files.
+          sw=build/web/index.service.worker.js
+          sed -i "s|const local = url.startsWith(base) ? url.replace(base, '') : '';|const local = (url.startsWith(base) ? url.replace(base, '') : '').split('?')[0];|; s|cache\.match(\([a-z.]*\))|cache.match(\1, { ignoreSearch: true })|g; s|cache\.addAll(CACHED_FILES)|cache.addAll(CACHED_FILES.map((f) => new Request(f, { cache: 'reload' })))|" $sw
+          grep -q "split('?')\[0\];" $sw
+          test $(grep -c "ignoreSearch: true" $sw) -eq 2
+          grep -q "cache: 'reload'" $sw
 
       - name: Export Android
         env:
