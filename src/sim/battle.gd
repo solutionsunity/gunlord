@@ -6,8 +6,6 @@ extends RefCounted
 
 enum State { RUNNING, WON, LOST }
 
-const START_UNITS := 10
-
 var state := State.RUNNING
 var time := 0.0
 var wave := 0
@@ -40,8 +38,10 @@ func _init(roster: Array[WeaponDef], objects: Dictionary, p_level: Level) -> voi
 	for w in roster.size():
 		_weapon_index[roster[w].id] = w
 	squad = Squad.new(roster, level.capacity)
-	squad.add(_weapon_index[&"crossbow"], START_UNITS)
-	peak_units = START_UNITS
+	for s in level.start:
+		squad.add(_weapon_index[s[0]], s[1])
+	peak_units = squad.total()
+	lane.walls = level.walls
 
 
 ## The lane's own speed is the main difficulty dial.

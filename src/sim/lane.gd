@@ -6,8 +6,9 @@ extends RefCounted
 
 const SPAWN_Z := -50.0
 const WALL_END_Z := -5.0     ## where the walls between lanes stop
-const WALL_X := 3.25         ## the walls run along x = ±WALL_X
 const HALF_WIDTH := 6.0
+
+var walls := PackedFloat32Array()    ## x of each wall; an enemy keeps to the lane between two, or a wall and the edge
 
 var def: Array[ObjectDef] = []
 var serial := PackedInt32Array()     ## stable identity across compaction
@@ -54,9 +55,20 @@ func advance(dt: float, lane_speed: float, squad_x: float) -> void:
 			if z[i] > WALL_END_Z:
 				x[i] = move_toward(x[i], squad_x, d.seek * dt)
 			else:
-				x[i] = clampf(x[i], -WALL_X + d.radius, WALL_X - d.radius)
+				x[i] = _keep_in_lane(x[i], d.radius)
 		elif z[i] > WALL_END_Z:
 			alive[i] = 0  # a pickup that reaches the end of its lane is lost
+
+
+func _keep_in_lane(px: float, r: float) -> float:
+	var lo := -HALF_WIDTH
+	var hi := HALF_WIDTH
+	for w in walls:
+		if w < px:
+			lo = maxf(lo, w)
+		else:
+			hi = minf(hi, w)
+	return clampf(px, lo + r, hi - r) if hi - lo > 2.0 * r else (lo + hi) / 2.0
 
 
 func damage(i: int, dmg: float) -> void:

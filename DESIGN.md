@@ -25,7 +25,7 @@ is deterministic in fixed ticks. Nothing beyond that is built for them yet.
 - Portrait screen. A tilted top-down camera looks up the lane toward the
   horizon, and the world moves toward the player.
 - The only input is a horizontal drag that moves the squad left and right
-  inside the lane's walls. The squad does not move forward or back.
+  across the deck. The squad does not move forward or back.
 - The player never aims or fires. Units fire on their own, aimed by their
   weapon (see Weapons).
 
@@ -53,9 +53,11 @@ Kinds are just data that fill in these fields:
 | Weapon crate   | add N units carrying that weapon  | passes, payout lost        |
 | Modifier gate  | apply a modifier (e.g. ATK +20%)  | passes, payout lost        |
 
-Pickups pay out only when shot down. Walls between lanes mean the squad cannot
-walk into side-lane objects. The only way to claim them is to shoot them, and
-anything that gets past you is lost.
+Pickups pay out only when shot down. The squad never walks into one: the only
+way to claim it is to shoot it, and anything that gets past you is lost.
+Where pickups and enemies arrive is the stage's plan (see Endless map); on a
+plan with lanes, low walls hold enemies to their lane until they near the
+squad.
 
 Traps punish standing in the wrong place, because `straight` weapons hit
 whatever is in front of them. `auto` weapons never target traps. Otherwise
@@ -115,8 +117,8 @@ Modifiers apply to the whole squad or to one weapon type (`ATK +20%`,
 - The script also schedules the pickups. Their size and toughness grow
   further up the lane and later in the run: +1 blocks early and near, +99
   blocks late and tough.
-- Themed lanes (bridge, towers…) change the setting and the lane layout, not
-  the rules.
+- Themed lanes (bridge, towers…) change the setting, not the rules; the
+  layout is the stage's plan (see Endless map).
 - The campaign is five levels, each a spec turned into a timeline by one
   generator (`src/content/levels.gd`). Each level has its own time of day:
 
@@ -151,6 +153,7 @@ block has its own tunable numbers:
 
 | Block | Numbers |
 |---|---|
+| Plan | the deck's layout, the wave formations it draws from, the pickup pattern, the opening squad |
 | Horde | soldiers in the first wave, soldiers added per wave |
 | Runners | first wave they appear, runners added per wave |
 | Brutes | a brute every N waves, hp, hp added per brute |
@@ -169,8 +172,21 @@ on that node's target, and it checks that the idle bot loses. The target falls
 from 60% at node 6 towards 15%. Every fifth node is a boss node, harder than
 the curve; the node after it is a breather, easier.
 
-**Protected opening.** Every forged stage opens the same fair way, whatever
-its character: no brute before wave 5, and a gun crate at about ten seconds.
+**Plans.** A stage's layout is its own, not a fixed centre lane flanked by
+pickups. Three plans (`Stages.PLANS`): *lanes*, a middle lane for enemies
+between low walls and side lanes for pickups; *split*, one wall down the
+middle and both lanes carrying both; *open*, no walls, with each wave on any
+stretch of the deck and pickups among the enemies. Each wave takes a
+formation drawn from the stage's character: block, line, wedge, columns or
+stream. Pickups arrive alternating, in pairs, in bursts or scattered. The
+opening squad is the stage's own too: ten crossbows, sixteen, six guns, or a
+mix. These draws depend on the node alone, so every attempt plays the
+verified stage. The five authored nodes use all three plans: lanes, split,
+open, open, lanes.
+
+**Protected opening.** Every forged stage opens fairly, whatever its
+character: no brute before wave 5, and a weapon crate (gun, gatling or
+cannon, the stage's draw) at about ten seconds.
 Without it, a siege stage's early brute meets a squad of crossbows that cannot
 hit it, and no intensity setting rescues the stage.
 
@@ -277,7 +293,8 @@ view never infers them from diffs of the simulation state.
 ### Stage and lighting
 
 - Stone bridge over animated water, with castle walls and towers along the
-  edges. The lane dividers are low stone walls.
+  edges. The lane dividers are low stone walls, drawn where the stage's plan
+  puts them, or none.
 - One sun, with real shadows only on static set pieces. Crowds get one
   blob-shadow quad per unit, drawn as another MultiMesh.
 
@@ -411,3 +428,4 @@ Peak scene: 120 squad + ~300 enemies + ~1,500 projectiles.
 | 34 | Weapon badges in a side column (right or left, a setting), clear of the steering thumb | Active |
 | 35 | Web updates: version-tagged file requests, and a version.json check offering a reload on the map | Active |
 | 36 | One volume button (a speaker opening a vertical slider; its bottom is mute) replaces mute plus inline slider | Active; refines 33 |
+| 37 | The plan is a block: each stage draws its layout (lanes, split, open), wave formations, pickup pattern and opening squad; walls are stage data | Active; refines 23 |

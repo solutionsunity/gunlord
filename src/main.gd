@@ -55,6 +55,7 @@ func start_level(index: int) -> void:
 	_battle = Battle.new(Content.weapons(), Content.objects(), level)
 	_view.reset()
 	_view.stage.apply_theme(level.theme)
+	_view.stage.apply_walls(level.walls)
 	_screens.hide_all()
 	_hud.visible = true
 	_since_end = 0.0

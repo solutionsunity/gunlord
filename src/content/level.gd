@@ -11,6 +11,8 @@ var capacity := 0                      ## the squad's maximum size
 var duration := 90.0                   ## the clock; it paces the waves, it does not decide the result
 var speed := 3.0                       ## lane speed at the start, m/s
 var accel := 0.02                      ## lane speed added per second: the main difficulty dial
+var walls := PackedFloat32Array([-3.25, 3.25])   ## x of each low wall along the deck: the stage's plan
+var start := [[&"crossbow", 10]]       ## the squad it opens with: [weapon id, count] pairs
 
 
 func _init(p_timeline: Array[Dictionary], p_waves: int, p_capacity: int) -> void:

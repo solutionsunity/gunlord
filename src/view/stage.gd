@@ -32,6 +32,7 @@ var _sun: DirectionalLight3D
 var _sky: ProceduralSkyMaterial
 var _env: Environment
 var _water_mat: ShaderMaterial
+var _walls := Node3D.new()            ## the low walls of the current stage's plan
 
 
 func _ready() -> void:
@@ -40,7 +41,8 @@ func _ready() -> void:
 	_deck()
 	_water()
 	_parapets()
-	_dividers()
+	add_child(_walls)
+	apply_walls(PackedFloat32Array([-3.25, 3.25]))
 	_towers()
 	_gatehouse()
 	apply_theme(&"noon")
@@ -151,16 +153,20 @@ func _parapets() -> void:
 	_batch("flag-banner-long", banners)
 
 
-## Low walls between the middle lane and the side lanes, ending where the squad stands.
-func _dividers() -> void:
+## The stage's plan: low walls between its lanes, ending where the squad
+## stands; none on an open deck.
+func apply_walls(xs: PackedFloat32Array) -> void:
+	for child in _walls.get_children():
+		child.queue_free()
 	var walls: Array[Transform3D] = []
 	var step := 1.5
 	var z := Lane.WALL_END_Z - step / 2.0
 	while z > FAR_Z + 4.0:
-		for side: float in [-1.0, 1.0]:
-			walls.append(_at(Vector3(side * Lane.WALL_X, 0, z), 0.0, Vector3(0.7, 0.5, step)))
+		for x in xs:
+			walls.append(_at(Vector3(x, 0, z), 0.0, Vector3(0.7, 0.5, step)))
 		z -= step
-	_batch("wall-narrow", walls)
+	if not walls.is_empty():
+		_batch("wall-narrow", walls, _walls)
 
 
 ## Towers standing in the water on both sides, on rocks, flying pennants.
@@ -227,7 +233,7 @@ static func _at(pos: Vector3, yaw: float, scale: Vector3) -> Transform3D:
 
 
 ## Every transform drawn with one Kenney piece, as a single MultiMesh per mesh.
-func _batch(piece: String, transforms: Array[Transform3D]) -> void:
+func _batch(piece: String, transforms: Array[Transform3D], parent: Node = self) -> void:
 	var scene: Node = load(KIT % piece).instantiate()
 	for mi in scene.find_children("*", "MeshInstance3D", true, false):
 		var mm := MultiMesh.new()
@@ -238,5 +244,5 @@ func _batch(piece: String, transforms: Array[Transform3D]) -> void:
 			mm.set_instance_transform(i, transforms[i] * mi.transform)
 		var mmi := MultiMeshInstance3D.new()
 		mmi.multimesh = mm
-		add_child(mmi)
+		parent.add_child(mmi)
 	scene.free()

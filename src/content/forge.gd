@@ -1,16 +1,17 @@
 class_name Forge
 extends RefCounted
-## Composes a stage spec for a map node from the blocks: horde, runners, brutes,
-## boss, pacing, economy and theme. Deterministic in (node, variant, intensity):
+## Composes a stage spec for a map node from the blocks: plan, horde, runners,
+## brutes, boss, pacing, economy and theme. Deterministic in (node, variant, intensity):
 ## the node's seed (and variant, if the first draw would not tune) draws the
 ## stage's character and its numbers; intensity scales every threat. tools/forge_map.gd finds, per node, the intensity at which the
 ## sweeping bot's margin lands on target(node).
 ##
 ## Spec fields are documented in stages.gd.
 ##
-## Every forged stage opens the same fair way, whatever its character: no brute
-## before OPENING_WAVES, and a gun crate at about ten seconds, so the squad can
-## grow before the first heavy hitter arrives.
+## Every forged stage opens fairly, whatever its character: no brute before
+## OPENING_WAVES, and a weapon crate at about ten seconds, so the squad can
+## grow before the first heavy hitter arrives. Which crate, and the squad it
+## grows from, are the stage's own.
 
 const CHARACTERS := [&"horde", &"rush", &"siege", &"elite", &"mixed"]
 ## Threat weights per character: horde, runners, brutes, crate pool.
@@ -21,6 +22,20 @@ const WEIGHTS := {
 	elite = [1.0, 1.0, 1.2, [&"gun_crate", &"cannon_crate", &"war_drum", &"war_drum"]],
 	mixed = [1.0, 1.0, 1.0, [&"gun_crate", &"gatling_crate", &"cannon_crate", &"war_drum"]],
 }
+## The wave shapes each character leans on (see Stages.FORMATIONS).
+const SHAPES := {
+	horde = [&"block", &"line", &"wedge"],
+	rush = [&"stream", &"columns", &"line"],
+	siege = [&"block", &"wedge"],
+	elite = [&"wedge", &"columns", &"block"],
+	mixed = [&"block", &"line", &"wedge", &"columns", &"stream"],
+}
+const PLANS := [&"lanes", &"lanes", &"open", &"open", &"split"]
+const STARTS := [
+	[[&"crossbow", 10]], [[&"crossbow", 10]], [[&"crossbow", 16]],
+	[[&"gun", 6]], [[&"crossbow", 6], [&"gun", 3]],
+]
+const OPENING_CRATES := [&"gun_crate", &"gun_crate", &"gatling_crate", &"cannon_crate"]
 const THEMES := [&"dawn", &"noon", &"afternoon", &"dusk", &"night"]
 const FIRST := ["Ashen", "Iron", "Raven", "Thorn", "Grey", "Storm", "Hollow", "Red", "Wolf", "Frost",
 		"Silent", "Broken", "High", "Old", "Black", "Golden", "Bitter", "Lantern", "Salt", "Ember"]
@@ -28,7 +43,7 @@ const SECOND := ["Ford", "Crossing", "Span", "Gate", "Causeway", "Arch", "Bridge
 		"Rampart", "Landing", "Narrows"]
 const BOSS_EVERY := 5
 const OPENING_WAVES := 5
-const OPENING_CRATE := [10.0, &"gun_crate"]
+const OPENING_AT := 10.0
 
 
 ## The sweeping bot's target margin at a node: from 60% at the first forged
@@ -63,6 +78,10 @@ static func forge(node: int, intensity: float, variant := 0, boss := 1.0) -> Dic
 		name = "%s %s" % [FIRST[rng.randi() % FIRST.size()], SECOND[rng.randi() % SECOND.size()]],
 		theme = THEMES[rng.randi() % THEMES.size()],
 		character = character,
+		plan = PLANS[rng.randi() % PLANS.size()],
+		formations = SHAPES[character],
+		pickups = Stages.PICKUPS[rng.randi() % Stages.PICKUPS.size()],
+		start = STARTS[rng.randi() % STARTS.size()],
 		waves = waves, gap = gap,
 		horde = maxi(3, roundi((5.0 + rng.randf() * 3.0) * w[0] * k)),
 		growth = maxi(1, roundi((2.5 + rng.randf() * 1.5) * w[0] * k)),
@@ -82,7 +101,8 @@ static func forge(node: int, intensity: float, variant := 0, boss := 1.0) -> Dic
 		tough = rng.randf_range(3.5, 5.0), tough_growth = rng.randf_range(0.6, 0.85),
 		multiplier_every = rng.randi_range(11, 17), trap_every = rng.randi_range(5, 9),
 	}
-	spec.crates = _crates(rng, w[3], Stages.WAVE_START + (waves - 1) * gap)
+	var opening: StringName = OPENING_CRATES[rng.randi() % OPENING_CRATES.size()]
+	spec.crates = _crates(rng, opening, w[3], Stages.WAVE_START + (waves - 1) * gap)
 	return spec
 
 
@@ -101,10 +121,10 @@ static func _companions(character: StringName, depth: float, boss: bool) -> Arra
 	return out
 
 
-## The opening gun crate, then crates spread through the stage, drawn from the character's pool.
-static func _crates(rng: RandomNumberGenerator, pool: Array, last_wave: float) -> Array:
+## The opening crate, then crates spread through the stage, drawn from the character's pool.
+static func _crates(rng: RandomNumberGenerator, opening: StringName, pool: Array, last_wave: float) -> Array:
 	var n := rng.randi_range(4, 7)
-	var out := [OPENING_CRATE]
+	var out := [[OPENING_AT, opening]]
 	for i in n:
 		var t := lerpf(20.0, last_wave * 0.85, float(i) / (n - 1)) + rng.randf_range(-1.5, 1.5)
 		out.append([t, pool[rng.randi() % pool.size()]])

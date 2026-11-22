@@ -46,8 +46,8 @@ func _init() -> void:
 			nodes.append(entry)
 		_save(nodes)
 		var spec := Forge.forge(node, entry.intensity, entry.variant, entry.boss)
-		print("node %3d v%d %-9s %-20s k=%.3f margin %.2f (target %.2f)  idle %s  %.1fs" % [
-			node + 1, entry.variant, spec.character, spec.name,
+		print("node %3d v%d %-9s %-5s %-20s k=%.3f margin %.2f (target %.2f)  idle %s  %.1fs" % [
+			node + 1, entry.variant, spec.character, spec.plan, spec.name,
 			entry.intensity, entry.margin, entry.target, "lost" if not entry.idle_won else "WON",
 			(Time.get_ticks_msec() - started) / 1000.0])
 	quit()
