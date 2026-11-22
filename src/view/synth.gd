@@ -1,7 +1,7 @@
 class_name Synth
 extends RefCounted
-## In-house sounds, generated at startup: the weapons' shots. Built from
-## decaying noise and sines, so they ship as code, not files.
+## In-house sounds, generated at startup: the weapons' shots and the surges.
+## Built from decaying noise and sines, so they ship as code, not files.
 
 const RATE := 22050
 
@@ -38,6 +38,34 @@ static func cannon() -> AudioStreamWAV:
 		var boom := sin(TAU * (75.0 - 30.0 * t) * t) * exp(-t * 4.5)
 		var rumble := lower.step(low.step(n)) * 12.0 * exp(-t * 3.0)
 		return (boom * 0.7 + rumble * 0.5) * 0.7)
+
+
+## Rocket: a hiss of air that rises as it leaves.
+static func rocket() -> AudioStreamWAV:
+	var low := _Lowpass.new(0.25)
+	return _render(0.5, func(t: float, n: float) -> float:
+		var hiss := low.step(n) * (1.0 - exp(-t * 30.0)) * exp(-t * 5.0)
+		var tone := sin(TAU * (300.0 + 500.0 * t) * t) * exp(-t * 8.0) * 0.25
+		return (hiss * 1.4 + tone) * 0.6)
+
+
+## Zap: a buzzing crackle, brief.
+static func zap() -> AudioStreamWAV:
+	return _render(0.14, func(t: float, n: float) -> float:
+		var buzz := signf(sin(TAU * 110.0 * t)) * 0.35 + n * 0.5
+		return buzz * exp(-t * 28.0) * 0.6)
+
+
+## Surge: three quick rising chimes.
+static func surge() -> AudioStreamWAV:
+	return _render(0.7, func(t: float, _n: float) -> float:
+		var v := 0.0
+		for k in 3:
+			var at := t - k * 0.09
+			if at > 0.0:
+				var f := 660.0 * pow(1.26, k)
+				v += (sin(TAU * f * at) + 0.4 * sin(TAU * f * 2.0 * at)) * exp(-at * 7.0)
+		return v * 0.3)
 
 
 ## Samples `voice(t, noise)` for `seconds` into a 16-bit mono stream, with a

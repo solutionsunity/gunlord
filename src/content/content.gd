@@ -7,6 +7,31 @@ extends RefCounted
 ## picks off what is still distant (40 m).
 
 
+## Surges: rare weapons that run for a few seconds. A surge picked up while
+## one runs replaces it; the same one again starts its clock over.
+##   chain    every hit arcs to the two nearest enemies
+##   flame    a cone of fire just ahead of the squad, stronger with its size
+##   rockets  homing rockets from the squad, more of them with its size
+##   freeze   the lane stands still while the squad keeps firing
+const SURGES := {
+	chain = {label = "CHAIN LIGHTNING", seconds = 10.0, color = Color("8fe3ff")},
+	flame = {label = "FLAMES", seconds = 8.0, color = Color("ff8a2a")},
+	rockets = {label = "ROCKETS", seconds = 10.0, color = Color("ff4a4a")},
+	freeze = {label = "FREEZE", seconds = 6.0, color = Color("bfe8ff")},
+}
+
+
+## Weapons no unit carries: fired by surges and relics. Their shots index past the roster.
+static func arms() -> Array[WeaponDef]:
+	var list: Array[WeaponDef] = [
+		_weapon(&"rocket", "Rocket", {
+			damage = 12.0, aim = WeaponDef.Aim.AUTO, splash = 1.6, homing = true,
+			reach = 45.0, projectile_speed = 20.0, color = Color("ff4a4a"), projectile = &"ball",
+		}),
+	]
+	return list
+
+
 static func weapons() -> Array[WeaponDef]:
 	var list: Array[WeaponDef] = [
 		_weapon(&"cannon", "Cannon", {
@@ -78,6 +103,11 @@ static func objects() -> Dictionary:
 			caption = "+{p}%", icon = &"attack", look = ObjectDef.Look.PEDESTAL, color = Color("f0f0f0"),
 		}),
 	]
+	for id in SURGES:
+		list.append(_object(StringName("surge_" + id), {
+			hp = 25.0, radius = 0.9, payout = ObjectDef.Payout.SURGE, surge = id,
+			caption = SURGES[id].label, icon = id, look = ObjectDef.Look.PEDESTAL, color = SURGES[id].color,
+		}))
 	var by_id := {}
 	for d in list:
 		by_id[d.id] = d

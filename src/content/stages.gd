@@ -11,6 +11,7 @@ extends RefCounted
 ##            formations                  the shapes its waves are drawn from, keys of FORMATIONS
 ##            pickups                     how pickups are laid out, a key of PICKUPS
 ##            start                       the squad it opens with: [weapon id, count] pairs
+##            surges                      when a surge pickup comes, as shares of the stage (0..1)
 ##   pacing:  waves, gap                  wave count, seconds between waves
 ##            speed, accel                lane speed at start (m/s), added per second
 ##   horde:   horde, growth               soldiers in wave 1, soldiers added per wave
@@ -29,6 +30,7 @@ extends RefCounted
 
 const WAVE_START := 2.0
 const FORGED := "res://assets/map/forged.json"
+const NO_LUCK := &"none"                ## build without surges: the stage as verified
 const JITTER := 0.15                    ## metres a soldier may shift in formation between attempts
 const SPACE := 0.85                     ## metres between soldiers in a formation
 const MARGIN := 0.45                    ## a formation keeps this far inside its area
@@ -50,7 +52,7 @@ const PICKUPS := [&"alternate", &"pairs", &"bursts", &"scatter"]
 const AUTHORED := [
 	{
 		boss_scale = 1.0, companions = [], brutes_from = 1,
-		plan = &"lanes", formations = [&"block"], pickups = &"alternate", start = [[&"crossbow", 10]],
+		plan = &"lanes", formations = [&"block"], pickups = &"alternate", start = [[&"crossbow", 10]], surges = [0.55],
 		name = "Riverbridge", theme = &"dawn",
 		waves = 12, gap = 4.5, horde = 5, growth = 2,
 		runners_from = 99, runners = 0,
@@ -62,11 +64,11 @@ const AUTHORED := [
 	},
 	{
 		boss_scale = 1.0, companions = [], brutes_from = 1,
-		plan = &"split", formations = [&"block", &"line", &"wedge"], pickups = &"pairs", start = [[&"crossbow", 10]],
+		plan = &"split", formations = [&"block", &"line", &"wedge"], pickups = &"pairs", start = [[&"crossbow", 10]], surges = [0.5],
 		name = "Old Crossing", theme = &"noon",
-		waves = 20, gap = 4.2, horde = 7, growth = 3,
+		waves = 20, gap = 4.2, horde = 6, growth = 3,
 		runners_from = 7, runners = 2,
-		brute_every = 5, brute_hp = 255.0, brute_step = 212.0, warlord_hp = 1700.0,
+		brute_every = 5, brute_hp = 230.0, brute_step = 191.0, warlord_hp = 1530.0,
 		capacity = 120, speed = 3.0, accel = 0.02,
 		pickup_gap = 1.7, reward = 1.5, reward_growth = 1.025, tough = 4.0, tough_growth = 0.7,
 		multiplier_every = 17, trap_every = 7,
@@ -75,7 +77,7 @@ const AUTHORED := [
 	},
 	{
 		boss_scale = 1.0, companions = [], brutes_from = 1,
-		plan = &"open", formations = [&"stream", &"line", &"columns"], pickups = &"scatter", start = [[&"crossbow", 10]],
+		plan = &"open", formations = [&"stream", &"line", &"columns"], pickups = &"scatter", start = [[&"crossbow", 10]], surges = [0.4, 0.75],
 		name = "Runners' Gauntlet", theme = &"afternoon",
 		waves = 20, gap = 4.0, horde = 5, growth = 2,
 		runners_from = 5, runners = 2,
@@ -88,11 +90,11 @@ const AUTHORED := [
 	},
 	{
 		boss_scale = 1.0, companions = [], brutes_from = 1,
-		plan = &"open", formations = [&"block", &"wedge"], pickups = &"bursts", start = [[&"crossbow", 10]],
+		plan = &"open", formations = [&"block", &"wedge"], pickups = &"bursts", start = [[&"crossbow", 10]], surges = [0.5],
 		name = "Brute Bridge", theme = &"dusk",
-		waves = 21, gap = 4.2, horde = 8, growth = 3,
+		waves = 21, gap = 4.2, horde = 6, growth = 2,
 		runners_from = 8, runners = 2,
-		brute_every = 4, brute_hp = 300.0, brute_step = 220.0, warlord_hp = 3000.0,
+		brute_every = 4, brute_hp = 240.0, brute_step = 176.0, warlord_hp = 3000.0,
 		capacity = 140, speed = 3.0, accel = 0.022,
 		pickup_gap = 1.6, reward = 1.8, reward_growth = 1.027, tough = 4.0, tough_growth = 0.75,
 		multiplier_every = 15, trap_every = 9,
@@ -101,7 +103,7 @@ const AUTHORED := [
 	},
 	{
 		boss_scale = 1.0, companions = [], brutes_from = 1,
-		plan = &"lanes", formations = [&"block", &"line", &"wedge", &"columns", &"stream"], pickups = &"alternate", start = [[&"crossbow", 10]],
+		plan = &"lanes", formations = [&"block", &"line", &"wedge", &"columns", &"stream"], pickups = &"alternate", start = [[&"crossbow", 10]], surges = [0.35, 0.7],
 		name = "Warlord's Gate", theme = &"night",
 		waves = 24, gap = 3.9, horde = 8, growth = 5,
 		runners_from = 6, runners = 3,
@@ -136,11 +138,14 @@ static func is_forged(node: int) -> bool:
 ## mirrored left-to-right, and the horde's formation shifts by up to JITTER.
 ## Everything else (formations, areas, pickup slots) is drawn from the node
 ## alone, so every attempt plays the stage that was verified.
-static func build(node: int, attempt := 0) -> Level:
-	return build_spec(spec(node), node, attempt)
+## `luck` picks what the surge slots hold: empty draws one per slot afresh for
+## each attempt (play); NO_LUCK leaves them out (the stage as verified, which
+## must be won without luck); a surge id puts that surge in every slot.
+static func build(node: int, attempt := 0, luck := &"") -> Level:
+	return build_spec(spec(node), node, attempt, luck)
 
 
-static func build_spec(s: Dictionary, node: int, attempt := 0) -> Level:
+static func build_spec(s: Dictionary, node: int, attempt := 0, luck := &"") -> Level:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash(node * 31 + attempt * 1000003)
 	var mirror := -1.0 if attempt > 0 and rng.randi() % 2 == 1 else 1.0
@@ -151,7 +156,7 @@ static func build_spec(s: Dictionary, node: int, attempt := 0) -> Level:
 	var events: Array[Dictionary] = []
 	_waves(s, plan, events, draw, rng, jitter)
 	var last_wave: float = WAVE_START + (s.waves - 1) * s.gap
-	_pickups(s, plan, events, draw, last_wave)
+	_pickups(s, plan, events, draw, last_wave, _surges(s, last_wave, luck, rng))
 	for e in events:
 		e.x *= mirror
 	events.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.t < b.t)
@@ -259,7 +264,19 @@ static func _boss(s: Dictionary, plan: Dictionary, events: Array[Dictionary], t:
 			events.append({t = t, id = c[0], x = at + x, z = -6.5 - (k / 6) * 0.9})
 
 
-static func _pickups(s: Dictionary, plan: Dictionary, events: Array[Dictionary], draw: RandomNumberGenerator, until: float) -> void:
+## The surge slots as [seconds, pickup id], in order.
+static func _surges(s: Dictionary, until: float, luck: StringName, rng: RandomNumberGenerator) -> Array:
+	var out := []
+	if luck == NO_LUCK:
+		return out
+	for share: float in s.surges:
+		var id: StringName = luck if luck != &"" else Content.SURGES.keys()[rng.randi() % Content.SURGES.size()]
+		out.append([share * until, StringName("surge_" + id)])
+	return out
+
+
+static func _pickups(s: Dictionary, plan: Dictionary, events: Array[Dictionary], draw: RandomNumberGenerator,
+		until: float, surges: Array) -> void:
 	var crates: Array = s.crates.duplicate()
 	crates.sort_custom(func(a: Array, b: Array) -> bool: return a[0] < b[0])
 	var slots: Array = plan.slots
@@ -279,7 +296,9 @@ static func _pickups(s: Dictionary, plan: Dictionary, events: Array[Dictionary],
 						else slots[(slots.find(x) + 1 + draw.randi() % (slots.size() - 1)) % slots.size()]
 		var value := roundf(s.reward * pow(s.reward_growth, t))
 		var toughness: float = s.tough + t * s.tough_growth
-		if not crates.is_empty() and t >= crates[0][0]:
+		if not surges.is_empty() and t >= surges[0][0]:
+			events.append({t = t, id = surges.pop_front()[1], x = x, hp = 25.0 + t})
+		elif not crates.is_empty() and t >= crates[0][0]:
 			events.append({t = t, id = crates.pop_front()[1], x = x})
 		elif j % s.multiplier_every == s.multiplier_every / 2:
 			events.append({t = t, id = &"multiplier", x = x, hp = 40.0 + t * 1.5})

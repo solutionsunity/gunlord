@@ -110,6 +110,21 @@ Starting set:
 Modifiers apply to the whole squad or to one weapon type (`ATK +20%`,
 `Gatling rate +50%`).
 
+**Surges** are rare weapons that run for seconds (`Content.SURGES`): chain
+lightning (every hit arcs to the two nearest enemies, 10 s), flames (a cone
+just ahead of the squad, 8 s), rockets (homing, 10 s) and freeze (the lane
+and its clock stand still while the squad fires, 6 s). Flames and rockets
+grow with the squad. A stage plans one or two surge slots; which surge fills
+a slot is drawn afresh on every attempt. A surge picked up while another
+runs replaces it; the same one again restarts its clock. The HUD shows the
+running surge's icon and countdown.
+
+**Luck never wins a stage.** The forge tunes and the CI probe judges every
+stage with its surge slots empty (`Stages.NO_LUCK`). With each surge in its
+slots, the best margin is recorded as `lucky`, to show luck does not make a
+stage trivial: surges thin the waves mid-stage, and the margin is settled
+later, at the boss.
+
 ## Level structure
 
 - A level is a scripted timeline of waves (target: about 20 waves over about
@@ -429,3 +444,5 @@ Peak scene: 120 squad + ~300 enemies + ~1,500 projectiles.
 | 35 | Web updates: version-tagged file requests, and a version.json check offering a reload on the map | Active |
 | 36 | One volume button (a speaker opening a vertical slider; its bottom is mute) replaces mute plus inline slider | Active; refines 33 |
 | 37 | The plan is a block: each stage draws its layout (lanes, split, open), wave formations, pickup pattern and opening squad; walls are stage data | Active; refines 23 |
+| 38 | Reach sets each weapon's role: gatling 18 m, crossbow 26, cannon 34, gun 40 | Active |
+| 39 | Surges: rare timed weapons in planned slots, drawn per attempt; stages verified without them, `lucky` recorded | Active |

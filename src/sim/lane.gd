@@ -91,18 +91,35 @@ func splash(px: float, pz: float, r: float, dmg: float, skip: int) -> void:
 			damage(i, dmg)
 
 
-## Nearest live object an auto-aim weapon may pick. Traps are never picked.
-func nearest_target(p: Vector2, reach: float) -> int:
+## Nearest live object an auto-aim weapon may pick, ahead of p. Traps are
+## never picked; with enemies_only, nor are pickups.
+func nearest_target(p: Vector2, reach: float, enemies_only := false) -> int:
 	var best := -1
 	var best_d := reach * reach
 	for i in size():
-		if not alive[i] or def[i].is_trap() or z[i] > p.y:
+		if not alive[i] or def[i].is_trap() or z[i] > p.y or (enemies_only and not def[i].enemy):
 			continue
 		var d2 := (x[i] - p.x) ** 2 + (z[i] - p.y) ** 2
 		if d2 < best_d:
 			best_d = d2
 			best = i
 	return best
+
+
+## Up to n live enemies nearest (px, pz) within r, nearest first, never `skip`.
+func enemies_near(px: float, pz: float, r: float, n: int, skip: int) -> PackedInt32Array:
+	var found := PackedInt32Array()
+	var dist := PackedFloat32Array()
+	for i in size():
+		if i == skip or not alive[i] or not def[i].enemy:
+			continue
+		var d2 := (x[i] - px) ** 2 + (z[i] - pz) ** 2
+		if d2 > r * r:
+			continue
+		var at := dist.bsearch(d2)
+		dist.insert(at, d2)
+		found.insert(at, i)
+	return found.slice(0, n)
 
 
 func compact() -> void:

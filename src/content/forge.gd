@@ -103,6 +103,7 @@ static func forge(node: int, intensity: float, variant := 0, boss := 1.0) -> Dic
 	}
 	var opening: StringName = OPENING_CRATES[rng.randi() % OPENING_CRATES.size()]
 	spec.crates = _crates(rng, opening, w[3], Stages.WAVE_START + (waves - 1) * gap)
+	spec.surges = [rng.randf_range(0.3, 0.5)] if rng.randi() % 2 == 0 else [rng.randf_range(0.25, 0.4), rng.randf_range(0.6, 0.8)]
 	return spec
 
 

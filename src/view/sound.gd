@@ -30,6 +30,9 @@ func _ready() -> void:
 		fire_gun = [[Synth.musket()], -12.0, 4, 0.07],
 		fire_gatling = [[Synth.gatling()], -16.0, 4, 0.05],
 		fire_cannon = [[Synth.cannon()], -6.0, 3, 0.2],
+		fire_rocket = [[Synth.rocket()], -14.0, 3, 0.12],
+		zap = [[Synth.zap()], -14.0, 3, 0.06],
+		surge = [[Synth.surge()], -4.0, 1, 0.3],
 		hit_flesh = [_kenney("impact-sounds", "impactPunch_medium_%03d", 5), -16.0, 4, 0.05],
 		hit_glass = [_kenney("impact-sounds", "impactGlass_light_%03d", 5), -12.0, 4, 0.06],
 		hit_stone = [_kenney("impact-sounds", "impactMining_%03d", 5), -14.0, 3, 0.08],
@@ -104,7 +107,9 @@ func hear(b: Battle) -> void:
 	for e in b.events:
 		match e.kind:
 			&"fire":
-				play(StringName("fire_" + String(b.squad.weapons[e.weapon].id)))
+				play(StringName("fire_" + String(b.arsenal[e.weapon].id)))
+			&"zap":
+				play(&"zap")
 			&"hit":
 				if e.splash > 0.0:
 					play(&"blast")

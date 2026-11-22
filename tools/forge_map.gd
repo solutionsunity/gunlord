@@ -8,6 +8,8 @@ extends SceneTree
 ## exists; if none of VARIANTS wins, up to MORE_VARIANTS are tried. A stage
 ## left too easy (a cliff: no intensity lands between an easy win and a loss)
 ## then has its warlord's hp raised until the margin comes down to target.
+## Stages are tuned without surges: luck must never be what wins one. With
+## each surge in its slots, the best margin is recorded as `lucky`.
 ## Appends to what is already forged, or re-forges given nodes in place.
 ##   godot --headless --path . -s tools/forge_map.gd -- <nodes to add, default 20>
 ##   godot --headless --path . -s tools/forge_map.gd -- redo <node number> ...
@@ -46,9 +48,9 @@ func _init() -> void:
 			nodes.append(entry)
 		_save(nodes)
 		var spec := Forge.forge(node, entry.intensity, entry.variant, entry.boss)
-		print("node %3d v%d %-9s %-5s %-20s k=%.3f margin %.2f (target %.2f)  idle %s  %.1fs" % [
+		print("node %3d v%d %-9s %-5s %-20s k=%.3f margin %.2f (target %.2f) lucky %.2f  idle %s  %.1fs" % [
 			node + 1, entry.variant, spec.character, spec.plan, spec.name,
-			entry.intensity, entry.margin, entry.target, "lost" if not entry.idle_won else "WON",
+			entry.intensity, entry.margin, entry.target, entry.lucky, "lost" if not entry.idle_won else "WON",
 			(Time.get_ticks_msec() - started) / 1000.0])
 	quit()
 
@@ -67,9 +69,14 @@ func _forge(node: int) -> Dictionary:
 	best.boss = 1.0
 	if best.margin - goal > GOOD_ENOUGH:
 		best = _toughen_boss(node, best, goal)
-	var idle: Dictionary = Bots.play(Stages.build_spec(Forge.forge(node, best.intensity, best.variant, best.boss), node), &"idle")
+	var idle: Dictionary = Bots.play(Stages.build_spec(Forge.forge(node, best.intensity, best.variant, best.boss), node, 0, Stages.NO_LUCK), &"idle")
+	var spec := Forge.forge(node, best.intensity, best.variant, best.boss)
+	var lucky := 0.0
+	for id in Content.SURGES:
+		lucky = maxf(lucky, Bots.play(Stages.build_spec(spec, node, 0, id), &"sweep").margin)
 	return {node = node, variant = best.variant, intensity = best.intensity, boss = best.boss,
-			margin = snappedf(best.margin, 0.001), target = snappedf(goal, 0.001), idle_won = idle.won}
+			margin = snappedf(best.margin, 0.001), lucky = snappedf(lucky, 0.001),
+			target = snappedf(goal, 0.001), idle_won = idle.won}
 
 
 ## Raises the warlord's hp (bisected on a log scale up to ×BOSS_MAX) to bring a
@@ -80,7 +87,7 @@ func _toughen_boss(node: int, tuned: Dictionary, goal: float) -> Dictionary:
 	var hi := BOSS_MAX
 	for step in STEPS:
 		var b := snappedf(sqrt(lo * hi), 0.0001)
-		var margin: float = Bots.play(Stages.build_spec(Forge.forge(node, tuned.intensity, tuned.variant, b), node), &"sweep").margin
+		var margin: float = Bots.play(Stages.build_spec(Forge.forge(node, tuned.intensity, tuned.variant, b), node, 0, Stages.NO_LUCK), &"sweep").margin
 		if margin > 0.0 and absf(margin - goal) < absf(best.margin - goal):
 			best = {variant = tuned.variant, intensity = tuned.intensity, boss = b, margin = margin}
 		if margin > 0.0 and absf(margin - goal) < TOLERANCE:
@@ -107,7 +114,7 @@ func _tune(node: int, variant: int, goal: float) -> Dictionary:
 	for step in STEPS:
 		# Snapped as stored, so a replay from the file runs at exactly this intensity.
 		var k := snappedf(sqrt(lo * hi), 0.0001)
-		var margin: float = Bots.play(Stages.build_spec(Forge.forge(node, k, variant), node), &"sweep").margin
+		var margin: float = Bots.play(Stages.build_spec(Forge.forge(node, k, variant), node, 0, Stages.NO_LUCK), &"sweep").margin
 		if best.is_empty() or _better(margin, best.margin, goal):
 			best = {variant = variant, intensity = k, margin = margin}
 		if absf(margin - goal) < TOLERANCE:

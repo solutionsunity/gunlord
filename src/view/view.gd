@@ -113,8 +113,10 @@ func draw(b: Battle, delta: float) -> void:
 		(entry.crowd.material_override as ShaderMaterial).set_shader_parameter(&"clock", _clock)
 	_draw_units(b.squad)
 	_draw_lane(b.lane, b.squad)
-	_draw_shots(b.shots, b.squad.weapons)
+	_draw_shots(b.shots, b.arsenal)
 	_drain_events(b)
+	if b.arms.surge == &"flame":
+		_flames(b.squad)
 	_draw_corpses(delta)
 	_draw_callouts(delta)
 	_draw_fx(delta)
@@ -246,7 +248,7 @@ func _character_kind(model: StringName) -> Dictionary:
 
 
 func _drain_events(b: Battle) -> void:
-	var weapons := b.squad.weapons
+	var weapons := b.arsenal
 	for e in b.events:
 		match e.kind:
 			&"fire":
@@ -267,6 +269,10 @@ func _drain_events(b: Battle) -> void:
 				label.modulate = e.color.lightened(0.3)
 				_callout_age[_next_callout] = 0.0
 				_next_callout = (_next_callout + 1) % CALLOUTS
+			&"zap":
+				for k in 6:   # a jagged run of blue-white sparks from one enemy to the next
+					var at: Vector3 = e.at.lerp(e.to, (k + 0.5) / 6.0) + Vector3(randf_range(-0.25, 0.25), randf_range(0.2, 0.8), 0)
+					_spark(at, Color("d8f6ff"), 1.0, 1.7, 0.18)
 			&"death":
 				if _corpses.size() == CORPSES:
 					_corpses.pop_front()
@@ -293,6 +299,16 @@ func _draw_corpses(delta: float) -> void:
 		var at: Vector3 = c.at - Vector3(0, sink * 0.6 * c.size, 0)
 		_character(c.model, at, c.yaw, c.size, c.color, &"death", -c.age, 0.45 * (1.0 - sink))
 	_corpses = keep
+
+
+## The flame surge: tongues of fire licking out over the ground ahead of the squad.
+func _flames(squad: Squad) -> void:
+	var front := Squad.Z - squad.radius()
+	for k in 6:
+		var ahead := randf() * Arms.FLAME_DEPTH
+		var half := squad.radius() + 1.0 + ahead * 0.25
+		var at := Vector3(squad.x + randf_range(-half, half), 0.4 + randf() * 0.5, front - ahead)
+		_spark(at, Color(1.0, 0.45 + randf() * 0.3, 0.1), 0.6, 1.8, 0.35)
 
 
 ## A glowing billboard that grows from `from` to `to` metres and fades over `life` seconds.

@@ -2,6 +2,7 @@ extends SceneTree
 ## Renders the game's own art from its own scene and models, into assets/art/:
 ##   icons/<weapon id>.png   a portrait of the unit carrying each weapon (256², transparent)
 ##   icons/attack.png        KayKit's sword, for the attack bonus (256², transparent)
+##   icons/<surge or relic>.png  a bold outlined glyph for each surge and relic (256², transparent)
 ##   icon.png                the game icon: a crossbowman on a gold-rimmed badge (512²)
 ##   splash.png              key art: a battle at dusk under the title (1080×1920)
 ## Needs a GPU context, so it runs under a display (xvfb on a server):
@@ -26,6 +27,8 @@ func _init() -> void:
 	for wd in Content.weapons():
 		_portraits[wd.id] = _portrait(wd.model, &"shoot" if wd.model != &"cannon" else &"shoot")
 	_portraits[&"attack"] = _sword()
+	for id in GLYPHS:
+		_portraits[id] = _glyph(GLYPHS[id].call())
 
 
 func _process(_delta: float) -> bool:
@@ -177,6 +180,104 @@ func _title(layer: CanvasLayer, text: String, size: int, color: Color, y: float)
 	l.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
 	l.offset_top = y
 	l.offset_bottom = y + size * 1.4
+
+
+## Glyphs in a 256-pixel square: [kind, points, colour, line width] parts,
+## drawn in order, each with a dark outline. kind: fill (a polygon) or line.
+var GLYPHS := {
+	chain = func() -> Array: return [
+		[&"fill", [Vector2(156, 18), Vector2(66, 142), Vector2(122, 142), Vector2(92, 238),
+				Vector2(194, 104), Vector2(138, 104), Vector2(176, 18)], Color("8fe3ff")],
+	],
+	flame = func() -> Array: return [
+		[&"fill", [Vector2(132, 16), Vector2(178, 74), Vector2(204, 136), Vector2(198, 192), Vector2(170, 228),
+				Vector2(128, 240), Vector2(86, 228), Vector2(58, 190), Vector2(56, 136), Vector2(82, 92),
+				Vector2(100, 128), Vector2(112, 70)], Color("ff7a1a")],
+		[&"fill", [Vector2(130, 104), Vector2(156, 152), Vector2(160, 196), Vector2(130, 222), Vector2(100, 200),
+				Vector2(100, 164), Vector2(116, 146)], Color("ffd23a")],
+	],
+	rockets = func() -> Array: return [
+		[&"fill", _turned([Vector2(128, 20), Vector2(160, 70), Vector2(160, 170), Vector2(96, 170), Vector2(96, 70)]), Color("f0f0f0")],
+		[&"fill", _turned([Vector2(96, 130), Vector2(60, 200), Vector2(96, 182)]), Color("e03a3a")],
+		[&"fill", _turned([Vector2(160, 130), Vector2(196, 200), Vector2(160, 182)]), Color("e03a3a")],
+		[&"fill", _turned([Vector2(108, 172), Vector2(128, 236), Vector2(148, 172)]), Color("ffb02a")],
+		[&"fill", _turned(_circle(Vector2(128, 96), 16)), Color("4d8df7")],
+	],
+	freeze = func() -> Array:
+		var parts := []
+		for k in 3:
+			var d := Vector2.from_angle(k * PI / 3.0 + PI / 2.0) * 100.0
+			parts.append([&"line", [Vector2(128, 128) - d, Vector2(128, 128) + d], Color("bfe8ff"), 20.0])
+			for s: float in [-1.0, 1.0]:
+				var tip := Vector2(128, 128) + d * 0.62 * s
+				var side := d.normalized().orthogonal() * 26.0
+				parts.append([&"line", [tip - side + d.normalized() * 24.0 * s, tip, tip + side + d.normalized() * 24.0 * s], Color("bfe8ff"), 14.0])
+		return parts,
+	blades = func() -> Array:
+		var star := PackedVector2Array()
+		for k in 8:
+			var r := 112.0 if k % 2 == 0 else 34.0
+			star.append(Vector2(128, 128) + Vector2.from_angle(k * PI / 4.0 + 0.3) * r)
+		return [[&"fill", star, Color("d9dde6")], [&"fill", _circle(Vector2(128, 128), 18), Color("5a6070")]],
+	drone = func() -> Array: return [
+		[&"line", [Vector2(58, 92), Vector2(198, 92)], Color("8a90a0"), 14.0],
+		[&"fill", _ellipse(Vector2(58, 80), 46, 14), Color("d9dde6")],
+		[&"fill", _ellipse(Vector2(198, 80), 46, 14), Color("d9dde6")],
+		[&"fill", _circle(Vector2(128, 140), 58), Color("f5c542")],
+		[&"fill", _circle(Vector2(128, 140), 22), Color("2f6fe0")],
+	],
+	shield = func() -> Array: return [
+		[&"fill", [Vector2(128, 18), Vector2(222, 50), Vector2(214, 140), Vector2(128, 238), Vector2(42, 140), Vector2(34, 50)], Color("f5c542")],
+		[&"fill", [Vector2(128, 44), Vector2(196, 68), Vector2(190, 134), Vector2(128, 206), Vector2(66, 134), Vector2(60, 68)], Color("2f6fe0")],
+	],
+}
+
+
+func _glyph(parts: Array) -> SubViewport:
+	var vp := _viewport(256)
+	for part in parts:
+		var pts := PackedVector2Array(part[1])
+		var width: float = part[3] if part.size() > 3 else 0.0
+		var rim := Line2D.new()
+		rim.points = pts
+		rim.closed = part[0] == &"fill"
+		rim.width = (width if width > 0.0 else 0.0) + 16.0
+		rim.default_color = INK
+		rim.joint_mode = Line2D.LINE_JOINT_ROUND
+		rim.begin_cap_mode = Line2D.LINE_CAP_ROUND
+		rim.end_cap_mode = Line2D.LINE_CAP_ROUND
+		vp.add_child(rim)
+		if part[0] == &"fill":
+			var poly := Polygon2D.new()
+			poly.polygon = pts
+			poly.color = part[2]
+			vp.add_child(poly)
+		else:
+			var line := rim.duplicate() as Line2D
+			line.width = width
+			line.default_color = part[2]
+			vp.add_child(line)
+	return vp
+
+
+static func _circle(c: Vector2, r: float) -> PackedVector2Array:
+	return _ellipse(c, r, r)
+
+
+static func _ellipse(c: Vector2, rx: float, ry: float) -> PackedVector2Array:
+	var out := PackedVector2Array()
+	for k in 32:
+		var a := k * TAU / 32.0
+		out.append(c + Vector2(cos(a) * rx, sin(a) * ry))
+	return out
+
+
+## Turns points 40° about the glyph's centre: a rocket climbing to the right.
+static func _turned(pts: Array) -> PackedVector2Array:
+	var out := PackedVector2Array()
+	for p: Vector2 in pts:
+		out.append(Vector2(128, 128) + (p - Vector2(128, 128)).rotated(deg_to_rad(40)))
+	return out
 
 
 func _viewport(px: int) -> SubViewport:

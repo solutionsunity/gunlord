@@ -2,6 +2,9 @@ class_name Shots
 extends RefCounted
 ## Every projectile in flight, stored as parallel flat arrays. Removal swaps
 ## the last projectile into the freed index.
+const TURN := 5.0                    ## rad/s a homing shot turns
+const ARC_REACH := 3.5               ## metres a chain arc jumps
+const ARCS := 2                      ## enemies one hit arcs to
 
 var x := PackedFloat32Array()
 var z := PackedFloat32Array()
@@ -14,6 +17,9 @@ var pierce := PackedInt32Array()
 var weapon := PackedInt32Array()
 var last_hit := PackedInt32Array()   ## serial of the last object hit, so a piercing shot hits each object once
 var hits_traps := PackedByteArray()  ## only straight shots can claim a trap
+var homing := PackedByteArray()      ## turns toward the nearest enemy in flight
+var chain := 0.0                     ## while a chain surge runs: the share of a hit that arcs onward
+var zaps := PackedFloat32Array()     ## this tick's arcs: from x, z, to x, z per arc
 var fired := PackedFloat32Array()    ## this tick's shots: x, z, weapon per shot
 var impacts := PackedFloat32Array()  ## this tick's hits: x, z, weapon, splash, lane index per hit
 var _rng := RandomNumberGenerator.new()
@@ -48,12 +54,15 @@ func fire(wd: WeaponDef, w: int, p: Vector2, dir: Vector2, mult: float) -> void:
 		weapon.append(w)
 		last_hit.append(-1)
 		hits_traps.append(1 if wd.aim == WeaponDef.Aim.STRAIGHT else 0)
+		homing.append(1 if wd.homing else 0)
 
 
 func advance(dt: float, lane: Lane, grid: Grid) -> void:
 	var i := 0
 	while i < size():
 		life[i] -= dt
+		if homing[i]:
+			_steer(i, dt, lane)
 		x[i] += vx[i] * dt
 		z[i] += vz[i] * dt
 		var spent := life[i] <= 0.0
@@ -64,6 +73,8 @@ func advance(dt: float, lane: Lane, grid: Grid) -> void:
 				impacts.append_array([x[i], z[i], float(weapon[i]), splash[i], float(hit)])
 				if splash[i] > 0.0:
 					lane.splash(lane.x[hit], lane.z[hit], splash[i], damage[i] * 0.5, hit)
+				if chain > 0.0 and lane.def[hit].enemy:
+					_arc(hit, damage[i] * chain, lane)
 				last_hit[i] = lane.serial[hit]
 				pierce[i] -= 1
 				spent = pierce[i] < 0
@@ -71,6 +82,26 @@ func advance(dt: float, lane: Lane, grid: Grid) -> void:
 			_swap_remove(i)
 		else:
 			i += 1
+
+
+## Turns a homing shot toward the nearest enemy ahead of it.
+func _steer(i: int, dt: float, lane: Lane) -> void:
+	var t := lane.nearest_target(Vector2(x[i], z[i]), 25.0, true)
+	if t < 0:
+		return
+	var v := Vector2(vx[i], vz[i])
+	var want := (Vector2(lane.x[t], lane.z[t]) - Vector2(x[i], z[i])).angle()
+	var turn := clampf(angle_difference(v.angle(), want), -TURN * dt, TURN * dt)
+	v = v.rotated(turn)
+	vx[i] = v.x
+	vz[i] = v.y
+
+
+## A chain arc: the hit enemy's nearest neighbours take a share of the hit.
+func _arc(hit: int, dmg: float, lane: Lane) -> void:
+	for j in lane.enemies_near(lane.x[hit], lane.z[hit], ARC_REACH, ARCS, hit):
+		lane.damage(j, dmg)
+		zaps.append_array([lane.x[hit], lane.z[hit], lane.x[j], lane.z[j]])
 
 
 func _swap_remove(i: int) -> void:
@@ -86,6 +117,7 @@ func _swap_remove(i: int) -> void:
 	weapon[i] = weapon[last]
 	last_hit[i] = last_hit[last]
 	hits_traps[i] = hits_traps[last]
+	homing[i] = homing[last]
 	x.resize(last)
 	z.resize(last)
 	vx.resize(last)
@@ -97,3 +129,4 @@ func _swap_remove(i: int) -> void:
 	weapon.resize(last)
 	last_hit.resize(last)
 	hits_traps.resize(last)
+	homing.resize(last)

@@ -2,8 +2,9 @@ class_name Hud
 extends CanvasLayer
 ## Pause, the volume button, timer and wave chips, squad size with its
 ## capacity bar, the weapon mix as unit badges in a column at one side (clear
-## of the steering thumb), the nearest boss's health bar, and the stage's
-## title as a battle opens.
+## of the steering thumb), the nearest boss's health bar, the running surge
+## with its countdown (and a frost over the screen while the lane is frozen),
+## and the stage's title as a battle opens.
 
 signal pause_pressed
 signal master_changed(value: float)
@@ -21,11 +22,20 @@ var _badges := {}                   ## weapon index -> {chip: Control, count: La
 var _boss: Control
 var _boss_name: Label
 var _boss_bar: ProgressBar
+var _surge: Control
+var _surge_icon: TextureRect
+var _surge_bar: ProgressBar
+var _frost: ColorRect
 var _title: Label
 var _title_age := 9.0
 
 
 func _ready() -> void:
+	_frost = ColorRect.new()
+	_frost.color = Color(0.75, 0.9, 1.0, 0.2)
+	_frost.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_frost.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_frost)
 	var top := HBoxContainer.new()
 	top.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
 	top.offset_left = 20
@@ -62,6 +72,20 @@ func _ready() -> void:
 	add_child(_boss)
 	_boss_name = Ui.label(_boss, "", 30, Color("ffd0c8"))
 	_boss_bar = Ui.bar(_boss, Vector2(420, 22), Color("d8423a"))
+
+	_surge = HBoxContainer.new()
+	_surge.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	_surge.offset_top = 278
+	_surge.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_surge.add_theme_constant_override("separation", 10)
+	add_child(_surge)
+	_surge_icon = TextureRect.new()
+	_surge_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_surge_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_surge_icon.custom_minimum_size = Vector2(64, 64)
+	_surge.add_child(_surge_icon)
+	_surge_bar = Ui.bar(_surge, Vector2(200, 18), Color.WHITE)
+	_surge_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 
 	_title = Ui.label(self, "", 52, Color.WHITE)
 	_title.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
@@ -115,6 +139,20 @@ func draw(b: Battle) -> void:
 	(_fill.get_theme_stylebox("fill") as StyleBoxFlat).bg_color = Ui.GOLD if total >= b.squad.capacity else Ui.SKY
 	_draw_mix(b.squad)
 	_draw_boss(b.lane)
+	_draw_surge(b.arms)
+
+
+## The running surge: its icon and the time it has left; frost while frozen.
+func _draw_surge(arms: Arms) -> void:
+	_frost.visible = arms.frozen()
+	_surge.visible = arms.surge != &""
+	if not _surge.visible:
+		return
+	var s: Dictionary = Content.SURGES[arms.surge]
+	_surge_icon.texture = Ui.unit_icon(arms.surge)
+	_surge_bar.max_value = s.seconds
+	_surge_bar.value = arms.surge_left
+	(_surge_bar.get_theme_stylebox("fill") as StyleBoxFlat).bg_color = s.color
 
 
 ## One badge per weapon the squad carries: the unit's portrait and its count.

@@ -3,7 +3,7 @@ extends Resource
 ## One kind of lane object. Everything that comes down the lane is one of these:
 ## hit points, a payout when shot down, a behaviour when it reaches the squad.
 
-enum Payout { NONE, ADD_UNITS, MULTIPLY, REMOVE_UNITS, DAMAGE_BONUS }
+enum Payout { NONE, ADD_UNITS, MULTIPLY, REMOVE_UNITS, DAMAGE_BONUS, SURGE }
 enum Look { PANEL, PEDESTAL }
 
 @export var id: StringName
@@ -17,6 +17,7 @@ enum Look { PANEL, PEDESTAL }
 @export var payout := Payout.NONE
 @export var amount := 0.0             ## default payout size; spawns may override it
 @export var weapon: StringName        ## weapon granted by ADD_UNITS
+@export var surge: StringName         ## surge granted by SURGE (see Content.SURGES)
 @export var final := false            ## killing it wins the level
 @export var caption := ""             ## "{n}" = amount, "{x}" = amount to one decimal, "{p}" = amount as percent
 @export var model: StringName          ## baked character: the enemy itself, or the unit shown on a pedestal

@@ -1,5 +1,6 @@
 extends SceneTree
 ## Balance and drift probe.
+## Stages are judged without surges (Stages.NO_LUCK): luck never wins one.
 ## Authored nodes: every bot plays each; the sweeping bot must win and the idle
 ## bot must lose. Forged nodes: every SAMPLE-th is replayed by the sweeping bot
 ## and must reproduce the margin recorded when it was forged; the simulation is
@@ -16,7 +17,7 @@ const DRIFT := 0.002
 func _init() -> void:
 	for node in Stages.AUTHORED.size():
 		for policy in [&"idle", &"sweep", &"greedy"]:
-			var r: Dictionary = Bots.play(Stages.build(node), policy)
+			var r: Dictionary = Bots.play(Stages.build(node, 0, Stages.NO_LUCK), policy)
 			print("L%d %-7s %-5s t=%5.1fs wave=%2d units=%4d peak=%4d margin=%.2f" % [
 				node + 1, policy, "WON" if r.won else "LOST", r.time, r.wave, r.survivors, r.peak, r.margin])
 	var every := 1 if OS.get_cmdline_user_args().has("all") else SAMPLE
@@ -24,7 +25,7 @@ func _init() -> void:
 	for k in range(0, data.nodes.size(), every):
 		var entry: Dictionary = data.nodes[k]
 		var node := int(entry.node)
-		var r: Dictionary = Bots.play(Stages.build(node), &"sweep")
+		var r: Dictionary = Bots.play(Stages.build(node, 0, Stages.NO_LUCK), &"sweep")
 		var drift := absf(r.margin - float(entry.margin)) > DRIFT
 		print("N%d sweep margin %.3f recorded %.3f %s" % [node + 1, r.margin, entry.margin, "DRIFT" if drift else "ok"])
 	quit()

@@ -1,8 +1,9 @@
 class_name Battle
 extends RefCounted
 ## One run of one level. Owns the order of every step in a tick; the parts it
-## coordinates (squad, lane, shots, grid) know nothing about each other's
-## timing. The tick is deterministic: same inputs, same run.
+## coordinates (squad, lane, shots, grid, arms) know nothing about each other's
+## timing. The tick is deterministic: same inputs, same run. While a freeze
+## surge runs, the lane and its clock stand still and only the squad acts.
 
 enum State { RUNNING, WON, LOST }
 
@@ -16,12 +17,15 @@ var squad: Squad
 var lane := Lane.new()
 var shots := Shots.new()
 var grid := Grid.new()
+var arsenal: Array[WeaponDef] = []  ## the roster, then the arms no unit carries; shots index into it
+var arms: Arms
 ## Presentation events for the view, which drains them each frame. Kinds:
 ##   payout {at, text, color, tone}       tone: gain, loss, max or boost
 ##   death  {at, model, size, enemy, tint}   one per fallen soldier on either side
 ##   fire   {at, weapon}               one per shot (a spread counts once)
 ##   hit    {at, weapon, splash, target}  one per projectile impact; target is the ObjectDef hit
 ##   end    {won}                         once, when the battle is decided
+##   zap    {from, to}                    one per chain arc
 var events: Array[Dictionary] = []   ## cleared by whoever runs the battle, after every reader has seen them
 
 var _objects: Dictionary
@@ -37,6 +41,9 @@ func _init(roster: Array[WeaponDef], objects: Dictionary, p_level: Level) -> voi
 	waves = level.waves
 	for w in roster.size():
 		_weapon_index[roster[w].id] = w
+	arsenal = roster.duplicate()
+	arsenal.append_array(Content.arms())
+	arms = Arms.new(arsenal)
 	squad = Squad.new(roster, level.capacity)
 	for s in level.start:
 		squad.add(_weapon_index[s[0]], s[1])
@@ -52,13 +59,18 @@ func lane_speed() -> float:
 func tick(dt: float) -> void:
 	if state != State.RUNNING:
 		return
-	time += dt
-	_spawn()
+	var frozen := arms.frozen()
+	if not frozen:
+		time += dt
+		_spawn()
 	squad.move(dt)
-	lane.advance(dt, lane_speed(), squad.x)
-	_contacts(dt)
+	if not frozen:
+		lane.advance(dt, lane_speed(), squad.x)
+		_contacts(dt)
 	grid.build(lane)
-	squad.fire(dt, lane, shots, lane_speed())
+	squad.fire(dt, lane, shots, 0.0 if frozen else lane_speed())
+	arms.tick(dt, squad, lane, shots)
+	shots.chain = arms.chain()
 	shots.advance(dt, lane, grid)
 	_shot_events()
 	_payouts()
@@ -121,6 +133,9 @@ func _payouts() -> void:
 			ObjectDef.Payout.DAMAGE_BONUS:
 				squad.damage_mult += n
 				_callout(at, d.caption_for(n), d.color, &"boost")
+			ObjectDef.Payout.SURGE:
+				arms.grant(d.surge)
+				_callout(at, d.caption, d.color, &"surge")
 		if d.final:
 			state = State.WON
 
@@ -131,8 +146,12 @@ func _shot_events() -> void:
 	for k in range(0, shots.impacts.size(), 5):
 		events.append({kind = &"hit", at = Vector3(shots.impacts[k], 0.0, shots.impacts[k + 1]),
 				weapon = int(shots.impacts[k + 2]), splash = shots.impacts[k + 3], target = lane.def[int(shots.impacts[k + 4])]})
+	for k in range(0, shots.zaps.size(), 4):
+		events.append({kind = &"zap", at = Vector3(shots.zaps[k], 0.6, shots.zaps[k + 1]),
+				to = Vector3(shots.zaps[k + 2], 0.6, shots.zaps[k + 3])})
 	shots.fired.clear()
 	shots.impacts.clear()
+	shots.zaps.clear()
 
 
 ## Removes n units from the rim of the squad, announcing each one's death.
