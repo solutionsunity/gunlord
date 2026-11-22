@@ -1,15 +1,20 @@
 class_name VolumeButton
 extends Button
 ## The one sound control outside Settings: a speaker that, when tapped, opens
-## a vertical volume slider beneath it. The bottom of the slider is silence.
-## Tapping the speaker again, or anywhere else, closes it.
+## a vertical volume slider beneath it, topped by a mute button. The bottom of
+## the slider is silence. Tapped while silent, the mute button gives back the
+## last level heard. Tapping the speaker again, or anywhere else, closes it.
 
 signal changed(value: float)
 
 const LENGTH := 240.0
+const MUTE := 56.0
+
 
 var _panel: PanelContainer
 var _slider: Slider
+var _mute: Button
+var _before := 1.0         ## the last level above silence, which unmute gives back
 var _catcher: Control      ## covers the screen while open; a tap on it closes the slider
 
 
@@ -43,9 +48,13 @@ func _init(px: float, color: Color) -> void:
 	s.content_margin_bottom = 14
 	_panel.add_theme_stylebox_override("panel", s)
 	add_child(_panel)
-	_slider = Ui.slider(_panel, LENGTH, func(v: float) -> void:
-		_show_level(v)
-		changed.emit(v), true)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 14)
+	_panel.add_child(column)
+	_mute = Ui.icon_button(column, "audioOff", MUTE, Ui.INK.lightened(0.2), _toggle_mute)
+	_mute.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_slider = Ui.slider(column, LENGTH, _choose, true)
+	_slider.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 
 
 func is_open() -> bool:
@@ -58,8 +67,24 @@ func set_level(v: float) -> void:
 	_show_level(v)
 
 
+func _choose(v: float) -> void:
+	_show_level(v)
+	changed.emit(v)
+
+
+## Silences, or gives back the level silenced, and closes: two taps from the speaker.
+func _toggle_mute() -> void:
+	_slider.set_value_no_signal(0.0 if _slider.value > 0.0 else _before)
+	_choose(_slider.value)
+	_open(false)
+
+
+## The speaker shows the state; the mute button shows what it will do.
 func _show_level(v: float) -> void:
+	if v > 0.0:
+		_before = v
 	icon = Ui.icon("audioOff" if v <= 0.0 else "audioOn")
+	_mute.icon = Ui.icon("audioOn" if v <= 0.0 else "audioOff")
 
 
 func _open(open: bool) -> void:

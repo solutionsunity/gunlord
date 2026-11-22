@@ -1,11 +1,13 @@
 extends SceneTree
 ## The volume button, headless, on the map: tapping the speaker opens its
 ## slider; a tap near the slider's bottom silences everything; a tap elsewhere
-## closes it; the speaker toggles it; dragging the slider does not scroll the map.
+## closes it; the speaker toggles it; dragging the slider does not scroll the map;
+## the mute button silences and closes, and gives the level back.
 ##   godot --headless --path . -s tests/volume_input.gd     (prints PASS or FAIL lines)
 
 var _main: Node
 var _step := 0
+var _heard := 0.0
 
 
 func _init() -> void:
@@ -48,6 +50,17 @@ func _process(_delta: float) -> bool:
 			_drag(Vector2(r.get_center().x, r.end.y - 4), Vector2(0, -160))
 			_check("dragging the slider sets the volume", _main._settings.master > 0.5, "master %.2f" % _main._settings.master)
 			_check("dragging the slider does not scroll the map", screens._offset == from, "offset %.0f -> %.0f" % [from, screens._offset])
+			_heard = _main._settings.master
+			_tap(button._mute.get_global_rect().get_center())
+		18:
+			_check("mute silences", _main._settings.master == 0.0 and AudioServer.is_bus_mute(0), "master %.2f" % _main._settings.master)
+			_check("mute closes the slider", not button._panel.visible, "")
+			_tap(button.get_global_rect().get_center())
+		20:
+			_tap(button._mute.get_global_rect().get_center())
+		22:
+			_check("unmute gives the level back", is_equal_approx(_main._settings.master, _heard),
+					"%.2f, was %.2f" % [_main._settings.master, _heard])
 			return true
 	return false
 
