@@ -4,8 +4,8 @@ extends SceneTree
 ## and checks that the idle bot loses. A stage with a cliff (won easily just
 ## below some intensity, lost just above it) cannot be tuned; then the next
 ## variant of the node is tried, up to VARIANTS, keeping the closest.
-## A stage the sweeping bot cannot win is never kept while a winnable variant
-## exists; if none of VARIANTS wins, up to MORE_VARIANTS are tried. A stage
+## A stage the sweeping bot cannot win, or the idle bot can, is never kept
+## while a sound variant exists; if none of VARIANTS wins, up to MORE_VARIANTS are tried. A stage
 ## left too easy (a cliff: no intensity lands between an easy win and a loss)
 ## then has its warlord's hp raised until the margin comes down to target.
 ## Stages are tuned without surges: luck must never be what wins one. With
@@ -59,12 +59,14 @@ func _forge(node: int) -> Dictionary:
 	var goal := Forge.target(node)
 	var best := {}
 	for variant in MORE_VARIANTS:
-		if variant >= VARIANTS and best.margin > 0.0:
-			break   # extra variants only to find a winnable stage
+		if variant >= VARIANTS and best.sound > 0.0:
+			break   # extra variants only to find a sound stage
 		var tuned := _tune(node, variant, goal)
-		if best.is_empty() or _better(tuned.margin, best.margin, goal):
+		# Sound: the sweeping bot's margin, or 0 if standing still also wins.
+		tuned.sound = 0.0 if _idle_wins(node, tuned.variant, tuned.intensity) else tuned.margin
+		if best.is_empty() or _better(tuned.sound, best.sound, goal):
 			best = tuned
-		if best.margin > 0.0 and absf(best.margin - goal) < GOOD_ENOUGH:
+		if best.sound > 0.0 and absf(best.sound - goal) < GOOD_ENOUGH:
 			break
 	best.boss = 1.0
 	if best.margin - goal > GOOD_ENOUGH:
@@ -77,6 +79,10 @@ func _forge(node: int) -> Dictionary:
 	return {node = node, variant = best.variant, intensity = best.intensity, boss = best.boss,
 			margin = snappedf(best.margin, 0.001), lucky = snappedf(lucky, 0.001),
 			target = snappedf(goal, 0.001), idle_won = idle.won}
+
+
+func _idle_wins(node: int, variant: int, intensity: float) -> bool:
+	return Bots.play(Stages.build_spec(Forge.forge(node, intensity, variant), node, 0, Stages.NO_LUCK), &"idle").won
 
 
 ## Raises the warlord's hp (bisected on a log scale up to ×BOSS_MAX) to bring a

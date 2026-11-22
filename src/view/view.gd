@@ -329,8 +329,8 @@ func _draw_relics(arms: Arms, squad: Squad) -> void:
 		k += 1
 	_drones.end()
 	_shield.begin()
-	if arms.shield_max() > 0.0:
-		var charge := arms.shield / arms.shield_max()
+	if arms.level(&"shield") > 0:
+		var charge := arms.shield / maxf(arms.shield_max(squad), 1.0)
 		var r := squad.radius() + 0.7
 		for i in SHIELD_PANES:
 			var a := -PI / 2.0 + SHIELD_SPAN * (float(i) / (SHIELD_PANES - 1) - 0.5)

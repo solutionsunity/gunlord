@@ -42,7 +42,7 @@ const MARGIN := 0.45                    ## a formation keeps this far inside its
 const PLANS := {
 	lanes = {walls = [-3.25, 3.25], areas = [[-3.25, 3.25]], slots = [4.75, -4.75]},
 	split = {walls = [0.0], areas = [[-6.0, 0.0], [0.0, 6.0]], slots = [4.5, -1.5, 1.5, -4.5]},
-	open = {walls = [], areas = [], slots = [4.5, -2.0, 2.0, -4.5]},
+	open = {walls = [], areas = [], slots = [4.6, -2.75, 2.75, -4.6]},
 }
 const FORMATIONS := [&"block", &"line", &"wedge", &"columns", &"stream"]
 ## alternate: each slot in turn. pairs: two slots at once, then a double gap.

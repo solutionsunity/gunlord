@@ -1,7 +1,9 @@
 class_name Arms
 extends RefCounted
 ## What fights beside the squad's own weapons: the relics it brings (blades,
-## drones, shield; see Relics) and the surge running now, if any. The battle
+## drones, shield; see Relics) and the surge running now, if any. Relics
+## amplify the squad, never replace it: their strength follows its size, so a
+## squad that never grows gets little from them. The battle
 ## calls tick once per step; the arms reach into the squad, lane and shots
 ## only through their interfaces.
 
@@ -19,6 +21,8 @@ const BLADE_GAP := 0.9        ## metres between the squad's rim and the blades' 
 const DRONE_GAP := 1.3        ## metres from the squad's rim to a drone
 const SHIELD_PER_LEVEL := 6.0 ## blows the shield holds at full charge, per level
 const SHIELD_REGEN := 0.5     ## blows recharged per second, per level
+const FULL_STRENGTH := 50.0   ## a squad this size gets relics at full strength; they scale with it
+const STRENGTH_MAX := 2.0
 
 var loadout := {}             ## relic id -> level
 var spin := 0.0               ## the blades' angle
@@ -35,7 +39,7 @@ var _drone_acc := 0.0
 func _init(arsenal: Array[WeaponDef], p_loadout: Dictionary) -> void:
 	_arsenal = arsenal
 	loadout = p_loadout
-	shield = shield_max()
+	shield = 0.0   # charges as the squad grows
 	for i in arsenal.size():
 		match arsenal[i].id:
 			&"rocket":
@@ -48,8 +52,13 @@ func level(relic: StringName) -> int:
 	return loadout.get(relic, 0)
 
 
-func shield_max() -> float:
-	return SHIELD_PER_LEVEL * level(&"shield")
+## Relic strength for a squad of this size: 1 at FULL_STRENGTH units.
+static func strength(squad: Squad) -> float:
+	return minf(squad.total() / FULL_STRENGTH, STRENGTH_MAX)
+
+
+func shield_max(squad: Squad) -> float:
+	return SHIELD_PER_LEVEL * level(&"shield") * strength(squad)
 
 
 ## Where each blade is now.
@@ -108,10 +117,11 @@ func tick(dt: float, squad: Squad, lane: Lane, shots: Shots) -> void:
 
 
 func _relics(dt: float, squad: Squad, lane: Lane, shots: Shots) -> void:
-	shield = minf(shield + SHIELD_REGEN * level(&"shield") * dt, shield_max())
+	var power := strength(squad)
+	shield = minf(shield + SHIELD_REGEN * level(&"shield") * power * dt, shield_max(squad))
 	if level(&"blades") > 0:
 		spin = fposmod(spin + BLADE_SPIN * dt, TAU)
-		var hurt := BLADE_DPS * level(&"blades") * squad.damage_mult * dt
+		var hurt := BLADE_DPS * level(&"blades") * power * squad.damage_mult * dt
 		var cuts := blades(squad)
 		var ring := squad.radius() + BLADE_GAP + BLADE_REACH + WIDEST   # nothing further from the squad can be cut
 		for i in lane.size():
@@ -125,7 +135,7 @@ func _relics(dt: float, squad: Squad, lane: Lane, shots: Shots) -> void:
 					lane.damage(i, hurt)
 	if level(&"drone") > 0:
 		var wd := _arsenal[_drone]
-		_drone_acc += level(&"drone") * wd.fire_rate * dt
+		_drone_acc += level(&"drone") * wd.fire_rate * power * dt
 		var spots := drones(squad)
 		var k := 0
 		while _drone_acc >= 1.0:

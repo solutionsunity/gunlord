@@ -183,7 +183,8 @@ rewritten in blocks. Every later node is forged from its own seed.
 **Generate, then verify.** For each node the forge draws a character
 (horde, rush, siege, elite or mixed). It then scales all the threats with one
 intensity knob until the sweeping bot's margin (squad left over capacity) lands
-on that node's target, and it checks that the idle bot loses. The target falls
+on that node's target. A variant the idle bot wins is unsound and is passed
+over while a sound one exists: standing still must never win. The target falls
 from 60% at node 6 towards 15%. Every fifth node is a boss node, harder than
 the curve; the node after it is a breather, easier.
 
@@ -204,7 +205,10 @@ orbiting blades that cut the enemies they touch, drones that fire beside
 the squad, and a shield arc that takes the front line's blows and
 recharges. Beating a boss node (every fifth) earns the next step of a fixed
 schedule: a new relic, or a level on one held, up to level III each, all
-three maxed by node 46. A node can only be reached by beating every boss
+three maxed by node 46. Relics amplify the squad, never replace it: their
+strength follows its size (full at 50 units, double at 100), so a squad that
+never grows gets little from them. Without that, relics alone killed brutes,
+each bounty grew the squad, and standing still won. A node can only be reached by beating every boss
 before it, so the loadout at a node is a fact of the map: everyone arrives
 with the same, the forge verifies each stage with exactly it, a replay of an
 earlier node plays with that node's loadout, and nothing is stored.
@@ -457,3 +461,4 @@ Peak scene: 120 squad + ~300 enemies + ~1,500 projectiles.
 | 38 | Reach sets each weapon's role: gatling 18 m, crossbow 26, cannon 34, gun 40 | Active |
 | 39 | Surges: rare timed weapons in planned slots, drawn per attempt; stages verified without them, `lucky` recorded | Active |
 | 40 | Relics (blades, drones, shield) earned on boss nodes on a fixed schedule; the loadout is derived from the node, verified with, never stored | Active |
+| 41 | Relics scale with the squad's size; the forge passes over any variant the idle bot wins | Active; refines 24, 40 |
