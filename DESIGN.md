@@ -350,7 +350,12 @@ view never infers them from diffs of the simulation state.
   inward as it takes blows and relight as it recharges; a spent cell stays as
   a dim outline. Each blow it holds flashes it, with a glassy knock.
 - Graphics setting: full, or light (no shadows, glow or haze) for weaker
-  devices. Phone cost is unmeasured; light is the fallback.
+  devices.
+- The 3D scene renders at a pixel budget, not the device's resolution
+  (`Resolution`): about 1.25 times the 720x1280 design frame, scaled up
+  bilinearly; the HUD stays at full resolution. It then adapts to the frame
+  time, down to 0.35 when frames pass 33 ms, back up with headroom. Phone
+  cost was measured on an Honor 70 (see issue #17).
 
 ### Feedback
 
@@ -524,3 +529,4 @@ Peak scene: 120 squad + ~300 enemies + ~1,500 projectiles.
 | 47 | A performance readout in Settings (frame times, script and render time, GPU instances sent and drawn), to measure lag on the player's device | Active |
 | 48 | Batches hold room only for what they draw: sized buffers instead of full capacity every frame | Active |
 | 49 | Characters and projectiles cast no real shadows, only blobs | Active; refines 42 |
+| 50 | The 3D scene renders at a pixel budget (900x1600) and adapts to the frame time | Active |

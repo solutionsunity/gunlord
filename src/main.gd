@@ -18,6 +18,7 @@ var _hud := Hud.new()
 var _sound := Sound.new()
 var _screens := Screens.new()
 var _updates := Updates.new()
+var _resolution := Resolution.new()
 var _since_end := 0.0
 var _attempts := {}         ## node -> attempts this session; each retry varies the stage fairly
 var _sim_usec := 0          ## the simulation's time since the last drawn frame, for the readout
@@ -31,6 +32,7 @@ func _ready() -> void:
 	add_child(_sound)
 	add_child(_screens)
 	add_child(_updates)
+	add_child(_resolution)
 	var models: Array[StringName] = []
 	for w in Content.weapons():
 		models.append(w.model)

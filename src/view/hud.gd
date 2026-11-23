@@ -186,7 +186,8 @@ func draw(b: Battle) -> void:
 ## frame divides between the simulation, the game's other scripts (drawing,
 ## sound, HUD) and the engine (everything else: rendering, and on the web
 ## waiting for the GPU and the browser); the renderer's own CPU time (GPU
-## time too, where the platform measures it) and the pixels it renders;
+## time too, where the platform measures it), the pixels on screen and the
+## share of them the 3D scene is rendered at (see Resolution);
 ## and the instances sent to the GPU against those drawn.
 func draw_stats(view: View, sim_usec: int, scripts_usec: int) -> void:
 	if not _stats.visible:
@@ -208,10 +209,10 @@ func draw_stats(view: View, sim_usec: int, scripts_usec: int) -> void:
 	var sim := _stats_sim / 1000.0 / _stats_frames
 	var scripts := _stats_scripts / 1000.0 / _stats_frames
 	var pixels := get_viewport().get_texture().get_size()
-	_stats.text = "FPS %d  frame %.0f ms\nworst %.0f ms\nsim %.1f  scripts %.1f\nengine %.1f\nrender %.1f%s\npixels %dx%d\nsent %.1fk  drawn %.1fk" % [
+	_stats.text = "FPS %d  frame %.0f ms\nworst %.0f ms\nsim %.1f  scripts %.1f\nengine %.1f\nrender %.1f%s\npixels %dx%d  3d %.2f\nsent %.1fk  drawn %.1fk" % [
 		roundi(_stats_frames / _stats_time), frame, _stats_worst * 1000.0,
 		sim, scripts, frame - sim - scripts,
-		render, "  gpu %.1f" % gpu if gpu > 0.0 else "", pixels.x, pixels.y,
+		render, "  gpu %.1f" % gpu if gpu > 0.0 else "", pixels.x, pixels.y, get_viewport().scaling_3d_scale,
 		counts.x / 1000.0, counts.y / 1000.0]
 	_stats_age = 0.0
 	_stats_frames = 0
