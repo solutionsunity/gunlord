@@ -252,6 +252,10 @@ at a larger size.
   updates them in one tick that the game scene owns.
 - Rendering draws each mesh kind in one batched draw call (`MultiMeshInstance3D`),
   so drawing a few hundred bodies costs a handful of draw calls.
+  The renderer repacks and re-uploads every instance a MultiMesh holds each
+  frame, drawn or not, and on the web it does so inside the frame's scripts.
+  So each batch holds room only for what it draws (a power of two, grown at
+  once, shrunk lazily), and an empty one sends nothing.
 - Hit checks run on a uniform grid laid over the lane. Projectiles only test
   objects in their own grid cell.
 - Weapons, lane objects and levels are data resources, kept separate from the
@@ -513,3 +517,4 @@ Peak scene: 120 squad + ~300 enemies + ~1,500 projectiles.
 | 45 | Drones take turns across steps (the left one never fired); the map re-forged for it | Active; refines 40 |
 | 46 | Leaving the game pauses and silences it; the web build watches the page's visibility | Active |
 | 47 | A performance readout in Settings (frame times, script and render time, GPU instances sent and drawn), to measure lag on the player's device | Active |
+| 48 | Batches hold room only for what they draw: sized buffers instead of full capacity every frame | Active |
