@@ -1,11 +1,11 @@
 class_name Hud
 extends CanvasLayer
-## Pause, the volume button, timer and wave chips, the relics the squad
-## brings (each glyph with its level), squad size with its
+## Pause, the volume button, timer and wave chips, squad size with its
 ## capacity bar, the weapon mix as unit badges in a column at one side (clear
-## of the steering thumb), the nearest boss's health bar, the running surge
-## with its countdown (and a frost over the screen while the lane is frozen),
-## and the stage's title as a battle opens.
+## of the steering thumb), the nearest boss's health bar, a gear row on the
+## badges' side holding the relics the squad brings (each glyph with its
+## level) and the running surge with its countdown (and a frost over the
+## screen while the lane is frozen), and the stage's title as a battle opens.
 
 signal pause_pressed
 signal master_changed(value: float)
@@ -23,7 +23,8 @@ var _badges := {}                   ## weapon index -> {chip: Control, count: La
 var _boss: Control
 var _boss_name: Label
 var _boss_bar: ProgressBar
-var _relics: VBoxContainer
+var _gear: HBoxContainer            ## the relics, then the surge, on the badges' side
+var _relics: HBoxContainer
 var _surge: Control
 var _surge_icon: TextureRect
 var _surge_bar: ProgressBar
@@ -58,13 +59,6 @@ func _ready() -> void:
 	top.add_child(gap)
 	_wave = _chip(top, 36)
 
-	_relics = VBoxContainer.new()   # down the left edge, under the pause button
-	_relics.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
-	_relics.offset_left = 20
-	_relics.offset_top = 100
-	_relics.add_theme_constant_override("separation", 8)
-	add_child(_relics)
-
 	var squad := VBoxContainer.new()
 	squad.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
 	squad.offset_top = 96
@@ -82,12 +76,15 @@ func _ready() -> void:
 	_boss_name = Ui.label(_boss, "", 30, Color("ffd0c8"))
 	_boss_bar = Ui.bar(_boss, Vector2(420, 22), Color("d8423a"))
 
+	_gear = HBoxContainer.new()   # under the boss bar
+	_gear.add_theme_constant_override("separation", 16)
+	add_child(_gear)
+	_relics = HBoxContainer.new()
+	_relics.add_theme_constant_override("separation", 8)
+	_gear.add_child(_relics)
 	_surge = HBoxContainer.new()
-	_surge.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
-	_surge.offset_top = 278
-	_surge.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_surge.add_theme_constant_override("separation", 10)
-	add_child(_surge)
+	_gear.add_child(_surge)
 	_surge_icon = TextureRect.new()
 	_surge_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_surge_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -114,9 +111,16 @@ func show_settings(settings: Settings) -> void:
 	_place_badges(settings.badges)
 
 
-## The badge column hugs one edge, a little above the middle of the screen.
+## The badge column hugs one edge, a little above the middle of the screen;
+## the gear row hugs the same edge up top, the relics outermost.
 func _place_badges(side: StringName) -> void:
 	var right := side == &"right"
+	_gear.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT if right else Control.PRESET_TOP_LEFT)
+	_gear.grow_horizontal = Control.GROW_DIRECTION_BEGIN if right else Control.GROW_DIRECTION_END
+	_gear.offset_right = -20 if right else 0
+	_gear.offset_left = 0 if right else 20
+	_gear.offset_top = 278
+	_gear.move_child(_relics, -1 if right else 0)
 	_mix.set_anchors_and_offsets_preset(Control.PRESET_CENTER_RIGHT if right else Control.PRESET_CENTER_LEFT)
 	_mix.grow_horizontal = Control.GROW_DIRECTION_BEGIN if right else Control.GROW_DIRECTION_END
 	_mix.grow_vertical = Control.GROW_DIRECTION_BOTH

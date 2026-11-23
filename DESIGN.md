@@ -361,6 +361,9 @@ view never infers them from diffs of the simulation state.
   per weapon (that unit's portrait and its count). The badges stand in a
   column at one edge, a little above the middle, clear of the steering
   thumb; the side (right by default, or left) is a setting.
+- The gear row hugs the badges' side under the boss bar: one chip per relic
+  (its glyph and level, outermost) and, while one runs, the surge's icon and
+  countdown.
 - Pedestals show the unit's icon above their payout and hit points.
 - The volume button is the one sound control outside Settings, in the battle
   bar, on the map and in the pause overlay: a speaker that, tapped, opens a
