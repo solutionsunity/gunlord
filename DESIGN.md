@@ -400,9 +400,12 @@ view never infers them from diffs of the simulation state.
   that tell the player something (pickups, surges, jingles) always. Many of
   one sound asked for in the same frame start once, up to 6 dB louder.
 - The performance readout (off by default) sits under the pause button in a
-  battle: frames per second, the average and worst frame, the scripts' time
-  in simulation and drawing, the renderer's CPU time, and the GPU instances
-  sent against those drawn. It exists to measure lag on a player's device.
+  battle: frames per second, the average and worst frame, how the frame
+  divides between the simulation, the game's other scripts and the engine
+  (rendering, and on the web waiting for the GPU and the browser), the
+  renderer's CPU time and pixel size, and the GPU instances sent against
+  those drawn. It exists to measure lag on a player's device. Godot's own
+  process time is no use here: it includes the whole rendering pass.
 - Shared style (font, palette, buttons, chips, bars) lives in `src/view/ui.gd`.
 
 ### Own art and loading

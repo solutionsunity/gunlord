@@ -20,6 +20,7 @@ var _screens := Screens.new()
 var _updates := Updates.new()
 var _since_end := 0.0
 var _attempts := {}         ## node -> attempts this session; each retry varies the stage fairly
+var _sim_usec := 0          ## the simulation's time since the last drawn frame, for the readout
 var _on_visibility: JavaScriptObject   ## the page's visibility callback, held so it stays alive
 
 
@@ -141,17 +142,21 @@ func _physics_process(delta: float) -> void:
 	if _view.freeze > 0.0:
 		_view.freeze -= delta   # hit-stop: the battle holds still for a beat
 		return
+	var began := Time.get_ticks_usec()
 	_battle.tick(delta)
+	_sim_usec += Time.get_ticks_usec() - began
 
 
 func _process(delta: float) -> void:
 	if _battle == null or _mode == Mode.PAUSED:
 		return
+	var began := Time.get_ticks_usec()
 	_view.draw(_battle, delta)
 	_sound.hear(_battle)
 	_battle.events.clear()
 	_hud.draw(_battle)
-	_hud.draw_stats(_view)
+	_hud.draw_stats(_view, _sim_usec, Time.get_ticks_usec() - began)
+	_sim_usec = 0
 	if _mode == Mode.BATTLE and _battle.state != Battle.State.RUNNING:
 		_since_end += delta
 		if _since_end >= RESULT_DELAY:

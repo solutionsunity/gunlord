@@ -38,6 +38,8 @@ var _stats_age := 0.0
 var _stats_frames := 0
 var _stats_time := 0.0
 var _stats_worst := 0.0
+var _stats_sim := 0                 ## microseconds over the span
+var _stats_scripts := 0
 
 
 func _ready() -> void:
@@ -106,7 +108,7 @@ func _ready() -> void:
 	_title.grow_vertical = Control.GROW_DIRECTION_BOTH
 	_title.offset_top = -260
 
-	_stats = Ui.label(self, "", 20, Color.WHITE)
+	_stats = Ui.label(self, "", 18, Color.WHITE)
 	_stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_stats.position = Vector2(20, 100)
 	_stats.visible = false
@@ -179,12 +181,14 @@ func draw(b: Battle) -> void:
 	_draw_surge(b.arms)
 
 
-## The performance readout, refreshed every STATS_EVERY seconds: frames per
-## second and the average and worst frame; the scripts' time in the
-## simulation (physics) and the drawing (process) callbacks, and the
-## renderer's CPU time (GPU time too, where the platform measures it); the
+## The performance readout, refreshed every STATS_EVERY seconds, averaged
+## over that span: frames per second, the frame and the worst one; how the
+## frame divides between the simulation, the game's other scripts (drawing,
+## sound, HUD) and the engine (everything else: rendering, and on the web
+## waiting for the GPU and the browser); the renderer's own CPU time (GPU
+## time too, where the platform measures it) and the pixels it renders;
 ## and the instances sent to the GPU against those drawn.
-func draw_stats(view: View) -> void:
+func draw_stats(view: View, sim_usec: int, scripts_usec: int) -> void:
 	if not _stats.visible:
 		return
 	var dt := get_process_delta_time()
@@ -192,22 +196,29 @@ func draw_stats(view: View) -> void:
 	_stats_frames += 1
 	_stats_time += dt
 	_stats_worst = maxf(_stats_worst, dt)
+	_stats_sim += sim_usec
+	_stats_scripts += scripts_usec
 	if _stats_age < STATS_EVERY:
 		return
 	var vp := get_viewport().get_viewport_rid()
 	var render := RenderingServer.viewport_get_measured_render_time_cpu(vp) + RenderingServer.get_frame_setup_time_cpu()
 	var gpu := RenderingServer.viewport_get_measured_render_time_gpu(vp)
 	var counts := view.instances()
-	_stats.text = "FPS %d  frame %.0f ms\nworst %.0f ms\nsim %.1f  draw %.1f\nrender %.1f%s\nsent %.1fk  drawn %.1fk" % [
-		roundi(_stats_frames / _stats_time), _stats_time / _stats_frames * 1000.0, _stats_worst * 1000.0,
-		Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0,
-		Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0,
-		render, "  gpu %.1f" % gpu if gpu > 0.0 else "",
+	var frame := _stats_time / _stats_frames * 1000.0
+	var sim := _stats_sim / 1000.0 / _stats_frames
+	var scripts := _stats_scripts / 1000.0 / _stats_frames
+	var pixels := get_viewport().get_texture().get_size()
+	_stats.text = "FPS %d  frame %.0f ms\nworst %.0f ms\nsim %.1f  scripts %.1f\nengine %.1f\nrender %.1f%s\npixels %dx%d\nsent %.1fk  drawn %.1fk" % [
+		roundi(_stats_frames / _stats_time), frame, _stats_worst * 1000.0,
+		sim, scripts, frame - sim - scripts,
+		render, "  gpu %.1f" % gpu if gpu > 0.0 else "", pixels.x, pixels.y,
 		counts.x / 1000.0, counts.y / 1000.0]
 	_stats_age = 0.0
 	_stats_frames = 0
 	_stats_time = 0.0
 	_stats_worst = 0.0
+	_stats_sim = 0
+	_stats_scripts = 0
 
 
 ## The running surge: its icon and the time it has left; frost while frozen.
