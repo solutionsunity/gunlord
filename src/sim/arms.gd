@@ -34,6 +34,7 @@ var _rocket := -1             ## the rocket's index in the arsenal
 var _drone := -1              ## the drone's
 var _rocket_acc := 0.0
 var _drone_acc := 0.0
+var _drone_turn := 0          ## which drone fires next: they take turns, across steps
 
 
 func _init(arsenal: Array[WeaponDef], p_loadout: Dictionary) -> void:
@@ -137,11 +138,10 @@ func _relics(dt: float, squad: Squad, lane: Lane, shots: Shots) -> void:
 		var wd := _arsenal[_drone]
 		_drone_acc += level(&"drone") * wd.fire_rate * power * dt
 		var spots := drones(squad)
-		var k := 0
 		while _drone_acc >= 1.0:
 			_drone_acc -= 1.0
-			var from := spots[k % spots.size()]
-			k += 1
+			var from := spots[_drone_turn % spots.size()]
+			_drone_turn += 1
 			var t := lane.nearest_target(from, wd.reach, true)
 			if t >= 0:
 				shots.fire(wd, _drone, from, (Vector2(lane.x[t], lane.z[t]) - from).normalized(), squad.damage_mult)

@@ -506,4 +506,5 @@ Peak scene: 120 squad + ~300 enemies + ~1,500 projectiles.
 | 42 | Graphics pass: low close camera, real crowd shadows, haze, glow, shaded and outlined characters, modelled relics; a light setting | Active; supersedes 17 |
 | 43 | Installable web app: Godot's PWA export, its worker taught the version tags; the update tap clears the offline build | Active; refines 35 |
 | 44 | Sound budget: tiered voice limit and same-frame grouping, instead of a limiter (web samples bypass bus effects) | Active |
+| 45 | Drones take turns across steps (the left one never fired); the map re-forged for it | Active; refines 40 |
 | 46 | Leaving the game pauses and silences it; the web build watches the page's visibility | Active |
