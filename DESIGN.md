@@ -382,6 +382,12 @@ view never infers them from diffs of the simulation state.
   tracks), which phones can fail to play. Streaming needs the game to keep
   the mixer fed, so the web audio buffer is 120 ms; only music pays that
   latency.
+- All effects share a budget of voices, so a battle never sums dozens of
+  sounds into clipping (which also broke up the music). Each sound has a tier:
+  busy ones (rapid fire, hits) start only while at most 6 voices play, loud
+  ones (cannon, blasts, the fallen, the shield) while at most 10 do, and ones
+  that tell the player something (pickups, surges, jingles) always. Many of
+  one sound asked for in the same frame start once, up to 6 dB louder.
 - Shared style (font, palette, buttons, chips, bars) lives in `src/view/ui.gd`.
 
 ### Own art and loading
@@ -492,3 +498,4 @@ Peak scene: 120 squad + ~300 enemies + ~1,500 projectiles.
 | 41 | Relics scale with the squad's size; the forge passes over any variant the idle bot wins | Active; refines 24, 40 |
 | 42 | Graphics pass: low close camera, real crowd shadows, haze, glow, shaded and outlined characters, modelled relics; a light setting | Active; supersedes 17 |
 | 43 | Installable web app: Godot's PWA export, its worker taught the version tags; the update tap clears the offline build | Active; refines 35 |
+| 44 | Sound budget: tiered voice limit and same-frame grouping, instead of a limiter (web samples bypass bus effects) | Active |

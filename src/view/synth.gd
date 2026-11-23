@@ -68,6 +68,15 @@ static func surge() -> AudioStreamWAV:
 		return v * 0.3)
 
 
+## Shield: a blow turned aside, a dull knock under a bright glassy ring.
+static func shield() -> AudioStreamWAV:
+	var low := _Lowpass.new(0.15)
+	return _render(0.45, func(t: float, n: float) -> float:
+		var knock := low.step(n) * exp(-t * 40.0)
+		var ring := (sin(TAU * 1180.0 * t) + 0.6 * sin(TAU * 1730.0 * t)) * exp(-t * 11.0)
+		return (knock * 1.2 + ring * 0.35) * 0.6)
+
+
 ## Samples `voice(t, noise)` for `seconds` into a 16-bit mono stream, with a
 ## few milliseconds of fade at both ends so nothing clicks.
 static func _render(seconds: float, voice: Callable) -> AudioStreamWAV:
