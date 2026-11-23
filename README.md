@@ -6,6 +6,12 @@ A portrait mobile crowd shooter. Design: [DESIGN.md](DESIGN.md). Research: [RESE
 **Android:** the signed APK from the latest [release](https://github.com/solutionsunity/gunlord/releases),
 or from the latest [build run](https://github.com/solutionsunity/gunlord/actions/workflows/build.yml).
 Every push to `main` rebuilds and redeploys both; a `v*` tag publishes a release.
+Pages deploys from `main` only, so push a release's tag together with `main`
+(`git push origin main vX.Y.Z`); a tag pushed alone leaves the site on the previous version.
+
+Problems met so far, each with its cause and fix, are the closed
+[issues](https://github.com/solutionsunity/gunlord/issues?q=is%3Aissue%20state%3Aclosed).
+Search them before changing the web build, audio or balance; file new ones before working on them.
 
 Requires Godot 4.7.
 
