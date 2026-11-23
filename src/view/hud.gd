@@ -5,13 +5,15 @@ extends CanvasLayer
 ## of the steering thumb), the nearest boss's health bar, a gear row on the
 ## badges' side holding the relics the squad brings (each glyph with its
 ## level) and the running surge with its countdown (and a frost over the
-## screen while the lane is frozen), and the stage's title as a battle opens.
+## screen while the lane is frozen), the stage's title as a battle opens, and,
+## when the settings ask for it, a performance readout under the pause button.
 
 signal pause_pressed
 signal master_changed(value: float)
 
 const BOSS_RANGE := -40.0           ## a boss's bar shows once it is this close
 const BUTTON := 64.0
+const STATS_EVERY := 0.5            ## seconds between readout refreshes; the worst frame is over that span
 
 var _volume: VolumeButton
 var _clock: Label
@@ -31,6 +33,11 @@ var _surge_bar: ProgressBar
 var _frost: ColorRect
 var _title: Label
 var _title_age := 9.0
+var _stats: Label
+var _stats_age := 0.0
+var _stats_frames := 0
+var _stats_time := 0.0
+var _stats_worst := 0.0
 
 
 func _ready() -> void:
@@ -99,6 +106,11 @@ func _ready() -> void:
 	_title.grow_vertical = Control.GROW_DIRECTION_BOTH
 	_title.offset_top = -260
 
+	_stats = Ui.label(self, "", 20, Color.WHITE)
+	_stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_stats.position = Vector2(20, 100)
+	_stats.visible = false
+
 	_mix = VBoxContainer.new()
 	_mix.add_theme_constant_override("separation", 10)
 	add_child(_mix)
@@ -109,6 +121,8 @@ func _ready() -> void:
 func show_settings(settings: Settings) -> void:
 	_volume.set_level(settings.master)
 	_place_badges(settings.badges)
+	_stats.visible = settings.stats
+	RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), settings.stats)
 
 
 ## The badge column hugs one edge, a little above the middle of the screen;
@@ -163,6 +177,37 @@ func draw(b: Battle) -> void:
 	_draw_mix(b.squad)
 	_draw_boss(b.lane)
 	_draw_surge(b.arms)
+
+
+## The performance readout, refreshed every STATS_EVERY seconds: frames per
+## second and the average and worst frame; the scripts' time in the
+## simulation (physics) and the drawing (process) callbacks, and the
+## renderer's CPU time (GPU time too, where the platform measures it); the
+## and the instances sent to the GPU against those drawn.
+func draw_stats(view: View) -> void:
+	if not _stats.visible:
+		return
+	var dt := get_process_delta_time()
+	_stats_age += dt
+	_stats_frames += 1
+	_stats_time += dt
+	_stats_worst = maxf(_stats_worst, dt)
+	if _stats_age < STATS_EVERY:
+		return
+	var vp := get_viewport().get_viewport_rid()
+	var render := RenderingServer.viewport_get_measured_render_time_cpu(vp) + RenderingServer.get_frame_setup_time_cpu()
+	var gpu := RenderingServer.viewport_get_measured_render_time_gpu(vp)
+	var counts := view.instances()
+	_stats.text = "FPS %d  frame %.0f ms\nworst %.0f ms\nsim %.1f  draw %.1f\nrender %.1f%s\nsent %.1fk  drawn %.1fk" % [
+		roundi(_stats_frames / _stats_time), _stats_time / _stats_frames * 1000.0, _stats_worst * 1000.0,
+		Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0,
+		Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0,
+		render, "  gpu %.1f" % gpu if gpu > 0.0 else "",
+		counts.x / 1000.0, counts.y / 1000.0]
+	_stats_age = 0.0
+	_stats_frames = 0
+	_stats_time = 0.0
+	_stats_worst = 0.0
 
 
 ## The running surge: its icon and the time it has left; frost while frozen.

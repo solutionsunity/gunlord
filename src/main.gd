@@ -151,6 +151,7 @@ func _process(delta: float) -> void:
 	_sound.hear(_battle)
 	_battle.events.clear()
 	_hud.draw(_battle)
+	_hud.draw_stats(_view)
 	if _mode == Mode.BATTLE and _battle.state != Battle.State.RUNNING:
 		_since_end += delta
 		if _since_end >= RESULT_DELAY:

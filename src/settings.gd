@@ -2,8 +2,8 @@ class_name Settings
 extends RefCounted
 ## The player's settings, kept on the device: overall, music and effects
 ## volumes (each 0 to 1, where 0 is silence), and which side of the screen
-## the weapon badges sit on, and the graphics: full (shadows, glow, haze) or
-## light, for weaker devices. Volumes act through the audio buses: Master, and
+## the weapon badges sit on, the graphics: full (shadows, glow, haze) or
+## light, for weaker devices, and whether battles show a performance readout. Volumes act through the audio buses: Master, and
 ## Music and SFX under it.
 
 const PATH := "user://settings.cfg"
@@ -17,6 +17,7 @@ var music := 1.0           ## 0..1
 var sound := 1.0           ## 0..1, the effects
 var badges: StringName = &"right"   ## the side of the screen the weapon badges sit on
 var graphics: StringName = &"full"  ## full or light
+var stats := false         ## a performance readout over the battle
 
 
 static func load_saved() -> Settings:
@@ -28,6 +29,7 @@ static func load_saved() -> Settings:
 		s.sound = cfg.get_value("audio", "sound_volume", 1.0)
 		s.badges = StringName(cfg.get_value("hud", "badges", "right"))
 		s.graphics = StringName(cfg.get_value("video", "graphics", "full"))
+		s.stats = cfg.get_value("video", "stats", false)
 	return s
 
 
@@ -48,6 +50,7 @@ func save() -> void:
 	cfg.set_value("audio", "sound_volume", sound)
 	cfg.set_value("hud", "badges", String(badges))
 	cfg.set_value("video", "graphics", String(graphics))
+	cfg.set_value("video", "stats", stats)
 	cfg.save(path)
 
 

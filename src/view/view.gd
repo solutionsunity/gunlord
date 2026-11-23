@@ -104,6 +104,16 @@ func _ready() -> void:
 		_callout_age.append(CALLOUT_LIFE)
 
 
+## Instances handed to the GPU this frame, and how many of them are drawn:
+## every crowd sends its whole capacity, whatever it draws.
+func instances() -> Vector2i:
+	var out := Vector2i.ZERO
+	for c in get_children():
+		if c is Crowd:
+			out += Vector2i(c.capacity, c.count)
+	return out
+
+
 ## Clears everything that belongs to a battle: crowds, corpses, effects, labels.
 func reset() -> void:
 	_corpses.clear()

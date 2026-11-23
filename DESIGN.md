@@ -371,7 +371,7 @@ view never infers them from diffs of the simulation state.
   muted). Tapping the speaker again, or anywhere else, closes it; while it is
   open, a drag is the slider's, never the map's.
 - Settings are overall volume, music volume, effects volume, the badges'
-  side, and reset progress (tap twice); kept on the device in
+  side, graphics, a performance readout, and reset progress (tap twice); kept on the device in
   `user://settings.cfg`, acting through the audio buses Master, Music and SFX.
 - The map scrolls by dragging (finger or mouse) or the mouse wheel. A press
   that travels more than 14 px is a scroll, never a tap on the node beneath it.
@@ -395,6 +395,10 @@ view never infers them from diffs of the simulation state.
   ones (cannon, blasts, the fallen, the shield) while at most 10 do, and ones
   that tell the player something (pickups, surges, jingles) always. Many of
   one sound asked for in the same frame start once, up to 6 dB louder.
+- The performance readout (off by default) sits under the pause button in a
+  battle: frames per second, the average and worst frame, the scripts' time
+  in simulation and drawing, the renderer's CPU time, and the GPU instances
+  sent against those drawn. It exists to measure lag on a player's device.
 - Shared style (font, palette, buttons, chips, bars) lives in `src/view/ui.gd`.
 
 ### Own art and loading
@@ -508,3 +512,4 @@ Peak scene: 120 squad + ~300 enemies + ~1,500 projectiles.
 | 44 | Sound budget: tiered voice limit and same-frame grouping, instead of a limiter (web samples bypass bus effects) | Active |
 | 45 | Drones take turns across steps (the left one never fired); the map re-forged for it | Active; refines 40 |
 | 46 | Leaving the game pauses and silences it; the web build watches the page's visibility | Active |
+| 47 | A performance readout in Settings (frame times, script and render time, GPU instances sent and drawn), to measure lag on the player's device | Active |

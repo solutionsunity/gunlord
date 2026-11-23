@@ -2,12 +2,14 @@ extends SceneTree
 ## CPU cost per frame of the real game scene under the sweeping bot, headless:
 ## the simulation tick and the view's buffer writes. GPU cost is not measured
 ## here; that needs a device.
-##   godot --headless --path . -s tests/frame_cost.gd
+## The stage is node 5 unless a node (1-based) is given.
+##   godot --headless --path . -s tests/frame_cost.gd -- [node]
 
 var _main: Node
 var _sim := PackedFloat32Array()
 var _view := PackedFloat32Array()
 var _sizes := PackedInt32Array()
+var _node := 4
 
 
 func _init() -> void:
@@ -19,11 +21,14 @@ func _init() -> void:
 	root.add_child(_main)
 	_main.set_physics_process(false)
 	_main.set_process(false)
+	var args := OS.get_cmdline_user_args()
+	if not args.is_empty():
+		_node = int(args[0]) - 1
 
 
 func _process(delta: float) -> bool:
 	if _main._battle == null:
-		_main.start_level(4)   # the game opens on the menu
+		_main.start_level(_node)   # the game opens on the menu
 		return false
 	var b: Battle = _main._battle
 	b.squad.target_x = sin(b.time * 0.8) * Squad.EDGE

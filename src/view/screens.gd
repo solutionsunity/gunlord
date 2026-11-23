@@ -38,6 +38,8 @@ var _badges: Button
 var _badge_side: StringName = &"right"
 var _graphics: Button
 var _graphics_mode: StringName = &"full"
+var _stats: Button
+var _stats_on := false
 var _volume_buttons: Array[VolumeButton] = []
 var _reset: Button
 var _armed := false          ## reset asks twice
@@ -289,6 +291,8 @@ func _build_settings() -> void:
 	_graphics = Ui.button(c, "", Ui.BLUE, func() -> void:
 		setting_changed.emit(&"graphics", &"light" if _graphics_mode == &"full" else &"full"))
 	_graphics.custom_minimum_size = Vector2(460, 88)
+	_stats = Ui.button(c, "", Ui.BLUE, func() -> void: setting_changed.emit(&"stats", not _stats_on))
+	_stats.custom_minimum_size = Vector2(460, 88)
 	_space(c, 16)
 	_reset = Ui.button(c, "", Color("8a2a2a"), func() -> void: _reset_pressed())
 	_reset.custom_minimum_size = Vector2(460, 88)
@@ -327,6 +331,8 @@ func show_settings(settings: Settings) -> void:
 	_badges.text = "BADGES ON THE %s" % String(settings.badges).to_upper()
 	_graphics_mode = settings.graphics
 	_graphics.text = "GRAPHICS: %s" % String(settings.graphics).to_upper()
+	_stats_on = settings.stats
+	_stats.text = "PERFORMANCE: %s" % ("SHOWN" if settings.stats else "HIDDEN")
 
 
 func _open_settings() -> void:
