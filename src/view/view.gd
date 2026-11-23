@@ -66,6 +66,7 @@ func _ready() -> void:
 	add_child(stage)
 	_shadows = _blob_shadows(CHARACTERS * 3)
 	_placeholder = _primitive(_capsule(0.3, 1.0), CHARACTERS, false)
+	_placeholder.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_font = load(FONT)
 	_glow = _billboards(FX)
 	_streaks = _trails(4000)
@@ -88,6 +89,8 @@ func _ready() -> void:
 		tracer = _primitive(_box(Vector3(0.14, 0.14, 1.4)), 4000, true),
 		ball = _primitive(_sphere(0.32), 400, false),
 	}
+	for look in _projectiles:   # too many and too small to be worth drawing into the shadow map
+		_projectiles[look].cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	for i in LABELS:
 		_labels.append(_label(40))
 	for i in BADGES:
@@ -277,6 +280,9 @@ func _character_kind(model: StringName) -> Dictionary:
 		return {}
 	var bake: CrowdBake = load(BAKED % model)
 	var crowd := Crowd.new(bake.mesh, CHARACTERS, bake.material())
+	# Hundreds of characters drawn again into the shadow map cost the GPU more
+	# than the rest of the frame on a phone; each has a soft blob shadow instead.
+	crowd.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(crowd)
 	crowd.begin()
 	(crowd.material_override as ShaderMaterial).set_shader_parameter(&"clock", _clock)

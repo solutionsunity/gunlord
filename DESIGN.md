@@ -328,8 +328,10 @@ view never infers them from diffs of the simulation state.
 - Stone bridge over animated water, with castle walls and towers along the
   edges. The lane dividers are low stone walls, drawn where the stage's plan
   puts them, or none.
-- One sun, casting real shadows from set pieces and crowds alike, with a
-  soft blob under every unit for contact. The sun stands no higher than 40°
+- One sun, casting real shadows from set pieces, drones and blades; every
+  character and projectile has a soft blob instead. Real crowd shadows drew
+  hundreds of characters a second time and, on a phone, cost the GPU more
+  than the rest of the frame. The sun stands no higher than 40°
   at any time of day, so shadows always fall across the deck.
 - Depth cues: the camera sits low and close behind the squad (13.5 m up,
   10 m back, looking 14 m ahead), so units read as figures, not dots. Haze
@@ -521,3 +523,4 @@ Peak scene: 120 squad + ~300 enemies + ~1,500 projectiles.
 | 46 | Leaving the game pauses and silences it; the web build watches the page's visibility | Active |
 | 47 | A performance readout in Settings (frame times, script and render time, GPU instances sent and drawn), to measure lag on the player's device | Active |
 | 48 | Batches hold room only for what they draw: sized buffers instead of full capacity every frame | Active |
+| 49 | Characters and projectiles cast no real shadows, only blobs | Active; refines 42 |
