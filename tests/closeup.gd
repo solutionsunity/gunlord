@@ -1,10 +1,12 @@
 extends SceneTree
 ## Plays the real scene under the sweeping bot until time T, then saves a
 ## close-up of the squad to build/closeup_<T>.png. Renders only that frame.
-##   xvfb-run godot --path . --audio-driver Dummy --rendering-driver opengl3 --resolution 720x1280 --fixed-fps 60 -s tests/closeup.gd -- 60
+## The stage is node 2 unless a node (1-based) is given; node 16 on carries every relic.
+##   xvfb-run godot --path . --audio-driver Dummy --rendering-driver opengl3 --resolution 720x1280 --fixed-fps 60 -s tests/closeup.gd -- 60 [node]
 
 var _main: Node
 var _at := 13.0
+var _node := 1
 var _armed := false
 
 
@@ -12,6 +14,8 @@ func _init() -> void:
 	var args := OS.get_cmdline_user_args()
 	if not args.is_empty():
 		_at = float(args[0])
+	if args.size() > 1:
+		_node = int(args[1]) - 1
 	DirAccess.make_dir_recursive_absolute("res://build")
 	_main = load("res://main.tscn").instantiate()
 	_main._progress = Progress.new()   # tests start fresh and never save
@@ -24,7 +28,7 @@ func _init() -> void:
 
 func _process(_delta: float) -> bool:
 	if _main._battle == null:
-		_main.start_level(1)   # the game opens on the menu
+		_main.start_level(_node)   # the game opens on the menu
 		return false
 	var b: Battle = _main._battle
 	b.squad.target_x = sin(b.time * 0.8) * Squad.EDGE

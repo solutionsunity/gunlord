@@ -26,6 +26,7 @@ var arms: Arms
 ##   hit    {at, weapon, splash, target}  one per projectile impact; target is the ObjectDef hit
 ##   end    {won}                         once, when the battle is decided
 ##   zap    {from, to}                    one per chain arc
+##   shielded {count}                     the shield took count blows meant for the squad
 var events: Array[Dictionary] = []   ## cleared by whoever runs the battle, after every reader has seen them
 
 var _objects: Dictionary
@@ -156,7 +157,10 @@ func _shot_events() -> void:
 
 ## The front line takes n blows: the shield saves what it can, the rest fall.
 func _struck(n: int) -> void:
-	_lose(n - arms.absorb(n))
+	var saved := arms.absorb(n)
+	if saved > 0:
+		events.append({kind = &"shielded", count = saved})
+	_lose(n - saved)
 
 
 ## Removes n units from the rim of the squad, announcing each one's death.

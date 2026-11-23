@@ -25,6 +25,12 @@ const FX := 1200                   ## live flashes, sparks and blasts
 const BOSS_SIZE := 2.0             ## enemies this big shake the screen when they fall
 const SHIELD_PANES := 9            ## glass panes in the shield's arc
 const SHIELD_SPAN := 1.9           ## radians the arc covers, centred ahead of the squad
+const DRONE_HEIGHT := 1.8          ## metres a drone hovers at
+const DRONE_SCALE := 1.3
+const DRONE_TILT := -0.14          ## radians nose-down, leaning into the advance
+const MOTORS := [Vector3(0.38, 0.1, 0.38), Vector3(-0.38, 0.1, 0.38), Vector3(0.38, 0.1, -0.38), Vector3(-0.38, 0.1, -0.38)]
+const BLADE_HEIGHT := 0.9
+const BLADE_TRAIL := Color(0.7, 0.88, 1.0, 0.55)
 
 var stage := Stage.new()
 var _characters := {}              ## model -> {crowd: Crowd, bake: CrowdBake, scale: float}
@@ -37,8 +43,10 @@ var _projectiles := {}             ## projectile look -> Crowd
 var _streaks: Crowd                ## a glowing trail behind every projectile, so shots read at phone size
 var _blades: Crowd                 ## the relics: orbiting swords, hovering drones, the shield's honeycomb
 var _drones: Crowd
-var _rotors: Crowd
+var _rotors: Crowd                 ## each drone's four two-bladed props
+var _discs: Crowd                  ## and the blur they spin into
 var _shield: Crowd
+var _shield_flash := 0.0           ## 1 when the shield has just taken a blow; fades
 var _font: FontFile
 var _glow: Crowd                   ## every flash, spark and blast: additive billboards
 var _fx: Array[Dictionary] = []    ## {at, color, from, to, life, age}
@@ -65,10 +73,14 @@ func _ready() -> void:
 	_panels = _glass(_box(PANEL), 200)
 	_pedestals = _kit_crowd("tower-square-base", 64)
 	_blades = _swords(8)
-	_drones = _primitive(_sphere(0.34), 8, false)
-	(_drones.material_override as StandardMaterial3D).metallic = 0.7
-	(_drones.material_override as StandardMaterial3D).roughness = 0.3
-	_rotors = _primitive(_box(Vector3(1.0, 0.03, 0.1)), 16, false)
+	_drones = Crowd.new(_quadcopter(), 8, null)
+	add_child(_drones)
+	_rotors = _primitive(_box(Vector3(0.56, 0.014, 0.05)), 32, false)
+	var blur := _hexagon(0.3)
+	blur.radial_segments = 20
+	blur.height = 0.008
+	_discs = _glass(blur, 32)
+	(_discs.material_override as StandardMaterial3D).emission_enabled = false
 	_shield = _glass(_reshaped(_hexagon(0.42), Transform3D(Basis(Vector3.RIGHT, PI / 2.0), Vector3.ZERO)), SHIELD_PANES * 2)
 	_projectiles = {
 		bolt = _arrows(4000),
@@ -127,7 +139,7 @@ func draw(b: Battle, delta: float) -> void:
 	_draw_units(b.squad)
 	_draw_lane(b.lane, b.squad)
 	_draw_shots(b.shots, b.arsenal)
-	_draw_relics(b.arms, b.squad)
+	_draw_relics(b, delta)
 	_drain_events(b)
 	if b.arms.surge == &"flame":
 		_flames(b.squad)
@@ -270,7 +282,12 @@ func _drain_events(b: Battle) -> void:
 			&"fire":
 				var wd: WeaponDef = weapons[e.weapon]
 				var big := wd.splash > 0.0
-				_spark(e.at + Vector3(0, 0.7, -0.35 * wd.size), wd.color.lightened(0.7), 1.6 if big else 0.8, 0.3, 0.09)
+				var muzzle := Vector3(0, DRONE_HEIGHT - 0.2, -0.6) if wd.id == &"drone" else Vector3(0, 0.7, -0.35 * wd.size)
+				_spark(e.at + muzzle, wd.color.lightened(0.7), 1.6 if big else 0.8, 0.3, 0.09)
+			&"shielded":
+				_shield_flash = 1.0
+				var front := b.squad.radius() + 0.7
+				_spark(Vector3(b.squad.x, 0.8, Squad.Z - front), Color(0.6, 0.85, 1.0), 1.0, 2.6, 0.25)
 			&"hit":
 				if e.splash > 0.0:
 					_spark(e.at + Vector3(0, 0.5, 0), Color(1.0, 0.55, 0.15), 0.8, e.splash * 2.2, 0.4)
@@ -317,38 +334,66 @@ func _draw_corpses(delta: float) -> void:
 	_corpses = keep
 
 
-## Swords sweeping edge-first around the squad, drones bobbing beside it on
-## spinning rotors, and the shield's honeycomb ahead of it, fading as it is spent.
-func _draw_relics(arms: Arms, squad: Squad) -> void:
+## Swords sweeping edge-first around the squad, trailing light and throwing
+## sparks where they cut; quadcopters hovering beside it; and the shield's
+## honeycomb ahead of it. The lit cells are the shield's charge: they go out
+## as it takes blows (each blow flashes it) and light again as it recharges.
+func _draw_relics(b: Battle, delta: float) -> void:
+	var arms := b.arms
+	var squad := b.squad
+	var lane := b.lane
 	_blades.begin()
 	for p in arms.blades(squad):
 		var out := p - Vector2(squad.x, Squad.Z)
 		var tangent := atan2(-out.y, out.x)        # the way the circle runs here, as a yaw
-		_blades.add(Vector3(p.x, 0.7, p.y), tangent, Vector3.ONE, Color.WHITE)
-		_shadows.add(Vector3(p.x, 0.03, p.y), 0.0, Vector3(0.5, 1.0, 1.2), Color(0, 0, 0, 0.3))
+		var at := Vector3(p.x, BLADE_HEIGHT, p.y)
+		_blades.add(at, tangent, Vector3.ONE * 1.35, Color.WHITE)
+		_shadows.add(Vector3(p.x, 0.03, p.y), 0.0, Vector3(0.6, 1.0, 1.5), Color(0, 0, 0, 0.3))
+		_spark(at, BLADE_TRAIL, 0.8, 0.3, 0.25)   # one a frame: together, a ribbon of light along the path
+		for i in lane.size():
+			if lane.alive[i] and lane.def[i].enemy and lane.hit_age[i] < FLASH and randf() < 0.35 \
+					and p.distance_to(Vector2(lane.x[i], lane.z[i])) <= Arms.BLADE_REACH + lane.def[i].radius:
+				_spark(at + Vector3(randf_range(-0.3, 0.3), 0.1, randf_range(-0.3, 0.3)), Color(1.0, 0.85, 0.5), 0.5, 1.4, 0.2)
 	_blades.end()
 	_drones.begin()
 	_rotors.begin()
+	_discs.begin()
+	var tilt := Basis(Vector3.RIGHT, DRONE_TILT).scaled(Vector3.ONE * DRONE_SCALE)
 	var k := 0
 	for p in arms.drones(squad):
-		var at := Vector3(p.x, 1.8 + sin(_clock * 3.0 + k) * 0.15, p.y)
-		_drones.add(at, 0.0, Vector3.ONE, Color("f5c542"))
-		for side: float in [-0.42, 0.42]:
-			_rotors.add(at + Vector3(side, 0.34, 0), _clock * 40.0 * signf(side), Vector3(0.8, 1.0, 1.6), Color(0.12, 0.13, 0.16))
-		_shadows.add(Vector3(p.x, 0.03, p.y), 0.0, Vector3.ONE * 0.9, Color(0, 0, 0, 0.3))
+		var at := Vector3(p.x, DRONE_HEIGHT + sin(_clock * 3.0 + k) * 0.12, p.y)
+		_drones.add(at, 0.0, Vector3.ONE, Color.WHITE)
+		for m in MOTORS.size():
+			var hub: Vector3 = at + tilt * (MOTORS[m] + Vector3(0, 0.03, 0))
+			var turn := 1.0 if m == 0 or m == 3 else -1.0   # diagonal pairs counter-rotate, as on a real quadcopter
+			_rotors.add(hub, _clock * 47.0 * turn, Vector3.ONE * DRONE_SCALE, Color(0.1, 0.1, 0.12))
+			_discs.add(hub, 0.0, Vector3.ONE * DRONE_SCALE, Color(0.8, 0.85, 0.9, 0.16))
+		_shadows.add(Vector3(p.x, 0.03, p.y), 0.0, Vector3.ONE * 1.3, Color(0, 0, 0, 0.3))
 		k += 1
+	_discs.end()
 	_rotors.end()
 	_drones.end()
+	_shield_flash = maxf(_shield_flash - delta * 4.0, 0.0)
 	_shield.begin()
 	if arms.level(&"shield") > 0:
-		var charge := arms.shield / maxf(arms.shield_max(squad), 1.0)
+		var lit := ceili(arms.shield / maxf(arms.shield_max(squad), 1.0) * SHIELD_PANES - 0.001)   # of SHIELD_PANES ranks
 		var r := squad.radius() + 0.7
 		for row in 2:   # two courses of hexagons, the upper set half a cell over
 			for i in SHIELD_PANES - row:
 				var a := -PI / 2.0 + SHIELD_SPAN * ((i + row * 0.5) / (SHIELD_PANES - 1) - 0.5)
 				var at := Vector3(squad.x + cos(a) * r, 0.45 + row * 0.72, Squad.Z + sin(a) * r)
-				_shield.add(at, PI / 2.0 - a, Vector3.ONE, Color(0.45, 0.75, 1.0, 0.15 + 0.5 * charge))
+				# Cells go out from the ends of the arc inward, the middle ones last.
+				var rank := _shield_rank(i + row * 0.5)
+				var color := Color(0.45, 0.75, 1.0, 0.6).lerp(Color(0.9, 0.97, 1.0, 0.9), _shield_flash) \
+						if rank < lit else Color(0.2, 0.24, 0.32, 0.35)
+				_shield.add(at, PI / 2.0 - a, Vector3.ONE, color)
 	_shield.end()
+
+
+## A cell's rank, 0 to SHIELD_PANES - 1, in the order the cells light: the middle first.
+func _shield_rank(slot: float) -> int:
+	var from_middle := absf(slot - (SHIELD_PANES - 1) / 2.0)
+	return int(roundf(from_middle * 2.0))
 
 
 ## The flame surge: tongues of fire licking out over the ground ahead of the squad.
@@ -537,6 +582,60 @@ func _swords(capacity: int) -> Crowd:
 	var crowd := Crowd.new(mesh, capacity, null)
 	add_child(crowd)
 	return crowd
+
+
+## A camera quadcopter, nose (-Z, up the lane) tipped down: a graphite body
+## with a gold spine, four arms out to the motors, skids, a camera on a gimbal
+## under the nose, white lights ahead and red behind. Props are drawn apart,
+## since they spin. Built from primitives, one surface per material.
+func _quadcopter() -> ArrayMesh:
+	var graphite := _paint(Color(0.16, 0.17, 0.19), 0.6, 0.35)
+	var dark := _paint(Color(0.07, 0.07, 0.08), 0.8, 0.25)
+	var gold := _paint(Color("f5c542"), 0.9, 0.3)
+	var white := _paint(Color(0.9, 0.95, 1.0), 0.0, 0.5, 2.5)
+	var red := _paint(Color(1.0, 0.15, 0.1), 0.0, 0.5, 2.5)
+	var parts := [
+		[_box(Vector3(0.36, 0.13, 0.52)), Transform3D(), graphite],
+		[_sphere(0.2), Transform3D(Basis().scaled(Vector3(0.9, 0.42, 1.25)), Vector3(0, 0.07, 0.02)), graphite],
+		[_box(Vector3(0.07, 0.02, 0.44)), Transform3D(Basis(), Vector3(0, 0.15, 0.02)), gold],
+		[_sphere(0.075), Transform3D(Basis(), Vector3(0, -0.11, -0.25)), dark],
+		[_capsule(0.035, 0.08), Transform3D(Basis(Vector3.RIGHT, PI / 2.0), Vector3(0, -0.11, -0.32)), white],
+	]
+	for m: Vector3 in MOTORS:
+		var arm := Vector3(m.x, 0, m.z)
+		parts.append([_box(Vector3(0.06, 0.05, arm.length())), Transform3D(Basis(Vector3.UP, atan2(arm.x, arm.z)), arm * 0.5), graphite])
+		var motor := _hexagon(0.065)
+		motor.radial_segments = 12
+		motor.height = 0.1
+		parts.append([motor, Transform3D(Basis(), Vector3(m.x, 0.04, m.z)), dark])
+		parts.append([_sphere(0.03), Transform3D(Basis(), Vector3(m.x, -0.04, m.z)), white if m.z < 0.0 else red])
+	for side: float in [-0.15, 0.15]:
+		parts.append([_box(Vector3(0.02, 0.14, 0.02)), Transform3D(Basis(), Vector3(side, -0.13, 0)), dark])
+		parts.append([_box(Vector3(0.025, 0.025, 0.42)), Transform3D(Basis(), Vector3(side, -0.2, 0)), dark])
+	var pose := Transform3D(Basis(Vector3.RIGHT, DRONE_TILT).scaled(Vector3.ONE * DRONE_SCALE), Vector3.ZERO)
+	var tools := {}   # material -> SurfaceTool
+	for part: Array in parts:
+		if not tools.has(part[2]):
+			tools[part[2]] = SurfaceTool.new()
+			tools[part[2]].begin(Mesh.PRIMITIVE_TRIANGLES)
+		tools[part[2]].append_from(part[0], 0, pose * part[1])
+	var mesh := ArrayMesh.new()
+	for material: Material in tools:
+		tools[material].commit(mesh)
+		mesh.surface_set_material(mesh.get_surface_count() - 1, material)
+	return mesh
+
+
+func _paint(color: Color, metallic: float, roughness: float, glow := 0.0) -> StandardMaterial3D:
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = color
+	mat.metallic = metallic
+	mat.roughness = roughness
+	if glow > 0.0:
+		mat.emission_enabled = true
+		mat.emission = color
+		mat.emission_energy_multiplier = glow
+	return mat
 
 
 ## A copy of a mesh with every vertex moved by `xform` once, up front: crowds

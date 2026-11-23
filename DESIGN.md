@@ -335,9 +335,14 @@ view never infers them from diffs of the simulation state.
   silhouette edge (a cheap outline), and each figure a shade lighter or
   darker than its neighbours. Team colour dyes the cloth but keeps its folds.
 - The deck is darker, warmer sandstone with worn slab edges.
-- Relics and rockets are models: the knight's sword sweeping edge-first, gold
-  drones on spinning rotors, a two-course honeycomb of glass, rockets trailing
-  smoke.
+- Relics and rockets are models: the knight's sword sweeping edge-first,
+  trailing a ribbon of light and throwing sparks where it cuts; a camera
+  quadcopter (graphite body, gold spine, counter-rotating props blurred into
+  discs, white lights ahead and red behind), the drones taking turns to fire;
+  a two-course honeycomb of glass; rockets trailing smoke.
+- The shield's honeycomb is its charge: its cells go out from the ends
+  inward as it takes blows and relight as it recharges; a spent cell stays as
+  a dim outline. Each blow it holds flashes it, with a glassy knock.
 - Graphics setting: full, or light (no shadows, glow or haze) for weaker
   devices. Phone cost is unmeasured; light is the fallback.
 
