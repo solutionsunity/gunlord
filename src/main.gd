@@ -20,6 +20,7 @@ var _screens := Screens.new()
 var _updates := Updates.new()
 var _since_end := 0.0
 var _attempts := {}         ## node -> attempts this session; each retry varies the stage fairly
+var _on_visibility: JavaScriptObject   ## the page's visibility callback, held so it stays alive
 
 
 func _ready() -> void:
@@ -46,6 +47,31 @@ func _ready() -> void:
 	_updates.available.connect(_screens.show_update)
 	_show_settings()
 	_show_menu()
+	# A browser keeps playing a hidden page's audio and never tells the engine
+	# the page was hidden, so the page is asked; native builds are told (below).
+	if OS.has_feature("web"):
+		_on_visibility = JavaScriptBridge.create_callback(func(_args: Array) -> void:
+			_set_away(JavaScriptBridge.eval("document.hidden")))
+		JavaScriptBridge.get_interface("document").addEventListener("visibilitychange", _on_visibility)
+
+
+func _notification(what: int) -> void:
+	match what:
+		NOTIFICATION_APPLICATION_PAUSED:
+			_set_away(true)
+		NOTIFICATION_APPLICATION_RESUMED:
+			_set_away(false)
+
+
+## Leaving the game (minimised, or another app or tab in front) pauses a
+## battle and silences everything. Coming back restores the sound as the
+## settings have it; a battle waits on its pause screen.
+func _set_away(away: bool) -> void:
+	if away:
+		_pause()
+		AudioServer.set_bus_mute(0, true)
+	else:
+		_settings.apply()
 
 
 func start_level(index: int) -> void:

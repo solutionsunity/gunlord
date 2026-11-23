@@ -376,6 +376,10 @@ view never infers them from diffs of the simulation state.
 - The map scrolls by dragging (finger or mouse) or the mouse wheel. A press
   that travels more than 14 px is a scroll, never a tap on the node beneath it.
 - Escape, or Android's back button, pauses a battle.
+- Leaving the game (minimised, or another app or tab in front) pauses a
+  battle and silences everything; coming back restores the sound, the battle
+  waiting on its pause screen. A browser never tells the engine its page was
+  hidden, so the web build listens for that itself.
 - Music: "Determined Pursuit" (Emma_MA) loops through a battle; "Fantasy
   Orchestral Theme" (Joth) plays on the map. Tracks crossfade over 1.2 s, and
   the battle track fades out as the battle is decided, under its jingle.
@@ -502,3 +506,4 @@ Peak scene: 120 squad + ~300 enemies + ~1,500 projectiles.
 | 42 | Graphics pass: low close camera, real crowd shadows, haze, glow, shaded and outlined characters, modelled relics; a light setting | Active; supersedes 17 |
 | 43 | Installable web app: Godot's PWA export, its worker taught the version tags; the update tap clears the offline build | Active; refines 35 |
 | 44 | Sound budget: tiered voice limit and same-frame grouping, instead of a limiter (web samples bypass bus effects) | Active |
+| 46 | Leaving the game pauses and silences it; the web build watches the page's visibility | Active |
