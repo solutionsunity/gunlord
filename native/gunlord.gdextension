@@ -6,4 +6,3 @@ compatibility_minimum = "4.7"
 [libraries]
 
 web.wasm32 = "res://native/bin/libgunlord.web.template_release.wasm32.nothreads.wasm"
-linux.x86_64 = "res://native/bin/libgunlord.linux.template_release.x86_64.so"

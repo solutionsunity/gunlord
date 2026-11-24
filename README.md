@@ -19,8 +19,8 @@ First run: bake the crowd characters (generated, not committed). Without them
 the game still runs, with placeholder capsules.
 
 The native library in `native/` (C++, GDExtension) is built for the web with
-Emscripten 4.0.20, the version Godot's 4.7 web templates use, and for Linux;
-CI builds both. Without it the game still runs, and the readout says so.
+Emscripten 4.0.20, the version Godot's 4.7 web templates use; CI builds it.
+Elsewhere, and without it, the game still runs and the readout says so.
 
     git clone --branch 10.0.0-stable https://github.com/godotengine/godot-cpp
     cd native && GODOT_CPP=../godot-cpp scons platform=web threads=no target=template_release api_version=4.7

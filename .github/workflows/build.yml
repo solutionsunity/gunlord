@@ -87,7 +87,8 @@ jobs:
           SETTINGS
 
       # The native library (native/): built for the web, against the same
-      # Emscripten as Godot's web templates, and for Linux, where the tests run.
+      # Emscripten as Godot's web templates. Web only for now: a Linux build
+      # crashed Godot's first import on the runner, not locally (issue #21).
       - uses: mymindstorm/setup-emsdk@v14
         with:
           version: ${{ env.EMSCRIPTEN_VERSION }}
@@ -107,9 +108,7 @@ jobs:
           cd native
           export GODOT_CPP=../godot-cpp
           scons platform=web threads=no target=template_release api_version=4.7 -j4
-          scons platform=linux target=template_release api_version=4.7 -j4
           test -f bin/libgunlord.web.template_release.wasm32.nothreads.wasm
-          test -f bin/libgunlord.linux.template_release.x86_64.so
 
       - name: Import and bake crowd characters
         run: |
