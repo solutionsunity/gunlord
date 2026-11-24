@@ -18,6 +18,13 @@ Requires Godot 4.7.
 First run: bake the crowd characters (generated, not committed). Without them
 the game still runs, with placeholder capsules.
 
+The native library in `native/` (C++, GDExtension) is built for the web with
+Emscripten 4.0.20, the version Godot's 4.7 web templates use, and for Linux;
+CI builds both. Without it the game still runs, and the readout says so.
+
+    git clone --branch 10.0.0-stable https://github.com/godotengine/godot-cpp
+    cd native && GODOT_CPP=../godot-cpp scons platform=web threads=no target=template_release api_version=4.7
+
     godot --headless --path . --import
     godot --headless --path . -s tools/bake_crowd.gd
 
@@ -46,6 +53,7 @@ Controls: drag with a finger or the mouse, or use the arrow keys.
 - `src/content/`: data — weapons, lane objects, level timelines
 - `src/sim/`: the deterministic simulation; `Battle` runs each tick
 - `src/view/`: drawing and HUD; reads the simulation, never writes to it. `Crowd` is one batched draw; `Stage` is the static scene; `crowd.gdshader` plays baked animations
+- `native/`: the GDExtension library (C++); for now a probe the readout times against GDScript (issue #21)
 - `tools/`: the crowd baker and in-house weapon models
 - `assets/third_party/`: CC0 and OFL packs with their licenses (see CREDITS.md); `assets/baked/`: baker output
 - `tests/`: headless bots and the frame renderer

@@ -14,6 +14,8 @@ env:
   GODOT_VERSION: 4.7.2
   GODOT: ./godot/Godot_v4.7.2-stable_linux.x86_64
   TEMPLATES: ~/.local/share/godot/export_templates/4.7.2.stable
+  EMSCRIPTEN_VERSION: 4.0.20      # what Godot 4.7's web templates are built with
+  GODOT_CPP_VERSION: 10.0.0-stable
 
 concurrency:
   group: build-${{ github.ref }}
@@ -50,7 +52,7 @@ jobs:
           path: |
             godot
             templates
-          key: godot-${{ env.GODOT_VERSION }}-web-android
+          key: godot-${{ env.GODOT_VERSION }}-web-dlink-android
 
       - name: Download Godot and the templates we use
         if: steps.cache.outputs.cache-hit != 'true'
@@ -60,7 +62,7 @@ jobs:
           curl -sSfL -o godot.zip "$base/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
           unzip -q godot.zip -d godot
           curl -sSfL -o templates.tpz "$base/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
-          unzip -q -j templates.tpz templates/version.txt templates/web_nothreads_release.zip templates/android_release.apk -d templates
+          unzip -q -j templates.tpz templates/version.txt templates/web_dlink_nothreads_release.zip templates/android_release.apk -d templates
           rm godot.zip templates.tpz
 
       - name: Install templates
@@ -83,6 +85,31 @@ jobs:
           export/android/android_sdk_path = "$ANDROID_SDK_ROOT"
           export/android/java_sdk_path = "$JAVA_HOME"
           SETTINGS
+
+      # The native library (native/): built for the web, against the same
+      # Emscripten as Godot's web templates, and for Linux, where the tests run.
+      - uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: ${{ env.EMSCRIPTEN_VERSION }}
+          actions-cache-folder: emsdk-cache
+
+      - name: Cache godot-cpp
+        id: cache-cpp
+        uses: actions/cache@v6
+        with:
+          path: godot-cpp
+          key: godot-cpp-${{ env.GODOT_CPP_VERSION }}-${{ env.EMSCRIPTEN_VERSION }}
+
+      - name: Build the native library
+        run: |
+          pip install scons
+          test -d godot-cpp || git clone -q --depth 1 --branch ${GODOT_CPP_VERSION} https://github.com/godotengine/godot-cpp
+          cd native
+          export GODOT_CPP=../godot-cpp
+          scons platform=web threads=no target=template_release api_version=4.7 -j4
+          scons platform=linux target=template_release api_version=4.7 -j4
+          test -f bin/libgunlord.web.template_release.wasm32.nothreads.wasm
+          test -f bin/libgunlord.linux.template_release.x86_64.so
 
       - name: Import and bake crowd characters
         run: |

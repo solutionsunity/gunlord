@@ -1,3 +1,7 @@
 .godot/
 /build/
 /assets/baked/
+/native/bin/
+/native/.sconsign.dblite
+/native/src/*.o
+/native/src/*.os
