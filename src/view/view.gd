@@ -41,6 +41,7 @@ var _panels: Crowd                 ## translucent panel faces
 var _pedestals: Crowd
 var _projectiles := {}             ## projectile look -> Crowd
 var _streaks: Crowd                ## a glowing trail behind every projectile, so shots read at phone size
+var _shot_looks: Array[Dictionary] = []   ## per arsenal index: {crowd, color, trail, wide, homing}; built once a battle
 var _blades: Crowd                 ## the relics: orbiting swords, hovering drones, the shield's honeycomb
 var _drones: Crowd
 var _rotors: Crowd                 ## each drone's four two-bladed props
@@ -49,7 +50,12 @@ var _shield: Crowd
 var _shield_flash := 0.0           ## 1 when the shield has just taken a blow; fades
 var _font: FontFile
 var _glow: Crowd                   ## every flash, spark and blast: additive billboards
-var _fx: Array[Dictionary] = []    ## {at, color, from, to, life, age}
+var _fx_at := PackedVector3Array()   ## live sparks as parallel arrays
+var _fx_color := PackedColorArray()
+var _fx_from := PackedFloat32Array()
+var _fx_to := PackedFloat32Array()
+var _fx_life := PackedFloat32Array()
+var _fx_age := PackedFloat32Array()
 var _trauma := 0.0                 ## screen shake, 0..1; decays
 var _shake_time := 0.0
 var freeze := 0.0                  ## seconds of hit-stop requested; the game loop pauses the simulation
@@ -119,7 +125,8 @@ func instances() -> Vector2i:
 ## Clears everything that belongs to a battle: crowds, corpses, effects, labels.
 func reset() -> void:
 	_corpses.clear()
-	_fx.clear()
+	_shot_looks.clear()
+	_fx_keep(0)
 	_trauma = 0.0
 	freeze = 0.0
 	for c in get_children():
@@ -167,11 +174,27 @@ func draw(b: Battle, delta: float) -> void:
 
 func _draw_units(squad: Squad) -> void:
 	var k := 0
+	var team := Color(PLAYER_TEAM, 0.0)
 	for w in squad.weapons.size():
 		var wd := squad.weapons[w]
+		var entry := _character_kind(wd.model)
+		if entry.is_empty():
+			for c in squad.counts[w]:
+				var p := squad.unit_position(k)
+				_character(wd.model, Vector3(p.x, 0.0, p.y), 0.0, wd.size, team, &"shoot", -k * 0.137)
+				k += 1
+			continue
+		# What _character does per soldier, with the kind, clip and sizes looked up once.
+		var crowd: Crowd = entry.crowd
+		var bake: CrowdBake = entry.bake
+		var role: StringName = &"shoot" if bake.clips.has(&"shoot") else bake.clips.keys()[0]
+		var body: Vector3 = Vector3.ONE * entry.scale * wd.size
+		var blob := Vector3.ONE * wd.size * 0.75
+		var shade := Color(0, 0, 0, 0.45)
 		for c in squad.counts[w]:
 			var p := squad.unit_position(k)
-			_character(wd.model, Vector3(p.x, 0.0, p.y), 0.0, wd.size, Color(PLAYER_TEAM, 0.0), &"shoot", -k * 0.137)
+			_shadows.add(Vector3(p.x, 0.03, p.y), 0.0, blob, shade)
+			crowd.add(Vector3(p.x, 0.0, p.y), 0.0, body, team, bake.custom(role, _clock - k * 0.137))
 			k += 1
 
 
@@ -239,19 +262,25 @@ func _draw_shots(shots: Shots, weapons: Array[WeaponDef]) -> void:
 	for look in _projectiles:
 		_projectiles[look].begin()
 	_streaks.begin()
+	if _shot_looks.size() != weapons.size():
+		_shot_looks.clear()
+		for wd in weapons:
+			# The trail starts at the projectile and stretches back along its path;
+			# a rocket's is a long pale smoke trail.
+			_shot_looks.append({crowd = _projectiles.get(wd.projectile, _projectiles.tracer),
+					color = wd.color.lightened(0.45),
+					trail = Color(0.85, 0.85, 0.88, 0.7) if wd.homing else Color(wd.color.lightened(0.15), 0.95),
+					size = Vector3(0.9, 1.0, 5.5) if wd.homing else Vector3(1.0 if wd.projectile == &"ball" else 0.6, 1.0, 3.0),
+					back = -1.3 * (2.2 if wd.homing else 1.0)})
 	for i in shots.size():
-		var wd := weapons[shots.weapon[i]]
-		var crowd: Crowd = _projectiles.get(wd.projectile, _projectiles.tracer)
+		var look := _shot_looks[shots.weapon[i]]
+		var vx := shots.vx[i]
+		var vz := shots.vz[i]
 		var at := Vector3(shots.x[i], 0.6, shots.z[i])
-		var yaw := atan2(shots.vx[i], shots.vz[i])
-		crowd.add(at, yaw, Vector3.ONE, wd.color.lightened(0.45))
-		# The trail starts at the projectile and stretches back along its path.
-		var back := Vector3(shots.vx[i], 0.0, shots.vz[i]).normalized() * -1.3
-		if wd.homing:   # a rocket leaves a long pale smoke trail
-			_streaks.add(at + back * 2.2, yaw, Vector3(0.9, 1.0, 5.5), Color(0.85, 0.85, 0.88, 0.7))
-			continue
-		var wide := 1.0 if wd.projectile == &"ball" else 0.6
-		_streaks.add(at + back, yaw, Vector3(wide, 1.0, 3.0), Color(wd.color.lightened(0.15), 0.95))
+		var yaw := atan2(vx, vz)
+		look.crowd.add(at, yaw, Vector3.ONE, look.color)
+		var back: float = look.back / sqrt(vx * vx + vz * vz)
+		_streaks.add(at + Vector3(vx * back, 0.0, vz * back), yaw, look.size, look.trail)
 	_streaks.end()
 	for look in _projectiles:
 		_projectiles[look].end()
@@ -261,7 +290,9 @@ func _draw_shots(shots: Shots, weapons: Array[WeaponDef]) -> void:
 ## from `phase` seconds offset so neighbours don't move in lockstep.
 func _character(model: StringName, at: Vector3, yaw: float, size: float, color: Color,
 		role: StringName, phase: float, shadow := 0.45) -> void:
-	var entry := _character_kind(model)
+	var entry: Dictionary = _characters.get(model, {})
+	if entry.is_empty():
+		entry = _character_kind(model)
 	if shadow > 0.0:
 		_shadows.add(Vector3(at.x, 0.03, at.z), 0.0, Vector3.ONE * size * 0.75, Color(0, 0, 0, shadow))
 	if entry.is_empty():
@@ -337,16 +368,17 @@ func _drain_events(b: Battle) -> void:
 
 ## Fallen soldiers play their death once, lie still, then sink into the deck.
 func _draw_corpses(delta: float) -> void:
-	var keep: Array[Dictionary] = []
+	var kept := 0
 	for c in _corpses:
 		c.age += delta
 		var sink := maxf(c.age - CORPSE_REST, 0.0) / CORPSE_SINK
 		if sink >= 1.0:
 			continue
-		keep.append(c)
+		_corpses[kept] = c
+		kept += 1
 		var at: Vector3 = c.at - Vector3(0, sink * 0.6 * c.size, 0)
 		_character(c.model, at, c.yaw, c.size, c.color, &"death", -c.age, 0.45 * (1.0 - sink))
-	_corpses = keep
+	_corpses.resize(kept)
 
 
 ## Swords sweeping edge-first around the squad, trailing light and throwing
@@ -366,7 +398,7 @@ func _draw_relics(b: Battle, delta: float) -> void:
 		_shadows.add(Vector3(p.x, 0.03, p.y), 0.0, Vector3(0.6, 1.0, 1.5), Color(0, 0, 0, 0.3))
 		_spark(at, BLADE_TRAIL, 0.8, 0.3, 0.25)   # one a frame: together, a ribbon of light along the path
 		for i in lane.size():
-			if lane.alive[i] and lane.def[i].enemy and lane.hit_age[i] < FLASH and randf() < 0.35 \
+			if lane.hit_age[i] < FLASH and lane.alive[i] and lane.def[i].enemy and randf() < 0.35 \
 					and p.distance_to(Vector2(lane.x[i], lane.z[i])) <= Arms.BLADE_REACH + lane.def[i].radius:
 				_spark(at + Vector3(randf_range(-0.3, 0.3), 0.1, randf_range(-0.3, 0.3)), Color(1.0, 0.85, 0.5), 0.5, 1.4, 0.2)
 	_blades.end()
@@ -423,23 +455,46 @@ func _flames(squad: Squad) -> void:
 
 ## A glowing billboard that grows from `from` to `to` metres and fades over `life` seconds.
 func _spark(at: Vector3, color: Color, from: float, to: float, life: float) -> void:
-	if _fx.size() == FX:
+	if _fx_at.size() == FX:
 		return
-	_fx.append({at = at, color = color, from = from, to = to, life = life, age = 0.0})
+	_fx_at.append(at)
+	_fx_color.append(color)
+	_fx_from.append(from)
+	_fx_to.append(to)
+	_fx_life.append(life)
+	_fx_age.append(0.0)
+
+
+func _fx_keep(n: int) -> void:
+	_fx_at.resize(n)
+	_fx_color.resize(n)
+	_fx_from.resize(n)
+	_fx_to.resize(n)
+	_fx_life.resize(n)
+	_fx_age.resize(n)
 
 
 func _draw_fx(delta: float) -> void:
 	_glow.begin()
-	var keep: Array[Dictionary] = []
-	for f in _fx:
-		f.age += delta
-		var t: float = f.age / f.life
+	var kept := 0
+	for i in _fx_at.size():
+		var age := _fx_age[i] + delta
+		var t := age / _fx_life[i]
 		if t >= 1.0:
 			continue
-		keep.append(f)
-		var s: float = lerpf(f.from, f.to, sqrt(t))
-		_glow.add(f.at, 0.0, Vector3(s, s, s), Color(f.color, 1.0 - t * t))
-	_fx = keep
+		if kept != i:
+			_fx_at[kept] = _fx_at[i]
+			_fx_color[kept] = _fx_color[i]
+			_fx_from[kept] = _fx_from[i]
+			_fx_to[kept] = _fx_to[i]
+			_fx_life[kept] = _fx_life[i]
+		_fx_age[kept] = age
+		kept += 1
+		var s := lerpf(_fx_from[i], _fx_to[i], sqrt(t))
+		var c := _fx_color[i]
+		c.a = 1.0 - t * t
+		_glow.add(_fx_at[i], 0.0, Vector3(s, s, s), c)
+	_fx_keep(kept)
 	_glow.end()
 
 

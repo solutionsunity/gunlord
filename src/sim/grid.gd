@@ -41,8 +41,8 @@ func first_hit(lane: Lane, px: float, pz: float, skip_serial: int, hits_traps: b
 	var cx := int(floor((px - X0) / CELL))
 	var cz := int(floor((pz - Z0) / CELL))
 	for gz in range(cz - 1, cz + 2):
-		if gz < 0 or gz >= ROWS:
-			continue
+		if gz < 0 or gz >= ROWS or _start[gz * COLS] == _start[gz * COLS + COLS]:
+			continue   # off the grid, or a row with nothing in it
 		for gx in range(cx - 1, cx + 2):
 			if gx < 0 or gx >= COLS:
 				continue
