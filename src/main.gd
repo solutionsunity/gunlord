@@ -21,7 +21,7 @@ var _updates := Updates.new()
 var _resolution := Resolution.new()
 var _since_end := 0.0
 var _attempts := {}         ## node -> attempts this session; each retry varies the stage fairly
-var _sim_usec := 0          ## the simulation's time since the last drawn frame, for the readout
+var _sim_usec := 0          ## the simulation's time since the last drawn frame, for the readout and the resolution
 var _on_visibility: JavaScriptObject   ## the page's visibility callback, held so it stays alive
 
 
@@ -157,7 +157,9 @@ func _process(delta: float) -> void:
 	_sound.hear(_battle)
 	_battle.events.clear()
 	_hud.draw(_battle)
-	_hud.draw_stats(_view, _sim_usec, Time.get_ticks_usec() - began)
+	var scripts := Time.get_ticks_usec() - began
+	_hud.draw_stats(_view, _sim_usec, scripts)
+	_resolution.observe(delta, _sim_usec + scripts)
 	_sim_usec = 0
 	if _mode == Mode.BATTLE and _battle.state != Battle.State.RUNNING:
 		_since_end += delta
