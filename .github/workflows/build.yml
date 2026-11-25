@@ -92,7 +92,9 @@ jobs:
       # Emscripten Godot's web templates use, and for Android. Each platform has
       # its own godot-cpp checkout: the bindings it generates are laid out for
       # the first platform built (32-bit for the web), and a Linux library built
-      # on the web's layout crashes Godot as it loads.
+      # on the web's layout crashes Godot as it loads. The checkouts sit at short
+      # paths: godot-cpp archives its ~1,100 objects in one shell command, and
+      # under the workspace's long path that command passes the shell's limit.
       - uses: mymindstorm/setup-emsdk@v14
         with:
           version: ${{ env.EMSCRIPTEN_VERSION }}
@@ -104,19 +106,19 @@ jobs:
       - name: Cache godot-cpp
         uses: actions/cache@v6
         with:
-          path: godot-cpp-*
+          path: /tmp/gc
           key: godot-cpp-${{ env.GODOT_CPP_VERSION }}-${{ env.EMSCRIPTEN_VERSION }}-${{ env.ANDROID_NDK_VERSION }}-per-platform
 
       - name: Build the native library
         run: |
           pip install scons
           for p in linux web android; do
-            test -d godot-cpp-$p || git clone -q --depth 1 --branch ${GODOT_CPP_VERSION} https://github.com/godotengine/godot-cpp godot-cpp-$p
+            test -d /tmp/gc/$p || git clone -q --depth 1 --branch ${GODOT_CPP_VERSION} https://github.com/godotengine/godot-cpp /tmp/gc/$p
           done
           cd native
-          GODOT_CPP=../godot-cpp-linux scons platform=linux target=template_release api_version=4.7 -j4
-          GODOT_CPP=../godot-cpp-web scons platform=web threads=no target=template_release api_version=4.7 -j4
-          GODOT_CPP=../godot-cpp-android scons platform=android arch=arm64 ndk_version=${ANDROID_NDK_VERSION} target=template_release api_version=4.7 -j4
+          GODOT_CPP=/tmp/gc/linux scons platform=linux target=template_release api_version=4.7 -j4
+          GODOT_CPP=/tmp/gc/web scons platform=web threads=no target=template_release api_version=4.7 -j4
+          GODOT_CPP=/tmp/gc/android scons platform=android arch=arm64 ndk_version=${ANDROID_NDK_VERSION} target=template_release api_version=4.7 -j4
           test -f bin/libgunlord.linux.template_release.x86_64.so
           test -f bin/libgunlord.web.template_release.wasm32.nothreads.wasm
           test -f bin/libgunlord.android.template_release.arm64.so
