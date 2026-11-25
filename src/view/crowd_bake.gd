@@ -17,13 +17,6 @@ extends Resource
 @export var height := 0.0                ## standing height in model units
 
 
-## Per-instance custom data that plays `role` from `start` (seconds on the crowd clock).
-func custom(role: StringName, start: float) -> Color:
-	var c: Vector4 = clips[role]
-	var fps := c.z if c.w > 0.5 else -c.z
-	return Color(c.x, c.y, fposmod(start, CrowdClock.WRAP), fps)
-
-
 func material() -> ShaderMaterial:
 	var m := ShaderMaterial.new()
 	m.shader = preload("res://src/view/crowd.gdshader")

@@ -81,7 +81,7 @@ func start_level(index: int) -> void:
 	_sound.play(&"click")
 	_attempts[index] = _attempts.get(index, -1) + 1
 	var level := Stages.build(index, _attempts[index])
-	_battle = Battle.new(Content.weapons(), Content.objects(), level)
+	_battle = Battle.create(Content.weapons(), Content.arms(), Content.objects(), Content.SURGES, level)
 	_view.reset()
 	_view.stage.apply_theme(level.theme)
 	_view.stage.apply_walls(level.walls)
@@ -168,11 +168,12 @@ func _process(delta: float) -> void:
 func _finish() -> void:
 	_mode = Mode.RESULT
 	var won := _battle.state == Battle.State.WON
-	var index := _battle.level.index
+	var level: Level = _battle.level
+	var index := level.index
 	if won:
 		_progress.record_victory(index, _battle.squad.total())
-	var line := "%d · %s\n" % [index + 1, _battle.level.name]
-	line += "%d of %d standing" % [_battle.squad.total(), _battle.level.capacity] if won \
+	var line := "%d · %s\n" % [index + 1, level.name]
+	line += "%d of %d standing" % [_battle.squad.total(), level.capacity] if won \
 			else "fell at wave %d of %d" % [_battle.wave, _battle.waves]
 	var relic := Relics.earned(index)
 	if won and not relic.is_empty():

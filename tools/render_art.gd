@@ -53,10 +53,11 @@ func _process(_delta: float) -> bool:
 func _portrait(model: StringName, role: StringName) -> SubViewport:
 	var vp := _viewport(256)
 	var bake: CrowdBake = load("res://assets/baked/%s.res" % model)
-	var crowd := Crowd.new(bake.mesh, 1, bake.material())
+	var crowd := Crowd.create(bake.mesh, 1, bake.material())
+	crowd.clips = bake.clips
 	vp.add_child(crowd)
 	crowd.begin()
-	crowd.add(Vector3.ZERO, PI * 0.82, Vector3.ONE / bake.height, Color(BLUE, 0.0), bake.custom(role, -0.35))
+	crowd.add(Vector3.ZERO, PI * 0.82, Vector3.ONE / bake.height, Color(BLUE, 0.0), crowd.custom(role, -0.35))
 	crowd.end()
 	(crowd.material_override as ShaderMaterial).set_shader_parameter(&"clock", 0.0)
 	var cam := Camera3D.new()

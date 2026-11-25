@@ -256,11 +256,14 @@ at a larger size.
   frame, drawn or not, and on the web it does so inside the frame's scripts.
   So each batch holds room only for what it draws (a power of two, grown at
   once, shrunk lazily), and an empty one sends nothing.
-- The web build uses Godot's dlink template, which loads GDExtension
-  libraries, so hot loops can move to native code (`native/`, C++). On an
-  Honor 70 the GDScript loops cost 16–20 ms a frame in crowded waves (issue
-  #21). For now the library holds only a probe: the readout times Crowd.add's
-  work in GDScript and in native code on the player's device.
+- The simulation and the per-frame filling of the crowds are native code
+  (`native/`, C++ through godot-cpp). On an Honor 70 the GDScript loops cost
+  16–20 ms a frame in crowded waves (issue #21). The port reproduces the
+  GDScript simulation bit for bit (its 64-bit script floats and 32-bit stored
+  ones), so the forged map and its recorded margins stand. Every build carries
+  the library: the web through Godot's dlink template, Android (arm64), and
+  Linux, where the tests run. GDScript keeps the content, the stages, the
+  screens and the order of the frame.
 - Hit checks run on a uniform grid laid over the lane. Projectiles only test
   objects in their own grid cell.
 - Weapons, lane objects and levels are data resources, kept separate from the
@@ -538,4 +541,5 @@ Peak scene: 120 squad + ~300 enemies + ~1,500 projectiles.
 | 50 | The 3D scene renders at a pixel budget (900x1600) and adapts to the frame time | Refined by 51, then 52 |
 | 51 | The resolution adapts to the engine's share of the frame, not the whole frame: CPU-bound frames keep their pixels | Superseded by 52 |
 | 52 | The pixel budget is fixed per window size; no adaptation, since the web exposes no GPU timer | Active; refines 50 |
-| 53 | The web build loads native code (dlink template, GDExtension in C++); first a probe measures the gain on the device | Active |
+| 53 | The web build loads native code (dlink template, GDExtension in C++); first a probe measures the gain on the device | Refined by 54 |
+| 54 | The simulation and the crowds' drawing move to native code, bit for bit with the GDScript they replace; every platform carries the library; the probe is gone | Active; refines 53 |

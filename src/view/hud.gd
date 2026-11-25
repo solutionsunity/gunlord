@@ -40,7 +40,6 @@ var _stats_time := 0.0
 var _stats_worst := 0.0
 var _stats_sim := 0                 ## microseconds over the span
 var _stats_scripts := 0
-var _native := ""                   ## the readout's last line: Crowd.add in GDScript beside native code (issue #21)
 
 
 func _ready() -> void:
@@ -125,29 +124,7 @@ func show_settings(settings: Settings) -> void:
 	_volume.set_level(settings.master)
 	_place_badges(settings.badges)
 	_stats.visible = settings.stats
-	if settings.stats and _native == "":
-		_native = _probe_native()
 	RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), settings.stats)
-
-
-## A thousand instances written by Crowd.add in GDScript, then by the same
-## work in native code if the build carries it: what moving the hot loops to
-## native code would gain on this device. GDScript: best of five rounds;
-## native: the mean of 200, as a browser clock is too coarse for one.
-func _probe_native() -> String:
-	var crowd := Crowd.new(BoxMesh.new(), 1000, null)
-	var script := INF
-	for r in 5:
-		var began := Time.get_ticks_usec()
-		crowd.begin()
-		for i in 1000:
-			crowd.add(Vector3(i, 0.0, 1.0), 0.3 + i * 0.001, Vector3.ONE, Color.RED)
-		script = minf(script, Time.get_ticks_usec() - began)
-	crowd.free()
-	if not ClassDB.class_exists(&"NativeProbe"):
-		return "1k adds: script %.0f us  native none" % script
-	var native: float = ClassDB.class_call_static(&"NativeProbe", &"add_usec", 1000, 200)
-	return "1k adds: script %.0f us  native %.0f us" % [script, native]
 
 
 ## The badge column hugs one edge, a little above the middle of the screen;
@@ -232,11 +209,11 @@ func draw_stats(view: View, sim_usec: int, scripts_usec: int) -> void:
 	var sim := _stats_sim / 1000.0 / _stats_frames
 	var scripts := _stats_scripts / 1000.0 / _stats_frames
 	var pixels := get_viewport().get_texture().get_size()
-	_stats.text = "FPS %d  frame %.0f ms\nworst %.0f ms\nsim %.1f  scripts %.1f\nengine %.1f\nrender %.1f%s\npixels %dx%d  3d %.2f\nsent %.1fk  drawn %.1fk\n%s" % [
+	_stats.text = "FPS %d  frame %.0f ms\nworst %.0f ms\nsim %.1f  scripts %.1f\nengine %.1f\nrender %.1f%s\npixels %dx%d  3d %.2f\nsent %.1fk  drawn %.1fk" % [
 		roundi(_stats_frames / _stats_time), frame, _stats_worst * 1000.0,
 		sim, scripts, frame - sim - scripts,
 		render, "  gpu %.1f" % gpu if gpu > 0.0 else "", pixels.x, pixels.y, get_viewport().scaling_3d_scale,
-		counts.x / 1000.0, counts.y / 1000.0, _native]
+		counts.x / 1000.0, counts.y / 1000.0]
 	_stats_age = 0.0
 	_stats_frames = 0
 	_stats_time = 0.0
@@ -261,7 +238,7 @@ func _draw_surge(arms: Arms) -> void:
 ## One badge per weapon the squad carries: the unit's portrait and its count.
 func _draw_mix(squad: Squad) -> void:
 	for w in squad.weapons.size():
-		var wd := squad.weapons[w]
+		var wd: WeaponDef = squad.weapons[w]
 		if not _badges.has(w):
 			var row := Ui.icon_chip(_mix, Ui.unit_icon(wd.id), 56.0, 30)
 			var panel := row.get_parent() as PanelContainer
@@ -276,15 +253,11 @@ func _draw_mix(squad: Squad) -> void:
 
 ## The nearest boss on the lane, once it comes within range.
 func _draw_boss(lane: Lane) -> void:
-	var best := -1
-	for i in lane.size():
-		if lane.alive[i] and lane.def[i].persistent and lane.z[i] > BOSS_RANGE:
-			if best < 0 or lane.z[i] > lane.z[best]:
-				best = i
+	var best := lane.nearest_boss(BOSS_RANGE)
 	_boss.visible = best >= 0
 	if best < 0:
 		return
-	_boss_name.text = String(lane.def[best].id).to_upper()
+	_boss_name.text = String(lane.def_of(best).id).to_upper()
 	_boss_bar.max_value = lane.max_hp[best]
 	_boss_bar.value = lane.hp[best]
 

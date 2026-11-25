@@ -18,12 +18,18 @@ Requires Godot 4.7.
 First run: bake the crowd characters (generated, not committed). Without them
 the game still runs, with placeholder capsules.
 
-The native library in `native/` (C++, GDExtension) is built for the web with
-Emscripten 4.0.20, the version Godot's 4.7 web templates use; CI builds it.
-Elsewhere, and without it, the game still runs and the readout says so.
+The simulation and the drawing of crowds are a native library, `native/` (C++,
+GDExtension, godot-cpp 10): build it for the platform you run on before the
+first import. CI builds it for Linux, the web (Emscripten 4.0.20, the version
+Godot's 4.7 web templates use) and Android (NDK 28.1.13356709). Give each
+platform its own godot-cpp checkout: godot-cpp lays its generated bindings out
+for the first platform built, and a library built on another platform's layout
+crashes Godot as it loads.
 
-    git clone --branch 10.0.0-stable https://github.com/godotengine/godot-cpp
-    cd native && GODOT_CPP=../godot-cpp scons platform=web threads=no target=template_release api_version=4.7
+    git clone --branch 10.0.0-stable https://github.com/godotengine/godot-cpp godot-cpp-linux
+    cd native && GODOT_CPP=../godot-cpp-linux scons platform=linux target=template_release api_version=4.7
+    # web:     GODOT_CPP=../godot-cpp-web scons platform=web threads=no target=template_release api_version=4.7
+    # Android: GODOT_CPP=../godot-cpp-android scons platform=android arch=arm64 target=template_release api_version=4.7
 
     godot --headless --path . --import
     godot --headless --path . -s tools/bake_crowd.gd
@@ -51,9 +57,8 @@ Controls: drag with a finger or the mouse, or use the arrow keys.
 ## Layout
 
 - `src/content/`: data — weapons, lane objects, level timelines
-- `src/sim/`: the deterministic simulation; `Battle` runs each tick
-- `src/view/`: drawing and HUD; reads the simulation, never writes to it. `Crowd` is one batched draw; `Stage` is the static scene; `crowd.gdshader` plays baked animations
-- `native/`: the GDExtension library (C++); for now a probe the readout times against GDScript (issue #21)
+- `src/view/`: drawing and HUD; reads the simulation, never writes to it. `View` orders the frame; `Stage` is the static scene; `crowd.gdshader` plays baked animations
+- `native/`: the native library (C++). The deterministic simulation (`Battle` runs each tick over `Squad`, `Lane`, `Shots`, `Arms`); `Crowd`, one batched draw; `Painter`, which fills the crowds from the simulation each frame
 - `tools/`: the crowd baker and in-house weapon models
 - `assets/third_party/`: CC0 and OFL packs with their licenses (see CREDITS.md); `assets/baked/`: baker output
 - `tests/`: headless bots and the frame renderer

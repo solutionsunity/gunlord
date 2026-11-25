@@ -5,7 +5,7 @@
 shader_type spatial;
 render_mode cull_back;
 
-const float WRAP = 64.0; // CrowdClock.WRAP
+const float WRAP = 64.0; // Crowd.WRAP
 
 uniform sampler2D albedo : source_color, filter_linear_mipmap;
 uniform sampler2D team_mask : filter_nearest;

@@ -12,7 +12,7 @@ const TIME_LIMIT := 300.0
 ## Plays one battle to its end. Returns {won, margin, survivors, peak, time, wave}.
 ## margin = survivors / capacity, 0 on a loss.
 static func play(level: Level, policy: StringName) -> Dictionary:
-	var b := Battle.new(Content.weapons(), Content.objects(), level)
+	var b := Battle.create(Content.weapons(), Content.arms(), Content.objects(), Content.SURGES, level)
 	while b.state == Battle.State.RUNNING and b.time < TIME_LIMIT:
 		steer(policy, b)
 		b.tick(DT)
@@ -38,26 +38,32 @@ static func steer(policy: StringName, b: Battle) -> void:
 ## pickup in reach, skipping lanes led by a trap.
 static func _greedy_x(b: Battle) -> float:
 	var lane := b.lane
+	var x := lane.x
+	var z := lane.z
+	var defs: Array[ObjectDef] = []
 	for i in lane.size():
-		if lane.def[i].enemy and lane.z[i] > -22.0:
+		defs.append(lane.def_of(i))
+		if defs[i].enemy and z[i] > -22.0:
 			return 0.0
+	var amount := lane.amount
+	var hp := lane.hp
 	var best_x := 0.0
 	var best := 0.0
 	for i in lane.size():
-		var d := lane.def[i]
-		if d.enemy or d.is_trap() or lane.z[i] < -45.0:
+		var d := defs[i]
+		if d.enemy or d.is_trap() or z[i] < -45.0:
 			continue
-		if _trap_ahead(lane, i):
+		if _trap_ahead(defs, x, z, i):
 			continue
-		var value := lane.amount[i] / maxf(lane.hp[i], 1.0)
+		var value := amount[i] / maxf(hp[i], 1.0)
 		if value > best:
 			best = value
-			best_x = lane.x[i]
+			best_x = x[i]
 	return best_x
 
 
-static func _trap_ahead(lane: Lane, i: int) -> bool:
-	for k in lane.size():
-		if lane.def[k].is_trap() and absf(lane.x[k] - lane.x[i]) < 0.5 and lane.z[k] > lane.z[i]:
+static func _trap_ahead(defs: Array[ObjectDef], x: PackedFloat32Array, z: PackedFloat32Array, i: int) -> bool:
+	for k in defs.size():
+		if defs[k].is_trap() and absf(x[k] - x[i]) < 0.5 and z[k] > z[i]:
 			return true
 	return false

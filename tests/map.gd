@@ -45,8 +45,9 @@ func _process(_delta: float) -> bool:
 			for i in 30:
 				Bots.steer(&"sweep", b)
 				b.tick(1.0 / 60.0)
+				var z := b.lane.z
 				for k in b.lane.size():
-					if b.lane.def[k].final and b.lane.z[k] > -16.0:
+					if b.lane.def_of(k).final and z[k] > -16.0:
 						_stage = 2
 				if _stage == 2 or b.state != Battle.State.RUNNING:
 					break
@@ -59,6 +60,6 @@ func _process(_delta: float) -> bool:
 			Bots.steer(&"sweep", _main._battle)
 			if _frames == 20:
 				root.get_texture().get_image().save_png("res://build/boss.png")
-				print("saved boss  state=%s" % Battle.State.keys()[_main._battle.state])
+				print("saved boss  state=%s" % ClassDB.class_get_enum_constants(&"Battle", &"State")[_main._battle.state])
 				return true
 	return false

@@ -32,7 +32,7 @@ func _process(_delta: float) -> bool:
 	if _armed:
 		# Rendering was switched on last frame, so the viewport now holds a fresh image.
 		root.get_texture().get_image().save_png("res://build/frame_%02d.png" % _taken)
-		print("frame %d at t=%.1f units=%d state=%s" % [_taken, b.time, b.squad.total(), Battle.State.keys()[b.state]])
+		print("frame %d at t=%.1f units=%d state=%s" % [_taken, b.time, b.squad.total(), ClassDB.class_get_enum_constants(&"Battle", &"State")[b.state]])
 		_taken += 1
 		_armed = false
 		RenderingServer.render_loop_enabled = false

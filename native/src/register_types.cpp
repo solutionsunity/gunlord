@@ -1,4 +1,10 @@
-#include "probe.h"
+#include "arms.h"
+#include "battle.h"
+#include "crowd.h"
+#include "lane.h"
+#include "painter.h"
+#include "shots.h"
+#include "squad.h"
 
 #include <gdextension_interface.h>
 #include <godot_cpp/core/class_db.hpp>
@@ -10,7 +16,13 @@ static void initialize(ModuleInitializationLevel level) {
 	if (level != MODULE_INITIALIZATION_LEVEL_SCENE) {
 		return;
 	}
-	GDREGISTER_CLASS(gunlord::NativeProbe);
+	GDREGISTER_CLASS(gunlord::Lane);
+	GDREGISTER_CLASS(gunlord::Squad);
+	GDREGISTER_CLASS(gunlord::Shots);
+	GDREGISTER_CLASS(gunlord::Arms);
+	GDREGISTER_CLASS(gunlord::Battle);
+	GDREGISTER_CLASS(gunlord::Crowd);
+	GDREGISTER_CLASS(gunlord::Painter);
 }
 
 static void uninitialize(ModuleInitializationLevel level) {

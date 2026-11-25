@@ -19,12 +19,12 @@ func _init() -> void:
 	for row in 2:
 		for i in MODELS.size():
 			var bake: CrowdBake = load("res://assets/baked/%s.res" % MODELS[i])
-			var crowd := Crowd.new(bake.mesh, 1, bake.material())
+			var crowd := Crowd.create(bake.mesh, 1, bake.material())
+			crowd.clips = bake.clips
 			stage.add_child(crowd)
-			var clip: StringName = role if bake.clips.has(role) else bake.clips.keys()[0]
 			crowd.begin()
 			crowd.add(Vector3((i - 3.5) * 1.5, 0, row * 2.2), PI * row, Vector3.ONE / bake.height * 1.3,
-					Color(WARLORD_TINT if MODELS[i] == &"warlord" and row == 1 else TEAMS[row], 0.0), bake.custom(clip, -at))
+					Color(WARLORD_TINT if MODELS[i] == &"warlord" and row == 1 else TEAMS[row], 0.0), crowd.custom(role, -at))
 			crowd.end()
 			(crowd.material_override as ShaderMaterial).set_shader_parameter(&"clock", 0.0)
 	var cam := Camera3D.new()
