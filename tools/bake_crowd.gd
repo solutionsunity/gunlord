@@ -9,6 +9,7 @@ extends SceneTree
 
 const FPS := 15.0
 const MAX_WIDTH := 4096
+const CROWD_SHARE := 0.25   ## of the triangles a battle draws per figure: a soldier there stands some 25 pixels tall
 const SOURCE := "res://assets/third_party/kaykit-adventurers/characters/%s.glb"
 const ATLAS := "res://assets/third_party/kaykit-adventurers/props/%s_texture.png"
 const ATLAS_GRID := Vector2i(8, 4)
@@ -167,6 +168,10 @@ func _bake(entry: Dictionary, rig: Node3D) -> CrowdBake:
 	var mesh := ArrayMesh.new()
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, rest)
 	mesh.custom_aabb = bounds
+	rest[Mesh.ARRAY_INDEX] = _reduced(rest)
+	var crowd_mesh := ArrayMesh.new()
+	crowd_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, rest)
+	crowd_mesh.custom_aabb = bounds
 
 	var mask := Image.create_empty(ATLAS_GRID.x, ATLAS_GRID.y, false, Image.FORMAT_R8)
 	for cell in entry.team:
@@ -174,6 +179,7 @@ func _bake(entry: Dictionary, rig: Node3D) -> CrowdBake:
 
 	var bake := CrowdBake.new()
 	bake.mesh = mesh
+	bake.crowd_mesh = crowd_mesh
 	bake.positions = ImageTexture.create_from_image(pos_img)
 	bake.normals = ImageTexture.create_from_image(nrm_img)
 	bake.albedo = load(ATLAS % entry.atlas)
@@ -184,6 +190,22 @@ func _bake(entry: Dictionary, rig: Node3D) -> CrowdBake:
 	bake.bounds = bounds
 	bake.height = bounds.end.y
 	return bake
+
+
+## Triangles for the crowd mesh: Godot's simplifier, at the level nearest
+## CROWD_SHARE of the full triangle count. Its levels index the same vertex
+## array, so every vertex keeps its number, and with it its animation.
+func _reduced(arrays: Array) -> PackedInt32Array:
+	var im := ImporterMesh.new()
+	im.add_surface(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	im.generate_lods(25, 60, [])
+	var full: int = (arrays[Mesh.ARRAY_INDEX] as PackedInt32Array).size()
+	var best: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
+	for k in im.get_surface_lod_count(0):
+		var idx := im.get_surface_lod_indices(0, k)
+		if absf(idx.size() - full * CROWD_SHARE) < absf(best.size() - full * CROWD_SHARE):
+			best = idx
+	return best
 
 
 ## A part is one mesh moving as a unit: skinned (skin set), carried by a bone

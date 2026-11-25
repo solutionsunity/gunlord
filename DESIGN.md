@@ -309,6 +309,10 @@ the pack's license and source URL. `CREDITS.md` lists them.
      a few millimetres of error at crowd scale) and normals into textures,
      one texture row per frame.
   4. Output the rest mesh, the textures and a clip table as resources.
+  5. Output a crowd mesh: the same vertices, a quarter of the triangles
+     (Godot's simplifier). Battles draw it, since a figure there stands some
+     25 pixels tall; the whole mesh is for portraits. On a phone the GPU's
+     per-vertex animation was the frame's largest cost (issue #17).
 - **The shader** reads the clip and phase for each instance from
   `INSTANCE_CUSTOM`, and the team colour and hit flash from `COLOR`. It blends
   between neighbouring frames.
@@ -545,3 +549,4 @@ Peak scene: 120 squad + ~300 enemies + ~1,500 projectiles.
 | 53 | The web build loads native code (dlink template, GDExtension in C++); first a probe measures the gain on the device | Refined by 54 |
 | 54 | The simulation and the crowds' drawing move to native code, bit for bit with the GDScript they replace; every platform carries the library; the probe is gone | Active; refines 53 |
 | 55 | The web audio buffer is 340 ms, so streamed music outlasts a phone's slowest crowded frames | Active |
+| 56 | Battles draw each figure from a quarter of its triangles; portraits keep the whole mesh | Active |

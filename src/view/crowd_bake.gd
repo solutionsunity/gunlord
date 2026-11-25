@@ -5,7 +5,8 @@ extends Resource
 ## the current animation frame, sampled from `positions` by VERTEX_ID.
 ## Produced by tools/bake_crowd.gd.
 
-@export var mesh: ArrayMesh
+@export var mesh: ArrayMesh             ## the whole figure, for portraits and close views
+@export var crowd_mesh: ArrayMesh       ## the same vertices, a quarter of the triangles: what a battle draws
 @export var positions: ImageTexture      ## RGB8, position within `bounds`; a frame spans rows_per_frame rows of `width` texels
 @export var bounds := AABB()             ## every position the character takes, over all its clips
 @export var normals: ImageTexture        ## RGB8, normal * 0.5 + 0.5, same layout

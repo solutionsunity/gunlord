@@ -201,7 +201,7 @@ func _character_kind(model: StringName) -> void:
 	if _characters.has(model) or model == &"" or not ResourceLoader.exists(BAKED % model):
 		return
 	var bake: CrowdBake = load(BAKED % model)
-	var crowd := Crowd.create(bake.mesh, CHARACTERS, bake.material())
+	var crowd := Crowd.create(bake.crowd_mesh, CHARACTERS, bake.material())
 	crowd.clips = bake.clips
 	# Hundreds of characters drawn again into the shadow map cost the GPU more
 	# than the rest of the frame on a phone; each has a soft blob shadow instead.
