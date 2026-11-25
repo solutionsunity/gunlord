@@ -407,8 +407,9 @@ view never infers them from diffs of the simulation state.
   but music streams through Godot's mixer, decoded a little at a time.
   Sample playback decodes a whole track at once (about 105 MB for both
   tracks), which phones can fail to play. Streaming needs the game to keep
-  the mixer fed, so the web audio buffer is 120 ms; only music pays that
-  latency.
+  the mixer fed between frames, and a crowded wave on a phone runs frames of
+  45–55 ms (issue #22), so the web audio buffer is 340 ms; Godot rounds it to
+  a power of two of samples, 16384 at 48 kHz. Only music pays that latency.
 - All effects share a budget of voices, so a battle never sums dozens of
   sounds into clipping (which also broke up the music). Each sound has a tier:
   busy ones (rapid fire, hits) start only while at most 6 voices play, loud
@@ -543,3 +544,4 @@ Peak scene: 120 squad + ~300 enemies + ~1,500 projectiles.
 | 52 | The pixel budget is fixed per window size; no adaptation, since the web exposes no GPU timer | Active; refines 50 |
 | 53 | The web build loads native code (dlink template, GDExtension in C++); first a probe measures the gain on the device | Refined by 54 |
 | 54 | The simulation and the crowds' drawing move to native code, bit for bit with the GDScript they replace; every platform carries the library; the probe is gone | Active; refines 53 |
+| 55 | The web audio buffer is 340 ms, so streamed music outlasts a phone's slowest crowded frames | Active |

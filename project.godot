@@ -12,7 +12,7 @@ boot_splash/stretch_mode=4
 
 [audio]
 
-driver/output_latency.web=120
+driver/output_latency.web=340
 
 [display]
 
