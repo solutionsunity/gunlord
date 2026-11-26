@@ -1,5 +1,7 @@
 extends SceneTree
-## Bakes KayKit characters into CrowdBake resources at assets/baked/<id>.res.
+## Bakes KayKit characters into CrowdBake resources at assets/baked/<id>.res,
+## and the knight's sword for the relic blades. The source characters are not
+## exported; the game reads only what this writes.
 ##   godot --headless --path . -s tools/bake_crowd.gd
 ##
 ## Per character: keep the skinned body plus the named props, sample each clip
@@ -14,6 +16,7 @@ const SOURCE := "res://assets/third_party/kaykit-adventurers/characters/%s.glb"
 const ATLAS := "res://assets/third_party/kaykit-adventurers/props/%s_texture.png"
 const ATLAS_GRID := Vector2i(8, 4)
 const OUT := "res://assets/baked/%s.res"
+const SWORD := "res://assets/baked/sword.res"   ## the relics' blade: the knight's sword, so the game never loads a source character
 
 ## The grip KayKit uses for a one-handed crossbow in the right hand slot; our
 ## own weapons (tools/props.gd, forward +Z) mount the same way.
@@ -86,6 +89,13 @@ func _init() -> void:
 		get_root().add_child(rig)
 		_rigs[entry.id] = rig
 		_pending.append(entry)
+	var knight: Node = load(SOURCE % "Knight").instantiate()
+	var sword: Mesh = (knight.find_child("1H_Sword") as MeshInstance3D).mesh.duplicate()
+	var paint: StandardMaterial3D = sword.surface_get_material(0).duplicate()
+	paint.albedo_texture = load(ATLAS % "knight")   # the exported atlas, not the glb's own copy
+	sword.surface_set_material(0, paint)
+	print("sword  ", error_string(ResourceSaver.save(sword, SWORD)))
+	knight.free()
 
 
 ## The animation players need a frame inside the tree before they can seek.

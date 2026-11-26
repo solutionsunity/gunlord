@@ -128,6 +128,7 @@ jobs:
           $GODOT --headless --path . --import
           $GODOT --headless --path . -s tools/bake_crowd.gd
           test -f assets/baked/crossbowman.res
+          test -f assets/baked/sword.res
 
       - name: Balance and drift probe
         # Fails if the sweeping bot loses an authored node, the idle bot wins one,

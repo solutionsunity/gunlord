@@ -15,6 +15,7 @@ const BADGES := 16
 const CALLOUTS := 24
 const CALLOUT_LIFE := 0.9
 const BAKED := "res://assets/baked/%s.res"
+const SWORD := "res://assets/baked/sword.res"   ## the knight's sword, baked by tools/bake_crowd.gd
 const PANEL := Vector3(1.9, 1.25, 0.14)
 const PANEL_LIFT := 0.15
 const PEDESTAL := Vector3(1.5, 0.95, 1.5)
@@ -458,11 +459,9 @@ func _arrows(capacity: int) -> Crowd:
 ## The knight's sword, laid flat and centred, its point leading along +Z:
 ## a relic blade that sweeps edge-first around the squad.
 func _swords(capacity: int) -> Crowd:
-	var knight: Node = load("res://assets/third_party/kaykit-adventurers/characters/Knight.glb").instantiate()
-	var sword: MeshInstance3D = knight.find_child("1H_Sword")
+	var sword: Mesh = load(SWORD)
 	var lay := Basis(Vector3.FORWARD, 0.35) * Basis(Vector3.RIGHT, PI / 2.0)   # flat, rolled a little to catch the light
-	var mesh := _reshaped(sword.mesh, Transform3D(lay.scaled(Vector3.ONE * 1.1), lay * Vector3(0, -0.52, 0) * 1.1))
-	knight.free()
+	var mesh := _reshaped(sword, Transform3D(lay.scaled(Vector3.ONE * 1.1), lay * Vector3(0, -0.52, 0) * 1.1))
 	var crowd := Crowd.create(mesh, capacity, null)
 	add_child(crowd)
 	return crowd
