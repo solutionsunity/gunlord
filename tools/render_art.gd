@@ -5,6 +5,8 @@ extends SceneTree
 ##   icons/<surge or relic>.png  a bold outlined glyph for each surge and relic (256², transparent)
 ##   icons/mute.png          a speaker struck through by a red circle: sound off
 ##   icon.png                the game icon: a crossbowman on a gold-rimmed badge (512²)
+##   icon_foreground.png, icon_background.png  the same, as Android's adaptive
+##                           layers (432²): the launcher crops them to its own shape
 ##   splash.png              key art: a battle at dusk under the title (1080×1920)
 ## Needs a GPU context, so it runs under a display (xvfb on a server):
 ##   xvfb-run godot --path . --audio-driver Dummy --rendering-driver opengl3 --resolution 1080x1920 -s tools/render_art.gd
@@ -20,6 +22,7 @@ const GOLD := Color("f5c542")
 var _frame := 0
 var _portraits := {}       ## weapon id -> SubViewport
 var _icon: SubViewport
+var _layers := {}          ## adaptive icon layer file -> SubViewport
 var _main: Node
 
 
@@ -39,8 +42,11 @@ func _process(_delta: float) -> bool:
 			for id in _portraits:
 				_save(_portraits[id], "icons/%s.png" % id)
 			_icon = _badge(_portraits[&"crossbow"].get_texture())
+			_layers = _adaptive(_portraits[&"crossbow"].get_texture())
 		8:
 			_save(_icon, "icon.png")
+			for file in _layers:
+				_save(_layers[file], file)
 			_battle()
 		16:
 			root.get_texture().get_image().save_png(OUT + "splash.png")
@@ -123,6 +129,42 @@ func _badge(portrait: Texture2D) -> SubViewport:
 	face.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	vp.add_child(face)
 	return vp
+
+
+## The badge as Android's adaptive icon: a full-bleed navy background with its
+## glow, and the crossbowman alone in front. The launcher masks both to its own
+## shape and shows only the middle two thirds, so the figure keeps to that.
+func _adaptive(portrait: Texture2D) -> Dictionary:
+	var back := SubViewport.new()
+	back.size = Vector2i(432, 432)
+	back.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	root.add_child(back)
+	var fill := ColorRect.new()
+	fill.color = Color("1d3b8a")
+	fill.size = Vector2(432, 432)
+	back.add_child(fill)
+	var glow := TextureRect.new()
+	var g := GradientTexture2D.new()
+	g.gradient = Gradient.new()
+	g.gradient.colors = PackedColorArray([Color("4d8df7"), Color(0.3, 0.55, 0.97, 0.0)])
+	g.fill = GradientTexture2D.FILL_RADIAL
+	g.fill_from = Vector2(0.5, 0.45)
+	g.fill_to = Vector2(0.5, 0.0)
+	glow.texture = g
+	glow.size = Vector2(432, 432)
+	back.add_child(glow)
+	var front := SubViewport.new()
+	front.size = Vector2i(432, 432)
+	front.transparent_bg = true
+	front.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	root.add_child(front)
+	var face := TextureRect.new()
+	face.texture = portrait
+	face.position = Vector2(66, 72)
+	face.size = Vector2(300, 300)
+	face.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	front.add_child(face)
+	return {"icon_background.png": back, "icon_foreground.png": front}
 
 
 ## A real battle at dusk, fast-forwarded to the thick of it, seen low from
