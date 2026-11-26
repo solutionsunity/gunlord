@@ -111,6 +111,7 @@ jobs:
 
       - name: Build the native library
         run: |
+          touch emsdk-cache/.gdignore   # setup-emsdk caches inside the project; Godot must not import or export it
           pip install scons
           for p in linux web android; do
             test -d /tmp/gc/$p || git clone -q --depth 1 --branch ${GODOT_CPP_VERSION} https://github.com/godotengine/godot-cpp /tmp/gc/$p
