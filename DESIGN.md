@@ -461,7 +461,12 @@ view never infers them from diffs of the simulation state.
 - Each time the map appears (at most every two minutes), the web build
   fetches `version.json` past every cache. If a different version is
   published, the map offers "New version … tap to update". It never
-  interrupts a battle; local and native builds do not check.
+  interrupts a battle; local builds do not check.
+- The APK checks the same way against the latest GitHub release (its tag
+  and the APK attached to it), since an installed APK has no page beside
+  it. The update tap opens that APK in the browser, which downloads it to
+  install over the current one, progress kept. The APK declares the
+  internet permission for this check alone (issue #27).
 - The web build is an installable app (Godot's progressive web app export):
   a manifest (standalone, portrait, the game icon) and a service worker that
   keeps the build for offline play, one cache per build. The worker serves
@@ -559,3 +564,4 @@ Peak scene: 120 squad + ~300 enemies + ~1,500 projectiles.
 | 56 | Battles draw each figure from a quarter of its triangles; portraits keep the whole mesh | Active |
 | 57 | Every build renders with the Compatibility renderer, so the web and Android look the same | Active |
 | 58 | The relic sword is polished steel | Active |
+| 59 | The APK checks the latest GitHub release for updates and downloads its APK | Active |
