@@ -361,7 +361,9 @@ view never infers them from diffs of the simulation state.
   trailing a ribbon of light and throwing sparks where it cuts; a camera
   quadcopter (graphite body, gold spine, counter-rotating props blurred into
   discs, white lights ahead and red behind), the drones taking turns to fire;
-  a two-course honeycomb of glass; rockets trailing smoke.
+  a two-course honeycomb of glass; rockets trailing smoke. The sword is
+  polished steel, so the sky's reflection shades it instead of daylight
+  washing it pale.
 - The shield's honeycomb is its charge: its cells go out from the ends
   inward as it takes blows and relight as it recharges; a spent cell stays as
   a dim outline. Each blow it holds flashes it, with a glassy knock.
@@ -555,3 +557,4 @@ Peak scene: 120 squad + ~300 enemies + ~1,500 projectiles.
 | 55 | The web audio buffer is 340 ms, so streamed music outlasts a phone's slowest crowded frames | Active |
 | 56 | Battles draw each figure from a quarter of its triangles; portraits keep the whole mesh | Active |
 | 57 | Every build renders with the Compatibility renderer, so the web and Android look the same | Active |
+| 58 | The relic sword is polished steel | Active |

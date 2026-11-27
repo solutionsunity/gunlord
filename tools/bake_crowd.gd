@@ -93,6 +93,8 @@ func _init() -> void:
 	var sword: Mesh = (knight.find_child("1H_Sword") as MeshInstance3D).mesh.duplicate()
 	var paint: StandardMaterial3D = sword.surface_get_material(0).duplicate()
 	paint.albedo_texture = load(ATLAS % "knight")   # the exported atlas, not the glb's own copy
+	paint.metallic = 0.8   # polished steel: the sky's reflection shades the blade, so it reads as metal, not a pale cutout
+	paint.roughness = 0.3
 	sword.surface_set_material(0, paint)
 	print("sword  ", error_string(ResourceSaver.save(sword, SWORD)))
 	knight.free()
