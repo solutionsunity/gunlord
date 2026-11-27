@@ -264,6 +264,10 @@ at a larger size.
   the library: the web through Godot's dlink template, Android (arm64), and
   Linux, where the tests run. GDScript keeps the content, the stages, the
   screens and the order of the frame.
+- Every build renders with Godot's Compatibility renderer (OpenGL ES 3 /
+  WebGL 2), the only one the web has. One renderer means one look: the
+  Mobile renderer lit the same scene dimmer and greyer on Android (issue #26),
+  so art tuned on one build drifted on the other.
 - Hit checks run on a uniform grid laid over the lane. Projectiles only test
   objects in their own grid cell.
 - Weapons, lane objects and levels are data resources, kept separate from the
@@ -550,3 +554,4 @@ Peak scene: 120 squad + ~300 enemies + ~1,500 projectiles.
 | 54 | The simulation and the crowds' drawing move to native code, bit for bit with the GDScript they replace; every platform carries the library; the probe is gone | Active; refines 53 |
 | 55 | The web audio buffer is 340 ms, so streamed music outlasts a phone's slowest crowded frames | Active |
 | 56 | Battles draw each figure from a quarter of its triangles; portraits keep the whole mesh | Active |
+| 57 | Every build renders with the Compatibility renderer, so the web and Android look the same | Active |
