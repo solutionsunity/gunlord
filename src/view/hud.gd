@@ -4,7 +4,7 @@ extends CanvasLayer
 ## capacity bar, the weapon mix as unit badges in a column at one side (clear
 ## of the steering thumb), the nearest boss's health bar, a gear row on the
 ## badges' side holding the relics the squad brings (each glyph with its
-## level) and the running surge with its countdown (and a frost over the
+## level, the shield's with its charge) and the running surge with its countdown (and a frost over the
 ## screen while the lane is frozen), the stage's title as a battle opens, and,
 ## when the settings ask for it, a performance readout under the pause button.
 
@@ -27,6 +27,7 @@ var _boss_name: Label
 var _boss_bar: ProgressBar
 var _gear: HBoxContainer            ## the relics, then the surge, on the badges' side
 var _relics: HBoxContainer
+var _shield_bar: ProgressBar        ## the shield's charge on its relic chip; null without a shield
 var _surge: Control
 var _surge_icon: TextureRect
 var _surge_bar: ProgressBar
@@ -149,14 +150,19 @@ func _place_badges(side: StringName) -> void:
 		badge.size_flags_horizontal = Control.SIZE_SHRINK_END if right else Control.SIZE_SHRINK_BEGIN
 
 
-## The relics this battle brings: a glyph and a level for each.
+## The relics this battle brings: a glyph and a level for each, and on the
+## shield's a bar for its charge.
 func show_relics(loadout: Dictionary) -> void:
 	for child in _relics.get_children():
 		child.queue_free()
+	_shield_bar = null
 	for id in Relics.LABELS:
 		if loadout.has(id):
 			var row := Ui.icon_chip(_relics, Ui.unit_icon(id), 40.0, 24)
 			(row.get_child(1) as Label).text = Relics.NUMERALS[loadout[id]]
+			if id == &"shield":
+				_shield_bar = Ui.bar(row, Vector2(72, 14), Ui.SKY)
+				_shield_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 
 
 ## The stage's number and name, shown for a moment as the battle opens.
@@ -179,6 +185,9 @@ func draw(b: Battle) -> void:
 	_draw_mix(b.squad)
 	_draw_boss(b.lane)
 	_draw_surge(b.arms)
+	if _shield_bar:
+		_shield_bar.max_value = b.arms.shield_max()
+		_shield_bar.value = b.arms.shield
 
 
 ## The performance readout, refreshed every STATS_EVERY seconds, averaged
