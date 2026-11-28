@@ -446,7 +446,12 @@ view never infers them from diffs of the simulation state.
   background. The web page (`web/shell.html`) is Godot's shell restyled: the
   art fills a portrait screen, and on wider screens stands whole over a
   blurred copy, with a gold progress bar. The game icon is the favicon and
-  the Android launcher icon.
+  Android's fallback icon.
+- Android's launcher icon is adaptive: a navy background layer and the
+  crossbowman in front, which the launcher crops to its own shape. Honor's
+  MagicOS launcher crops nothing and shows the whole layer as a square, so
+  the background is itself a rounded tile; its corners curve outside the
+  part a cropping launcher shows (issue #24).
 
 ### Versions and updates
 
@@ -565,3 +570,4 @@ Peak scene: 120 squad + ~300 enemies + ~1,500 projectiles.
 | 57 | Every build renders with the Compatibility renderer, so the web and Android look the same | Active |
 | 58 | The relic sword is polished steel | Active |
 | 59 | The APK checks the latest GitHub release for updates and downloads its APK | Active |
+| 60 | The adaptive icon's background is a rounded tile, for launchers that apply no mask | Active |

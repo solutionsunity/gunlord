@@ -6,7 +6,8 @@ extends SceneTree
 ##   icons/mute.png          a speaker struck through by a red circle: sound off
 ##   icon.png                the game icon: a crossbowman on a gold-rimmed badge (512²)
 ##   icon_foreground.png, icon_background.png  the same, as Android's adaptive
-##                           layers (432²): the launcher crops them to its own shape
+##                           layers (432²): the launcher crops them to its own shape;
+##                           the background is a rounded tile for launchers that don't
 ##   splash.png              key art: a battle at dusk under the title (1080×1920)
 ## Needs a GPU context, so it runs under a display (xvfb on a server):
 ##   xvfb-run godot --path . --audio-driver Dummy --rendering-driver opengl3 --resolution 1080x1920 -s tools/render_art.gd
@@ -131,17 +132,28 @@ func _badge(portrait: Texture2D) -> SubViewport:
 	return vp
 
 
-## The badge as Android's adaptive icon: a full-bleed navy background with its
-## glow, and the crossbowman alone in front. The launcher masks both to its own
-## shape and shows only the middle two thirds, so the figure keeps to that.
+## The badge as Android's adaptive icon: a navy background with its glow, and
+## the crossbowman alone in front. The launcher masks both to its own shape and
+## shows only the middle two thirds (144..288 of 432), so the figure keeps to
+## that. Some launchers (Honor's MagicOS) apply no mask and show the whole
+## layer, so the background is itself a rounded tile, inset a little to sit at
+## the size of the icons around it; its corners curve only outside the middle
+## two thirds, so a masking launcher still sees it full-bleed.
 func _adaptive(portrait: Texture2D) -> Dictionary:
 	var back := SubViewport.new()
 	back.size = Vector2i(432, 432)
+	back.transparent_bg = true
 	back.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	root.add_child(back)
-	var fill := ColorRect.new()
-	fill.color = Color("1d3b8a")
-	fill.size = Vector2(432, 432)
+	var tile := StyleBoxFlat.new()
+	tile.bg_color = Color("1d3b8a")
+	tile.set_corner_radius_all(84)
+	tile.corner_detail = 16
+	var fill := Panel.new()
+	fill.add_theme_stylebox_override("panel", tile)
+	fill.position = Vector2(24, 24)
+	fill.size = Vector2(384, 384)
+	fill.clip_children = CanvasItem.CLIP_CHILDREN_AND_DRAW   # the glow stays on the tile
 	back.add_child(fill)
 	var glow := TextureRect.new()
 	var g := GradientTexture2D.new()
@@ -151,8 +163,9 @@ func _adaptive(portrait: Texture2D) -> Dictionary:
 	g.fill_from = Vector2(0.5, 0.45)
 	g.fill_to = Vector2(0.5, 0.0)
 	glow.texture = g
+	glow.position = Vector2(-24, -24)   # laid over the whole layer, as before the tile
 	glow.size = Vector2(432, 432)
-	back.add_child(glow)
+	fill.add_child(glow)
 	var front := SubViewport.new()
 	front.size = Vector2i(432, 432)
 	front.transparent_bg = true
